@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Mining{% endblock %}
+{% block content %}
+<div>Block index: {{ block['index'] }}</div>
+<div>Block nonce: {{ block['header']['nonce'] }}</div>
+<div>Block timestamp: {{ block['header']['timestamp'] }}</div>
+<div>Block prev_hash: {{ block['header']['prev_hash'] }}</div>
+{% endblock %}

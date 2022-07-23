@@ -1,0 +1,10 @@
+chainstate/
+*.txt
+**/__pycache__
+wallet/*.bin
+blockchain/blocks
+blockchain/mempool
+database/database.db
+database/tables.sql
+/env
+

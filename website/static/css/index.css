@@ -1,0 +1,84 @@
+.blockchain_info {
+    display: flex;
+}
+
+#last_blocks {
+    margin-top: 40px;
+    display: table;
+    width: 400px;
+    border: 1px solid rgb(126, 126, 255);
+}
+#blocks-table-name {
+    display: table-caption;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+#blocks-header-row {
+    display: table-header-group;
+    background-color: rgb(171, 171, 255);
+    font-weight: bold;
+    font-size: 16px;
+}
+#blocks-body {
+    display: table-row-group;
+}
+.blocks-header-cell {
+    display: table-cell;
+    padding: 10px;
+    text-align: justify;
+    border-bottom: 1px solid black;
+}
+.blocks-row {
+    display: table-row;
+}
+.blocks-cell {
+    display: table-cell;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}
+.block-index {
+    color: rgb(55, 19, 202);
+    text-decoration: underline;
+}
+.block-index:hover {
+    color: rgb(23, 8, 83);
+    cursor: pointer;
+}
+
+
+#last_transactions {
+    margin-top: 40px;
+    display: table;
+    width: 400px;
+    border: 1px solid rgb(126, 126, 255);
+}
+#transactions-table-name {
+    display: table-caption;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+#transactions-header-row {
+    display: table-header-group;
+    background-color: rgb(255, 182, 171);
+    font-weight: bold;
+    font-size: 16px;
+}
+#transactions-body {
+    display: table-row-group;
+}
+.transactions-header-cell {
+    display: table-cell;
+    padding: 10px;
+    text-align: justify;
+    border-bottom: 1px solid black;
+}
+.transactions-row {
+    display: table-row;
+}
+.transactions-cell {
+    display: table-cell;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}
