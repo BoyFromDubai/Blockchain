@@ -1,5 +1,4 @@
 chainstate/
-*.txt
 **/__pycache__
 wallet/*.bin
 blockchain/blocks
