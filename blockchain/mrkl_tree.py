@@ -33,7 +33,7 @@ class MerkleTree:
             for leaf in tmp_leafs:
                 str_tmp_leaf += str(leaf)
 
-            tmp_arr.append(hashlib.sha256(pickle.dumps(str_tmp_leaf)).hexdigest())
+            tmp_arr.append(hashlib.sha256(pickle.dumps(str_tmp_leaf)).digest())
 
         if len(tmp_arr) != 1:
             return self.__create_mrkl_root(tmp_arr)

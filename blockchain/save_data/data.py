@@ -1,22 +1,36 @@
 import json
 import os
-from re import T
-from time import time
-
-from itsdangerous import exc
 
 NUMS_NUM = 4
 
-
-def save_block(block):
-    file = f"blockchain/blocks/blk_{str(block['index']).zfill(NUMS_NUM)}.json"
-    f = open(file, 'w')
-    f.write(json.dumps(block))
-    f.close()
-
-    # file = f"blockchain/bbblocks/blk_{str(block['index']).zfill(NUMS_NUM)}.dat"
-    # f = open(file, 'wb')
-    
+block_structure = {
+    'size': 4,
+    'header': {
+        'prev_blk_hash': 32,
+        'mrkl_root': 32,
+        'time': 4,
+        'difficulty': 4,
+        'nonce': 4
+    },
+    'tx_count': 1,
+    'tx_data': {
+        'version': 4,
+        'input_count': 1,
+        'input': {
+            'txid': 32,
+            'vout': 4,
+            # 'script_sig_size': None,
+            # 'script_sig': None,
+        },
+        'output_count': 1,
+        'output': {
+            'value': 8,
+            # 'script_pub_key_size': None,
+            # 'script_pub_key': None
+        },
+        'locktime': 4,
+    }
+}
 
 def save_to_mempool(tx):
     mempool_path = "blockchain/mempool/"
@@ -50,21 +64,15 @@ def get_chain():
         
         for file in files_arr:
             f = open('blockchain/blocks/' + file, 'r')
-            chain.append(json.load(f))
+            # chain.append({
+            #     'time': ,
+            # })
             f.close()
 
     except:
         os.mkdir(f'blockchain/{dir_name}')
     
     return chain
-
-def get_last_block():
-    last_file = sorted(os.listdir('blockchain/blocks'))[-1]
-    f = open('blockchain/blocks/' + last_file, 'r')
-    last_block = json.load(f)
-    f.close()
-
-    return last_block
 
 def get_block(index):
     block_file = sorted(os.listdir('blockchain/blocks'))[index - 1]
@@ -87,9 +95,3 @@ def get_mempool():
 
     return mempool
 
-def clear_mempool():
-    file = "blockchain/mempool/mempool.json"
-    f = open(file, 'r+')
-    f.truncate(0)
-    f.close()
-    
