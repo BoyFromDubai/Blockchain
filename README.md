@@ -1,4 +1,4 @@
 # Blockchain
-My project is about crypto for scientific research work in my university.
+My project is about crypto for scientific research work in my university and the goal of it is to to prevent double spending after chain reorganization in Bitcoin.
 
-The goal is to prevent double spending after chain reorganization in Bitcoin. And this crypto is made looking at technical description of Bitcoin. 
+This crypto is made looking at technical documentation of Bitcoin. 
