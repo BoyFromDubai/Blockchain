@@ -6,7 +6,7 @@ import pickle
 views = Blueprint('views', __name__)
 
 def hash_data(data):
-        return hashlib.sha256(pickle.dumps(data)).hexdigest()
+    return hashlib.sha256(pickle.dumps(data)).hexdigest()
 
 @views.route('/', methods=['GET'])
 def main():

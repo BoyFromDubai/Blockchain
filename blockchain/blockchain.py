@@ -2,27 +2,93 @@ import datetime
 import hashlib
 import random
 import math
+from sys import byteorder
 from blockchain.save_data import data
 from blockchain.mrkl_tree import MerkleTree
 import pickle
 import plyvel
 import time
 
+block_structure = {
+    'size': 4,
+    'header': {
+        'prev_blk_hash': 32,
+        'mrkl_root': 32,
+        'time': 4,
+        'difficulty': 4,
+        'nonce': 4
+    },
+    'tx_count': 1,
+    'tx_data': {
+        'version': 4,
+        'input_count': 1,
+        'input': {
+            'txid': 32,
+            'vout': 4,
+            'script_sig_size': None,
+            'script_sig': None,
+        },
+        'output_count': 1,
+        'output': {
+            'value': 8,
+            'script_pub_key_size': None,
+            'script_pub_key': None
+        },
+        'locktime': 4,
+    }
+}
+
 class Blockchain:
     def __init__(self):
         if not self.get_chain():
-            self.genezis_block = self.append_block(self.create_block(1, '0', '00'))
+            self.genezis_block = self.append_block(self.__create_block(1, hex(17), '00'))
 
-    def create_block(self, nonce, prev_hash, difficulty, transactions = []):
+    def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
         length = self.chain_len()
+
+        file = f"baa.dat"
+        f = open(file, 'wb')
+
+        res = bytes.fromhex(prev_hash)
+        res += bytes.fromhex(MerkleTree(transactions).root)
+        res += int(time.time()).to_bytes(block_structure['header']['time'], byteorder='little')
+        res += difficulty.to_bytes(block_structure['header']['difficulty'], byteorder='little')
+        res += nonce.to_bytes(block_structure['header']['nonce'], byteorder='little')
+        res += len(transactions).to_bytes(block_structure['tx_count'], byteorder='little')
+
+        for tx in transactions:
+            res += tx['version'].to_bytes(block_structure['tx_data']['version'], byteorder='little')
+            res += len(tx['vin']).to_bytes(block_structure['tx_data']['input_count'], byteorder='little')
+            print(len(tx['vin']))
+            
+            for vin in tx['vin']:
+                res += bytes.fromhex(vin['txid'])
+                res += int(vin['vout']).to_bytes(block_structure['tx_data']['input']['vout'], byteorder='little')
+                # scriptSig size
+                # scriptSig
+                res += int(vin['vout']).to_bytes(block_structure['tx_data']['input']['vout'], byteorder='little')
+            
+            res += len(tx['vout']).to_bytes(block_structure['tx_data']['output_count'], byteorder='little')
+
+            for vout in tx['vout']:
+                res += int(vout['value']).to_bytes(block_structure['tx_data']['output']['value'], byteorder='little')
+                # scriptPubKey size
+                # scriptPubKey
+
+            res += tx['locktime'].to_bytes(block_structure['tx_data']['locktime'], byteorder='little')
+
+        print(res.hex())
+        f.write(res)
+        f.close()
+
         block = {
             'index': length + 1,
             'header': {
-                'timestamp': int(time.time()),
                 'prev_hash': prev_hash,
                 'mrkl_root': MerkleTree(transactions).root,
+                'timestamp': int(time.time()),
+                'difficulty': difficulty,
                 'nonce': nonce,
-                'difficulty': difficulty
             },
             'transaction_counter': len(transactions),
             'transactions': transactions
@@ -57,7 +123,7 @@ class Blockchain:
         
         while (not(check_proof)):
 
-            check_block = self.create_block(nonce, self.hash(prev_block), num_of_zeros, transactions)
+            check_block = self.__create_block(nonce, self.hash(prev_block), num_of_zeros, transactions)
             
             if (str(self.hash(check_block))[:1] == difficulty): 
                 check_proof = True
@@ -129,9 +195,9 @@ class Blockchain:
         
         transaction = {
             'version': 0,
-            'locktime': 0,
             'vin': vin,
-            'vout': vout
+            'vout': vout,
+            'locktime': 0,
         }
 
         return transaction
