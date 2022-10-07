@@ -75,6 +75,8 @@ class Blockchain:
         for key, value in data.block_structure['header'].items():
             res += bytes[prev_value:prev_value + value]
             prev_value += value
+
+        print(res)
         
         return res
 
@@ -154,6 +156,7 @@ class Blockchain:
 
             check_block = self.__create_block(nonce, hashlib.sha256(prev_block_hash).digest(), num_of_zeros, transactions)
             header = self.__get_blk_header(check_block)
+            print(header)
             
             if (self.hash_hex(header)[:1] == difficulty): 
                 check_proof = True
