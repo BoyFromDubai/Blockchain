@@ -1,37 +1,6 @@
 import json
 import os
 
-NUMS_NUM = 4
-
-block_structure = {
-    'size': 4,
-    'header': {
-        'prev_blk_hash': 32,
-        'mrkl_root': 32,
-        'time': 4,
-        'difficulty': 4,
-        'nonce': 4
-    },
-    'tx_count': 1,
-    'tx_data': {
-        'version': 4,
-        'input_count': 1,
-        'input': {
-            'txid': 32,
-            'vout': 4,
-            # 'script_sig_size': None,
-            # 'script_sig': None,
-        },
-        'output_count': 1,
-        'output': {
-            'value': 8,
-            # 'script_pub_key_size': None,
-            # 'script_pub_key': None
-        },
-        'locktime': 4,
-    }
-}
-
 def save_to_mempool(tx):
     mempool_path = "blockchain/mempool/"
     file_path = mempool_path + "mempool.json"
