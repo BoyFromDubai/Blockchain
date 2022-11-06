@@ -5,7 +5,6 @@ import math
 from blockchain.save_data import data
 from blockchain.mrkl_tree import MerkleTree
 import pickle
-import plyvel
 import os
 import time
 
@@ -167,6 +166,7 @@ class Blockchain:
     
     def __get_chain_length(self): return len(os.listdir('blockchain/blocks'))
 
+    # @staticmethod
     def mine_block(self, pk):
         emission = self.add_transaction([math.ceil(random.random() * 100)], [pk])
         transactions = [emission]
