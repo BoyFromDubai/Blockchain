@@ -7,6 +7,7 @@ from blockchain.mrkl_tree import MerkleTree
 import pickle
 import os
 import time
+import ecdsa
 
 NUMS_NUM = 4
 
@@ -42,12 +43,12 @@ block_structure = {
     'input_count': 1, #tx info
     'txid': 32, #tx info
     'vout': 4, #tx info
-    # 'script_sig_size': None, #tx info
-    # 'script_sig': None, #tx info
+    'script_sig_size': None, #tx info
+    'script_sig': None, #tx info
     'output_count': 1, #tx info
     'value': 8, #tx info
-    # 'script_pub_key_size': None, #tx info
-    # 'script_pub_key': None #tx info
+    'script_pub_key_size': None, #tx info
+    'script_pub_key': None, #tx info
     'locktime': 4, #tx info
     
 }
@@ -57,12 +58,17 @@ class Blockchain:
         if not self.__get_chain_length():
             self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
 
+        with open('wallet/wallet.bin', 'rb') as f:
+            key = f.read()
+
+            self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+        self.mempool_tx_size_info = 2
+
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
-        length = self.chain_len()
 
         res = prev_hash
 
-        if (transactions):
+        if transactions:
             res += MerkleTree(transactions).root
         else:
             res += (12).to_bytes(32, byteorder='little')
@@ -70,34 +76,34 @@ class Blockchain:
         #TODO: change this if else
 
         res += int(time.time()).to_bytes(block_structure['time'], byteorder='little')
+        print()
+        print(difficulty)
         res += difficulty.to_bytes(block_structure['difficulty'], byteorder='little')
         res += nonce.to_bytes(block_structure['nonce'], byteorder='little')
+        print(res.hex())
         res += len(transactions).to_bytes(block_structure['tx_count'], byteorder='little')
-
+        print(transactions)
+        print()
         for tx in transactions:
-            res += tx['version'].to_bytes(block_structure['version'], byteorder='little')
-            res += len(tx['vin']).to_bytes(block_structure['input_count'], byteorder='little')
-            
-            for vin in tx['vin']:
-                res += bytes.fromhex(vin['txid'])
-                res += int(vin['vout']).to_bytes(block_structure['input']['vout'], byteorder='little')
-                # scriptSig size
-                # scriptSig
-            
-            res += len(tx['vout']).to_bytes(block_structure['output_count'], byteorder='little')
-
-            for vout in tx['vout']:
-                res += int(vout['value']).to_bytes(block_structure['value'], byteorder='little')
-                # scriptPubKey size
-                # scriptPubKey
-
-            res += tx['locktime'].to_bytes(block_structure['locktime'], byteorder='little')
+            res += tx
 
         size = len(res).to_bytes(block_structure['size'], byteorder='little')
 
         return size + res
 
-    def __get_mempool(self): return data.get_mempool()
+    def __get_mempool(self):
+        transactions = []
+
+        with open('blockchain/mempool/mempool.dat', 'rb') as f:
+            all_data = f.read()
+
+            f.seek(0)
+
+            while f.tell() < len(all_data):
+                tx_info_len = int.from_bytes(f.read(self.mempool_tx_size_info), 'little')
+                transactions.append(f.read(tx_info_len))
+
+        return transactions
 
     def __get_last_blk(self): return sorted(os.listdir('blockchain/blocks'))[-1]
 
@@ -115,10 +121,17 @@ class Blockchain:
 
     def __get_blk_header(self, bytes):
         res = b''
-        prev_value = block_structure['size']
-        for key, value in block_structure.items():
-            res += bytes[prev_value:prev_value + value]
-            prev_value += value
+        block_structure_copy = block_structure.copy()
+        prev_value = block_structure_copy['size']
+        del block_structure_copy['size']
+
+        for key, size in block_structure_copy.items():
+            if key == 'tx_count':
+                break
+            res += bytes[prev_value:prev_value + size]
+            prev_value += size
+
+        print(prev_value)
         
         return res
 
@@ -166,11 +179,10 @@ class Blockchain:
     
     def __get_chain_length(self): return len(os.listdir('blockchain/blocks'))
 
-    # @staticmethod
     def mine_block(self, pk):
-        emission = self.add_transaction([math.ceil(random.random() * 100)], [pk])
+        emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], self.sk)
         transactions = [emission]
-        mempool = self.__get_mempool()
+        mempool = self.__get_mempool()[1:]
 
         for tx in mempool: 
             transactions.append(tx)
@@ -178,10 +190,10 @@ class Blockchain:
         nonce = 1
         check_proof = False
         num_of_zeros = 1
-        difficulty = ''
+        difficulty = ''.zfill(num_of_zeros)
 
-        for i in range(num_of_zeros):
-            difficulty += '0'
+        # for i in range(num_of_zeros):
+        #     difficulty += '0'.
             
         prev_block_hash = self.__get_prev_blk_hash()
         
@@ -190,7 +202,9 @@ class Blockchain:
             check_block = self.__create_block(nonce, hashlib.sha256(prev_block_hash).digest(), num_of_zeros, transactions)
             header = self.__get_blk_header(check_block)
             
-            if (self.__hash_hex(header)[:1] == difficulty): 
+            if self.__hash_hex(header)[:num_of_zeros] == difficulty:
+                print(difficulty)
+                print(header.hex()) 
                 check_proof = True
                 self.__append_block(check_block)
                 self.__clear_mempool()
@@ -229,10 +243,8 @@ class Blockchain:
 
     #TODO change mempool from json to bytes
     def __clear_mempool(self):
-        file = "blockchain/mempool/mempool.json"
-        f = open(file, 'r+')
-        f.truncate(0)
-        f.close()
+        with open('blockchain/mempool/mempool.dat', 'w'): 
+            pass
 
     def __hash_hex(self, bytes): return hashlib.sha256(bytes).hexdigest()
 
@@ -241,6 +253,7 @@ class Blockchain:
     def chain_len(self): return len(data.get_chain())
 
     def is_chain_valid(self, chain):
+
         prev_block = chain[0]
         block_index = 1
 
@@ -255,52 +268,61 @@ class Blockchain:
         
         return True
 
-    def add_transaction(self, value, addresses, txid = [], vout_num = []):
-        vout = []
-        vin = []
+    def add_transaction(self, value, addresses, sk, txid = [], vout_num = []):
+
+        print(sk)
+        version = (0).to_bytes(block_structure['version'], "little")
+        tx_data = version
+        inputs_num = len(txid).to_bytes(block_structure['input_count'], "little")
+        tx_data += inputs_num
+        
+        for i in range(len(txid)):
+            tx_data += self.__create_vin(txid[i], int(vout_num[i]), sk)
+
+        tx_data += len(addresses).to_bytes(1, "big") #outputs num
 
         for i in range(len(addresses)):
-            vout.append(self.__create_vout(int(value[i]), i, addresses[i]))
-        for i in range(len(txid)):
-            vin.append(self.__create_vin(bytes.fromhex(hex(int(txid[i], 16))), int(vout_num[i])))
+            tx_data += self.__create_vout(int(value[i]), addresses[i])
         
-        transaction = {
-            'version': 0,
-            'vin': vin,
-            'vout': vout,
-            'locktime': 0,
-        }
+        # bytes.fromhex(txid[i] if not len(txid[i]) % 2 else '0' + txid[i])
 
-        return transaction
+        self.__append_to_mempool(tx_data)
 
+        return tx_data
+
+    def __append_to_mempool(self, tx_bytes):
+
+        with open('blockchain/mempool/mempool.dat', 'ab') as f:
+            f.write(len(tx_bytes).to_bytes(self.mempool_tx_size_info, 'little'))
+            f.write(tx_bytes)
+
+        # with open('blockchain/mempool/mempool.dat', 'wb') as f:
+        #     pass
+
+    def __read_mempool(self):
+        pass
+            
     def get_chain(self): return data.get_chain()
 
-    def __create_vin(self, txid, vout_num):
+    def __create_vin(self, txid, vout_num, sk):
         if not txid or not vout_num:
             return None
 
-        vin = {
-            'txid': txid,
-            'vout': vout_num,
-            'scriptSig': {
-                'asm': None,
-                'hex': None
-            },
-            'sequence': None
-        }
+        vin_data = int(txid, 16).to_bytes(block_structure['txid'], 'little')
+        vin_data += vout_num.to_bytes(block_structure['vout'], "little")
 
-        return vin
+        # TODO: change scriptSig
+        vin_data += (1).to_bytes(1, "big") #ScriptSig size
+        vin_data += (100).to_bytes(1, "big") #ScriptSig
 
-    def __create_vout(self, value, n, addresses):
-        vout = {
-            'value': value,
-            'n': n,
-            'scriptPubKey': {
-                'asm': None,
-                'hex': None,
-                'reqSigs': None,
-                'addresses': addresses,
-            }
-        }    
+        return vin_data
 
-        return vout
+    def __create_vout(self, value, address):
+
+        vout_data = int(value).to_bytes(block_structure['value'], "little")
+        # TODO: change scriptPubKey
+        len_of_script_pub_key = math.ceil(len(address) / 2)
+        vout_data += len_of_script_pub_key.to_bytes(1, "big") #ScriptPubKey size
+        vout_data += int(address, 16).to_bytes(len_of_script_pub_key, 'big')#ScriptPubKey
+
+        return vout_data

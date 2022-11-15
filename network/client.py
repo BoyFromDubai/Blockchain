@@ -31,8 +31,12 @@ class Client():
     def changeServerToConnectWith(self, ip_addr):
         with open('network/server.txt', 'w') as f:
             f.write(ip_addr)
-    # def __ask_for_peers(self):
+        self.server_to_ask_for_peers = ip_addr
 
+    def sendData(self):
+        pass
+
+    
 
         
         

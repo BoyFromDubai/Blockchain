@@ -17,27 +17,28 @@ import argparse
 from blockchain.blockchain import Blockchain
 from network.client import Client
 
+class User():
+    def __init__(self):
+        self.username = 'ccoin_client'
+        self.network_client = Client()
+
+        with open('wallet/wallet.bin', 'rb') as f:
+            key = f.read()
+
+            self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+
 class TestWindow(QWidget):
     def __init__(self, parent=None):
         super(TestWindow, self).__init__(parent)
-        
-        # self.grid = QGridLayout()
-        # self.setLayout(self.grid)
-
-        # self.setWindowTitle('Test')
-
-        # btn_take_a_test = QPushButton('Take a test', self)
-        # btn_take_a_test.clicked.connect(self.buttonClick)
-        # btn_take_a_test.setStyleSheet("background-color : yellow")
-        # self.grid.addWidget(btn_take_a_test, 1, 1)
 
 class OverviewWidget(QWidget):
     def __init__(self, parent=None):
         super(QWidget, self).__init__(parent)
 
 class WalletWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
+        self.user = user
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
         self.info_fields = {
@@ -73,7 +74,17 @@ class WalletWidget(QWidget):
         self.layout.addWidget(send_tx, 1)
 
     def sendTransaction(self):
-        pass
+        from main import blockchain
+        print([sum.text() for sum in self.info_fields['sums']])
+        print([address.text() for address in self.info_fields['addresses']])
+        print([txid.text() for txid in self.info_fields['txids']])
+        print([int(vout.text()) for vout in self.info_fields['vouts']])
+
+        blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
+        [address.text() for address in self.info_fields['addresses']],
+        self.user.sk,
+        [txid.text() for txid in self.info_fields['txids']],
+        [vout.text() for vout in self.info_fields['vouts']])
 
     def addVout(self):
         # for i in range(len(self.info_fields['txids'])):
@@ -92,7 +103,7 @@ class WalletWidget(QWidget):
         groupbox_layout.addWidget(sum, 1)
         self.vout_box_layout.addWidget(groupbox, 1)
 
-    def addVin(self):
+    def addVin(self):        
         groupbox = QGroupBox()
         groupbox_layout = QVBoxLayout()
         groupbox.setLayout(groupbox_layout)    
@@ -107,16 +118,6 @@ class WalletWidget(QWidget):
         groupbox_layout.addWidget(vout)
         self.vin_box_layout.addWidget(groupbox, 1)
 
-class User():
-    def __init__(self):
-        self.username = 'ccoin_client'
-        self.network_client = Client()
-
-        with open('wallet/wallet.bin', 'rb') as f:
-            key = f.read()
-
-            self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
-
 class Terminal(QTextEdit):
     def __init__(self):
         super().__init__()
@@ -125,11 +126,11 @@ class Terminal(QTextEdit):
         
 
 class TerminalInput(Terminal):
-    def __init__(self, terminal_output):
+    def __init__(self, terminal_output, user):
         super().__init__()
         self.terminal_output = terminal_output
         
-        self.user = User()
+        self.user = user
         self.prefix = f'{self.user.username}@ '
         self.history = ['']
         self.history_index = 0
@@ -162,8 +163,8 @@ class TerminalInput(Terminal):
             if command_arr[1] == 'srv-ip':
                 self.user.network_client.changeServerToConnectWith(command_arr[2])
 
-        self.__add_info_to_output(command, res)
-
+        # self.__add_info_to_output(command, res)
+        self.terminal_output.addEvent(self.prefix, command, res)
     def __clear_terminal(self):
         self.clear()
         self.setTextColor(QColor(17, 255, 0))
@@ -246,18 +247,22 @@ class TerminalOutput(Terminal):
         self.setReadOnly(True)
         self.insertPlainText('***CCoin Terminal***' + '\n'*2)
 
+    def addEvent(self, prefix, cmd, msg):
+        self.setTextColor(QColor(17, 255, 0))
+        self.insertPlainText(prefix)
+        self.setTextColor(QColor('white')) 
+        self.insertPlainText(str(cmd) + '\n' + str(msg) + '\n\n')
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
 
 class TerminalWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.client = Client()
         self.terminal_output = TerminalOutput()
-        self.terminal_input = TerminalInput(self.terminal_output)
-        # self.terminal_input.setFocus()
-        # self.command_line.setStyleSheet("""Terminal { background-color: black; color: white }""")
-        # command_line.setStyleSheet("color : white")
+        self.terminal_input = TerminalInput(self.terminal_output, user)
 
         self.layout.addWidget(self.terminal_output, 20)
         self.layout.addWidget(self.terminal_input, 1)
@@ -287,15 +292,14 @@ class MainWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        # client here
-        # callback 
-        # handler
+        self.user = User()
 
         self.setWindowTitle('CCoin Core')
+        self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
 
-        self.terminal_widget = TerminalWidget(self) 
+        self.terminal_widget = TerminalWidget(self.user, self) 
         self.main_widget = MainWidget(self) 
-        self.wallet_widget = WalletWidget(self) 
+        self.wallet_widget = WalletWidget(self.user, self) 
         self.overview_widget = OverviewWidget(self) 
 
         self.tabWidget = QtWidgets.QTabWidget()
