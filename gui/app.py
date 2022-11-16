@@ -38,9 +38,10 @@ class OverviewWidget(QWidget):
         super(QWidget, self).__init__(parent)
 
 class WalletWidget(QWidget):
-    def __init__(self, user, parent=None):
+    def __init__(self, user, blockchain, parent=None):
         super(QWidget, self).__init__(parent)
         self.user = user
+        self.blockchain = blockchain
 
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
@@ -77,13 +78,12 @@ class WalletWidget(QWidget):
         self.layout.addWidget(send_tx, 1)
 
     def sendTransaction(self):
-        from main import blockchain
         print([sum.text() for sum in self.info_fields['sums']])
         print([address.text() for address in self.info_fields['addresses']])
         print([txid.text() for txid in self.info_fields['txids']])
         print([int(vout.text()) for vout in self.info_fields['vouts']])
 
-        blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
+        self.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
         [address.text() for address in self.info_fields['addresses']],
         self.user.sk,
         [txid.text() for txid in self.info_fields['txids']],
@@ -128,8 +128,9 @@ class Terminal(QTextEdit):
         self.setStyleSheet("""QTextEdit { background-color: black; color: white }""")
         
 class TerminalInput(Terminal):
-    def __init__(self, terminal_output, user, prefix):
+    def __init__(self, terminal_output, user, prefix, blockchain):
         super().__init__()
+        self.blockchain = blockchain
         self.terminal_output = terminal_output
         self.user = user
         self.prefix = prefix
@@ -184,17 +185,15 @@ class TerminalInput(Terminal):
         self.setTextColor(QColor('white'))
 
     def __start_inf_mining(self):
-        from main import blockchain
 
         while True:
-            blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())
+            self.blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())
 
     def __mining_once(self):
         # from blockchain.blockchain import Blockchain
-        from main import blockchain
 
         # blk_info = Blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())      
-        blk_info = blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())      
+        blk_info = self.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())      
         return blk_info
 
     def __previous_command(self):
@@ -268,13 +267,13 @@ class TerminalOutput(Terminal):
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
 class TerminalWidget(QWidget):
-    def __init__(self, user, parent=None):
+    def __init__(self, user, blockchain, parent=None):
         super(QWidget, self).__init__(parent)
         self.prefix = f'{user.username}@ '
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.terminal_output = TerminalOutput(self.prefix)
-        self.terminal_input = TerminalInput(self.terminal_output, user, self.prefix)
+        self.terminal_input = TerminalInput(self.terminal_output, user, self.prefix, blockchain)
 
         self.layout.addWidget(self.terminal_output, 20)
         self.layout.addWidget(self.terminal_input, 1)
@@ -305,13 +304,14 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.user = User()
+        blockchain = Blockchain()
 
         self.setWindowTitle('CCoin Core')
         self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
 
-        self.terminal_widget = TerminalWidget(self.user, self) 
+        self.terminal_widget = TerminalWidget(self.user, blockchain, self) 
         self.main_widget = MainWidget(self) 
-        self.wallet_widget = WalletWidget(self.user, self) 
+        self.wallet_widget = WalletWidget(self.user, blockchain, self) 
         self.overview_widget = OverviewWidget(self) 
 
         self.tabWidget = QtWidgets.QTabWidget()
@@ -336,13 +336,18 @@ class MainWindow(QMainWindow):
         settingsMenu = menubar.addMenu('&Settings')
         helpMenu = menubar.addMenu('&Help')
         fileMenu.addAction(exitAction)
+
+    def closeEvent(self, event):
+        self.user.network_client.closeListening()
+        
         
 
 def fillChainTable(table):
-    from main import blockchain
-    chain = blockchain.get_chain()[::-1]
-    # chain = dict(reversed(chain))
-    for (i, block) in enumerate(chain):
-        item = QTableWidgetItem(f"{block['index']}")
-        f = table.setItem(i, 0, item)
-        table.setItem(i, 1, QTableWidgetItem(f"{block['header']['timestamp']}"))
+    # from main import blockchain
+    # chain = blockchain.get_chain()[::-1]
+    # # chain = dict(reversed(chain))
+    # for (i, block) in enumerate(chain):
+    #     item = QTableWidgetItem(f"{block['index']}")
+    #     f = table.setItem(i, 0, item)
+    #     table.setItem(i, 1, QTableWidgetItem(f"{block['header']['timestamp']}"))
+    pass
