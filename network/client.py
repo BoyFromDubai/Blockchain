@@ -26,7 +26,7 @@ class Client():
             except socket.gaierror:
                 return '127.0.0.1'
         finally:
-            sock.close()
+            sock.close() 
 
     def changeServerToConnectWith(self, ip_addr):
         with open('network/server.txt', 'w') as f:
