@@ -177,7 +177,12 @@ class Blockchain:
         f.write(bytes)
         f.close()
     
-    def __get_chain_length(self): return len(os.listdir('blockchain/blocks'))
+    def __get_chain_length(self): 
+        if not os.path.isdir('blockchain/blocks'): 
+            os.mkdir('blockchain/blocks')
+            return 0
+        else:
+            return len(os.listdir('blockchain/blocks')) 
 
     def mine_block(self, pk):
         emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], self.sk)
@@ -291,7 +296,9 @@ class Blockchain:
         return tx_data
 
     def __append_to_mempool(self, tx_bytes):
-
+        if not os.path.isdir('blockchain/mempool'): 
+            os.mkdir('blockchain/mempool')
+        
         with open('blockchain/mempool/mempool.dat', 'ab') as f:
             f.write(len(tx_bytes).to_bytes(self.mempool_tx_size_info, 'little'))
             f.write(tx_bytes)

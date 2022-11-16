@@ -1,6 +1,5 @@
 from cProfile import label
 from copy import copy
-from nis import match
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import QKeySequence, QColor, QTextCursor
 
