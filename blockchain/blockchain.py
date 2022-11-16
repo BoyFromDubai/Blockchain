@@ -305,9 +305,6 @@ class Blockchain:
 
         # with open('blockchain/mempool/mempool.dat', 'wb') as f:
         #     pass
-
-    def __read_mempool(self):
-        pass
             
     def get_chain(self): return data.get_chain()
 
