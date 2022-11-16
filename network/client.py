@@ -12,6 +12,15 @@ class Client():
             self.server_to_ask_for_peers = None
         self.peers = []
 
+    def changeServerToConnectWith(self, ip_addr):
+        with open('network/server.txt', 'w') as f:
+            f.write(ip_addr)
+        self.server_to_ask_for_peers = ip_addr
+
+    def sendData(self):
+        pass
+
+
     def __get_local_ip(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,15 +36,6 @@ class Client():
                 return '127.0.0.1'
         finally:
             sock.close()
-
-    def changeServerToConnectWith(self, ip_addr):
-        with open('network/server.txt', 'w') as f:
-            f.write(ip_addr)
-        self.server_to_ask_for_peers = ip_addr
-
-    def sendData(self):
-        pass
-
     
 
         
