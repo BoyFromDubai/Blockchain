@@ -22,7 +22,7 @@ class Client():
             return sock.getsockname()[0]
         except socket.error:
             try:
-                return socket.gethostbyname(socket.gethostname())
+                return socket.gethostbyname(socket.gethostname()) 
             except socket.gaierror:
                 return '127.0.0.1'
         finally:
