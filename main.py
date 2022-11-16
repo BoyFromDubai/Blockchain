@@ -7,7 +7,7 @@ from network.client import Client
 
 app = create_app()
 blockchain = Blockchain()
-wallet = Wallet()
+# wallet = Wallet()
 
 if __name__ == '__main__':
     client = Client()

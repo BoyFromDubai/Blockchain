@@ -7,6 +7,8 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from network.client import Client
+from wallet.wallet import Wallet
+import os
 
 import ecdsa
 import hashlib
@@ -20,11 +22,12 @@ class User():
     def __init__(self):
         self.username = 'ccoin_client'
         self.network_client = Client()
+        self.wallet = Wallet()
+        if os.path.exists('wallet/wallet.bin'):
+            with open('wallet/wallet.bin', 'rb') as f:
+                key = f.read()
 
-        with open('wallet/wallet.bin', 'rb') as f:
-            key = f.read()
-
-            self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+                self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
 
 class TestWindow(QWidget):
     def __init__(self, parent=None):
@@ -38,6 +41,7 @@ class WalletWidget(QWidget):
     def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
         self.user = user
+
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
         self.info_fields = {
@@ -123,26 +127,33 @@ class Terminal(QTextEdit):
 
         self.setStyleSheet("""QTextEdit { background-color: black; color: white }""")
         
-
 class TerminalInput(Terminal):
-    def __init__(self, terminal_output, user):
+    def __init__(self, terminal_output, user, prefix):
         super().__init__()
         self.terminal_output = terminal_output
-        
         self.user = user
-        self.prefix = f'{self.user.username}@ '
+        self.prefix = prefix
         self.history = ['']
         self.history_index = 0
 
         self.__clear_terminal()
 
-    def __add_info_to_output(self, cmd, msg):
-        self.terminal_output.setTextColor(QColor(17, 255, 0))
-        self.terminal_output.insertPlainText(self.prefix)
-        self.terminal_output.setTextColor(QColor('white')) 
-        self.terminal_output.insertPlainText(str(cmd) + '\n' + str(msg))
-        self.terminal_output.verticalScrollBar().setValue(self.terminal_output.verticalScrollBar().maximum())
+    def __check_keys(func):
+        def wrapper(*args):
+            if not os.path.exists('wallet/wallet.bin'):
+                message = '[WARNING] Private key wasn\'t generated!\nGenerating key...\n'
+                args[0].user.wallet.generateKeys()
 
+                message += 'Key generated successfully'
+                print(*args)
+                args[0].terminal_output.addEvent(args[1], message)
+
+            else:
+                func(*args)
+
+        return wrapper
+
+    @__check_keys
     def __execute_command(self, command):
         command_arr = command.split()
         res = ''
@@ -163,7 +174,9 @@ class TerminalInput(Terminal):
                 self.user.network_client.changeServerToConnectWith(command_arr[2])
 
         # self.__add_info_to_output(command, res)
-        self.terminal_output.addEvent(self.prefix, command, res)
+        self.terminal_output.addEvent(command, res)
+
+    
     def __clear_terminal(self):
         self.clear()
         self.setTextColor(QColor(17, 255, 0))
@@ -181,7 +194,7 @@ class TerminalInput(Terminal):
         from main import blockchain
 
         # blk_info = Blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())      
-        blk_info = blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())      
+        blk_info = blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())      
         return blk_info
 
     def __previous_command(self):
@@ -241,27 +254,27 @@ class TerminalInput(Terminal):
         super(Terminal, self).keyPressEvent(event)
 
 class TerminalOutput(Terminal):
-    def __init__(self):
+    def __init__(self, prefix):
         super().__init__()
+        self.prefix = prefix
         self.setReadOnly(True)
         self.insertPlainText('***CCoin Terminal***' + '\n'*2)
 
-    def addEvent(self, prefix, cmd, msg):
+    def addEvent(self, cmd, msg):
         self.setTextColor(QColor(17, 255, 0))
-        self.insertPlainText(prefix)
+        self.insertPlainText(self.prefix)
         self.setTextColor(QColor('white')) 
         self.insertPlainText(str(cmd) + '\n' + str(msg) + '\n\n')
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
-
 class TerminalWidget(QWidget):
     def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
+        self.prefix = f'{user.username}@ '
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.client = Client()
-        self.terminal_output = TerminalOutput()
-        self.terminal_input = TerminalInput(self.terminal_output, user)
+        self.terminal_output = TerminalOutput(self.prefix)
+        self.terminal_input = TerminalInput(self.terminal_output, user, self.prefix)
 
         self.layout.addWidget(self.terminal_output, 20)
         self.layout.addWidget(self.terminal_input, 1)

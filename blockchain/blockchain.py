@@ -58,10 +58,10 @@ class Blockchain:
         if not self.__get_chain_length():
             self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
 
-        with open('wallet/wallet.bin', 'rb') as f:
-            key = f.read()
+        # with open('wallet/wallet.bin', 'rb') as f:
+        #     key = f.read()
 
-            self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+        #     self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
         self.mempool_tx_size_info = 2
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
@@ -185,7 +185,7 @@ class Blockchain:
             return len(os.listdir('blockchain/blocks')) 
 
     def mine_block(self, pk):
-        emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], self.sk)
+        emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], sk=None)
         transactions = [emission]
         mempool = self.__get_mempool()[1:]
 
