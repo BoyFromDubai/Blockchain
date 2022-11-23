@@ -109,7 +109,6 @@ class Client():
         for_peers_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_of_peers_addr = (self.peers_server_ip, self.peers_server_port)
         for_peers_socket.connect(server_of_peers_addr)
-
         msg = msg.encode(self.msg_format)
         msg_len = str(len(msg)).encode(self.msg_format)
         msg_len += b' ' * (self.header_size - len(msg_len))
@@ -127,7 +126,8 @@ class Client():
             msg = conn.recv(msg_length)
             print(msg)
 
-            if msg_type == 'peers_answer':
+            if msg_type.decode(self.msg_format).strip() == 'peers_answer':
+                print(121)
                 self.__diconnection_message_to_peers_server()
 
     def changeServerToConnectWith(self, ip_addr):
