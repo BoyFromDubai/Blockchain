@@ -98,18 +98,27 @@ class Client():
         listening_thread.start()
 
     def __ask_for_peers(self):
+        msg = 'peers_request'
+        self.__send_msg_to_peers_server(msg)
+
+    def __diconnection_message_to_peers_server(self):
+        msg = 'DISCONNECTED'
+        self.__send_msg_to_peers_server(msg)
+            
+    def __send_msg_to_peers_server(self, msg):
         for_peers_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_of_peers_addr = (self.peers_server_ip, self.peers_server_port)
         for_peers_socket.connect(server_of_peers_addr)
 
-        msg = 'peers_request'.encode(self.msg_format)
+        msg = msg.encode(self.msg_format)
         msg_len = str(len(msg)).encode(self.msg_format)
         msg_len += b' ' * (self.header_size - len(msg_len))
         for_peers_socket.send(msg_len)
         for_peers_socket.send(msg)
-    
+        
     def __get_message(self, conn, addr):
         msg_length = conn.recv(self.header_size).decode(self.msg_format)
+        
         if msg_length:
             msg_length = int(msg_length)
             print(msg_length)
@@ -119,7 +128,7 @@ class Client():
             print(msg)
 
             if msg_type == 'peers_answer':
-                pass
+                self.__diconnection_message_to_peers_server()
 
     def changeServerToConnectWith(self, ip_addr):
         with open('network/server.txt', 'w') as f:
