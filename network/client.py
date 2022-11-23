@@ -121,6 +121,11 @@ class Client():
             if msg_type == 'peers_answer':
                 pass
 
+    def changeServerToConnectWith(self, ip_addr):
+        with open('network/server.txt', 'w') as f:
+            f.write(ip_addr)
+        self.peers_server_port = ip_addr
+
     def __start_listening(self):
 
         self.server.listen()
