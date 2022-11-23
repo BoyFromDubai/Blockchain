@@ -308,6 +308,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('CCoin Core')
         self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
+        self.setStyleSheet("background-color: grey;")
 
         self.terminal_widget = TerminalWidget(self.user, blockchain, self) 
         self.main_widget = MainWidget(self) 
