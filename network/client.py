@@ -128,7 +128,7 @@ class Client():
 
             if msg_type.decode(self.msg_format).strip() == 'peers_answer':
                 print(121)
-                self.__diconnection_message_to_peers_server()
+                # self.__diconnection_message_to_peers_server()
 
     def changeServerToConnectWith(self, ip_addr):
         with open('network/server.txt', 'w') as f:

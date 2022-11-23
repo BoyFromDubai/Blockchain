@@ -17,17 +17,68 @@ import argparse
 
 from blockchain.blockchain import Blockchain
 from network.client import Client
+from network.node import Node
+import socket
+
+class NewNode(Node):
+
+    # Python class constructor
+    def __init__(self, id=None, callback=None, max_connections=0):
+        super(NewNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
+        print("MyPeer2PeerNode: Started")
+
+    # all the methods below are called when things happen in the network.
+    # implement your network node behavior to create the required functionality.
+
+    def outbound_node_connected(self, node):
+        print("outbound_node_connected (" + self.id + "): " + node.id)
+        
+    def inbound_node_connected(self, node):
+        print("inbound_node_connected: (" + self.id + "): " + node.id)
+
+    def inbound_node_disconnected(self, node):
+        print("inbound_node_disconnected: (" + self.id + "): " + node.id)
+
+    def outbound_node_disconnected(self, node):
+        print("outbound_node_disconnected: (" + self.id + "): " + node.id)
+
+    def node_message(self, node, data):
+        print("node_message (" + self.id + ") from " + node.id + ": " + str(data))
+        
+    def node_disconnect_with_outbound_node(self, node):
+        print("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
+        
+    def node_request_to_stop(self):
+        print("node is requested to stop (" + self.id + "): ")
+
+    def __get_local_ip(self):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            # Use Google Public DNS server to determine own IP
+            sock.connect(('8.8.8.8', 80))
+
+            return sock.getsockname()[0]
+        except socket.error:
+            try:
+                return socket.gethostbyname(socket.gethostname()) 
+            except socket.gaierror:
+                return '127.0.0.1'
+        finally:
+            sock.close()
 
 class User():
     def __init__(self):
         self.username = 'ccoin_client'
-        self.network_client = Client()
+        # self.network_client = Client()
+        self.node = NewNode()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
             with open('wallet/wallet.bin', 'rb') as f:
                 key = f.read()
 
                 self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+                
 
 class TestWindow(QWidget):
     def __init__(self, parent=None):
@@ -165,14 +216,19 @@ class TerminalInput(Terminal):
             elif command_arr[1] == '-o' or command_arr[1] == '--once':
                 res = self.__mining_once()
 
-        elif command_arr[0] == 'show':
-            if command_arr[1] == 'srv-ip':
-                with open('network/server.txt', 'r') as f:
-                    res = f.read()
+        if command_arr[0] == 'p2p':
+            if command_arr[1] == 'connnect' or command_arr[1] == '-c':
+                self.user.node.connect_with_node(command_arr[2], self.user.node.port)
 
-        elif command_arr[0] == 'add':
-            if command_arr[1] == 'srv-ip':
-                self.user.network_client.changeServerToConnectWith(command_arr[2])
+
+        # elif command_arr[0] == 'show':
+        #     if command_arr[1] == 'srv-ip':
+        #         with open('network/server.txt', 'r') as f:
+        #             res = f.read()
+
+        # elif command_arr[0] == 'add':
+        #     if command_arr[1] == 'srv-ip':
+        #         self.user.network_client.changeServerToConnectWith(command_arr[2])
 
         # self.__add_info_to_output(command, res)
         self.terminal_output.addEvent(command, res)
