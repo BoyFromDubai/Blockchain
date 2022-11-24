@@ -72,6 +72,7 @@ class User():
         self.username = 'ccoin_client'
         # self.network_client = Client()
         self.node = NewNode()
+        self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
             with open('wallet/wallet.bin', 'rb') as f:
@@ -198,7 +199,7 @@ class TerminalInput(Terminal):
 
                 message += 'Key generated successfully'
                 print(*args)
-                args[0].terminal_output.addEvent(args[1], message)
+                args[0].__print_event(args[1], message)
 
             else:
                 func(*args)
@@ -216,9 +217,14 @@ class TerminalInput(Terminal):
             elif command_arr[1] == '-o' or command_arr[1] == '--once':
                 res = self.__mining_once()
 
-        if command_arr[0] == 'p2p':
-            if command_arr[1] == 'connnect' or command_arr[1] == '-c':
+        if command_arr[0] == 'network':
+            if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 self.user.node.connect_with_node(command_arr[2], self.user.node.port)
+
+            elif command_arr[1] == '-l' or command_arr[1] == '--list':
+                nodes = self.user.node.outboundNodes()
+                
+                for node in nodes: res += str(node)
 
 
         # elif command_arr[0] == 'show':
@@ -231,9 +237,10 @@ class TerminalInput(Terminal):
         #         self.user.network_client.changeServerToConnectWith(command_arr[2])
 
         # self.__add_info_to_output(command, res)
-        self.terminal_output.addEvent(command, res)
+        self.__print_event(command, res)
 
-    
+    def __print_event(self, command, res):
+        self.terminal_output.addEvent(command, res)
     def __clear_terminal(self):
         self.clear()
         self.setTextColor(QColor(17, 255, 0))

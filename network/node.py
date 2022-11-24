@@ -63,6 +63,10 @@ class Node(threading.Thread):
     def all_nodes(self):
         """Return a list of all the nodes, inbound and outbound, that are connected with this node."""
         return self.nodes_inbound + self.nodes_outbound
+    def outboundNodes(self):
+        return self.nodes_outbound
+    def inboundNodes(self):
+        return self.nodes_inbound
 
     def debug_print(self, message):
         """When the debug flag is set to True, all debug messages are printed in the console."""
@@ -128,7 +132,7 @@ class Node(threading.Thread):
         if host == self.host and port == self.port:
             print("connect_with_node: Cannot connect with yourself!!")
             return False
-
+        print(threading.current_thread().name)
         # Check if node is already connected with this node!
         for node in self.nodes_outbound:
             if node.host == host and node.port == port:
@@ -139,6 +143,7 @@ class Node(threading.Thread):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.debug_print("connecting to %s port %s" % (host, port))
             sock.connect((host, port))
+            print('Hello from thread!')
 
             # Basic information exchange (not secure) of the id's of the nodes!
             sock.send((self.id + ":" + str(self.port)).encode('utf-8')) # Send my id and port to the connected node!
