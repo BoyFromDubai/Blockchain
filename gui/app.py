@@ -72,7 +72,7 @@ class CCoinNode(Node):
 class User():
     def __init__(self):
         self.username = 'ccoin_client'
-        self.network_client = Node('192.168.0.116', 9999)
+        self.network_client = Node(self.__get_local_ip(), 9999)
         self.node = CCoinNode()
         self.node.start()
         self.wallet = Wallet()
@@ -81,6 +81,22 @@ class User():
                 key = f.read()
 
                 self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+    
+    def __get_local_ip(self):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            # Use Google Public DNS server to determine own IP
+            sock.connect(('8.8.8.8', 80))
+
+            return sock.getsockname()[0]
+        except socket.error:
+            try:
+                return socket.gethostbyname(socket.gethostname()) 
+            except socket.gaierror:
+                return '127.0.0.1'
+        finally:
+            sock.close()
                 
 
 class TestWindow(QWidget):
