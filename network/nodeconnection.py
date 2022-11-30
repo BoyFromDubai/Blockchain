@@ -47,7 +47,7 @@ class NodeConnection(threading.Thread):
 
         # End of transmission character for the network streaming messages.
         # self.EOT_CHAR = 0x04.to_bytes(1, 'big')
-        self.EOT_CHAR = 0x04FDDFFD.to_bytes(2, 'big')
+        self.EOT_CHAR = 0x04FDDFFD.to_bytes(4, 'big')
 
         # Datastore to store additional information concerning the node.
         self.info = {}
@@ -64,8 +64,7 @@ class NodeConnection(threading.Thread):
            is closed. Compression can be enabled by using zlib, bzip2 or lzma. When enabled the data is compressed and send to
            the client. This could reduce the network bandwith when sending large data chunks.
            """
-        print(type(data))
-        print(threading.current_thread().name)
+
         if isinstance(data, str):
             try:
                 self.sock.sendall( data.encode(encoding_type) + self.EOT_CHAR )

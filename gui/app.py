@@ -6,7 +6,7 @@ from PyQt5.QtGui import QKeySequence, QColor, QTextCursor
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from network.client import Client
+# from network.client import Node
 from wallet.wallet import Wallet
 import os
 
@@ -17,7 +17,8 @@ import argparse
 
 from blockchain.blockchain import Blockchain
 # from network.client import Client
-from network.node import Node
+# from network.node import Node
+from network.client import Node
 # from p2pnetwork.node import Node
 import socket
 
@@ -71,7 +72,7 @@ class CCoinNode(Node):
 class User():
     def __init__(self):
         self.username = 'ccoin_client'
-        # self.network_client = Client()
+        self.network_client = Node('192.168.0.116', 9999)
         self.node = CCoinNode()
         self.node.start()
         self.wallet = Wallet()

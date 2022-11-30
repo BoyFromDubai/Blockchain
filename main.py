@@ -1,7 +1,6 @@
 from website import create_app
 from gui.app import MainWindow, QApplication
 import sys
-from network.client import Client
 
 app = create_app()
 # wallet = Wallet()
