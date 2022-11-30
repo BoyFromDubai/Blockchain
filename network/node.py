@@ -18,33 +18,25 @@ class Node(threading.Thread):
             max_connections: (optional) limiting the maximum nodes that are able to connect to this node."""
         super(Node, self).__init__()
 
-        # When this flag is set, the node will stop and close
         self.terminate_flag = threading.Event()
 
-        # Server details, host (or ip) to bind to and the port
         self.host = host
         self.port = port
 
-        # Events are send back to the given callback
         self.callback = callback
 
-        # Nodes that have established a connection with this node
         self.nodes_inbound = []  # Nodes that are connect with us N->(US)
 
-        # Nodes that this nodes is connected to
         self.nodes_outbound = []  # Nodes that we are connected to (US)->N
 
-        # A list of nodes that should be reconnected to whenever the connection was lost
         self.reconnect_to_nodes = []
 
-        # Create a unique ID for each node if the ID is not given.
         if id == None:
             self.id = self.generate_id()
 
         else:
             self.id = str(id) # Make sure the ID is a string!
 
-        # Start the TCP/IP server
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.init_server()
 
@@ -56,6 +48,9 @@ class Node(threading.Thread):
         # Connection limit of inbound nodes (nodes that connect to us)
         self.max_connections = max_connections
 
+        self.SIZE_FIELD = 16
+        self.MSG_TYPE_FIELD = 32
+
         # Debugging on or off!
         self.debug = False
 
@@ -63,8 +58,10 @@ class Node(threading.Thread):
     def all_nodes(self):
         """Return a list of all the nodes, inbound and outbound, that are connected with this node."""
         return self.nodes_inbound + self.nodes_outbound
+    
     def outboundNodes(self):
         return self.nodes_outbound
+    
     def inboundNodes(self):
         return self.nodes_inbound
 
@@ -94,29 +91,29 @@ class Node(threading.Thread):
         print("- Total nodes connected with us: %d" % len(self.nodes_inbound))
         print("- Total nodes connected to     : %d" % len(self.nodes_outbound))
 
-    def send_to_nodes(self, data, exclude=[], compression='none'):
+    def send_to_nodes(self, data, exclude=[]):
         """ Send a message to all the nodes that are connected with this node. data is a python variable which is
             converted to JSON that is send over to the other node. exclude list gives all the nodes to which this
             data should not be sent.
             TODO: When sending was not successfull, the user is not notified."""
-        self.message_count_send = self.message_count_send + 1
-        for n in self.nodes_inbound:
-            if n in exclude:
-                self.debug_print("Node send_to_nodes: Excluding node in sending the message")
-            else:
-                self.send_to_node(n, data, compression)
+        self.message_count_send += 1
+        # for n in self.nodes_inbound:
+        #     if n in exclude:
+        #         self.debug_print("Node send_to_nodes: Excluding node in sending the message")
+        #     else:
+        #         self.send_to_node(n, data, compression)
 
         for n in self.nodes_outbound:
             if n in exclude:
                 self.debug_print("Node send_to_nodes: Excluding node in sending the message")
             else:
-                self.send_to_node(n, data, compression)
+                self.send_to_node(n, data)
 
-    def send_to_node(self, n, data, compression='none'):
+    def send_to_node(self, n, data):
         """ Send the data to the node n if it exists."""
         self.message_count_send = self.message_count_send + 1
         if n in self.nodes_inbound or n in self.nodes_outbound:
-            n.send(data, compression=compression)
+            n.send(data)
 
         else:
             self.debug_print("Node send_to_node: Could not send the data, node is not found!")
@@ -132,7 +129,6 @@ class Node(threading.Thread):
         if host == self.host and port == self.port:
             print("connect_with_node: Cannot connect with yourself!!")
             return False
-        print(threading.current_thread().name)
         # Check if node is already connected with this node!
         for node in self.nodes_outbound:
             if node.host == host and node.port == port:
@@ -143,12 +139,13 @@ class Node(threading.Thread):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.debug_print("connecting to %s port %s" % (host, port))
             sock.connect((host, port))
-            print('Hello from thread!')
-
+            conn_msg = (self.id + ":" + str(self.port)).encode('utf-8')
+            msg_type = 'connection'
             # Basic information exchange (not secure) of the id's of the nodes!
             sock.send((self.id + ":" + str(self.port)).encode('utf-8')) # Send my id and port to the connected node!
             connected_node_id = sock.recv(4096).decode('utf-8') # When a node is connected, it sends its id!
-
+            print()
+            print(connected_node_id)
             # Cannot connect with yourself
             if self.id == connected_node_id:
                 print("connect_with_node: You cannot connect with yourself?!")
@@ -249,6 +246,7 @@ class Node(threading.Thread):
                     connected_node_id   = connection.recv(4096).decode('utf-8')
                     if ":" in connected_node_id:
                         (connected_node_id, connected_node_port) = connected_node_id.split(':') # When a node is connected, it sends it id!
+                    
                     connection.send(self.id.encode('utf-8')) # Send my id to the connected node!
 
                     thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], connected_node_port)

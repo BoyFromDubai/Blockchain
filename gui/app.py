@@ -16,15 +16,16 @@ import threading
 import argparse
 
 from blockchain.blockchain import Blockchain
-from network.client import Client
+# from network.client import Client
 from network.node import Node
+# from p2pnetwork.node import Node
 import socket
 
-class NewNode(Node):
+class CCoinNode(Node):
 
     # Python class constructor
     def __init__(self, id=None, callback=None, max_connections=0):
-        super(NewNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
+        super(CCoinNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
         print("MyPeer2PeerNode: Started")
 
     # all the methods below are called when things happen in the network.
@@ -71,7 +72,7 @@ class User():
     def __init__(self):
         self.username = 'ccoin_client'
         # self.network_client = Client()
-        self.node = NewNode()
+        self.node = CCoinNode()
         self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
@@ -225,6 +226,17 @@ class TerminalInput(Terminal):
                 nodes = self.user.node.outboundNodes()
                 
                 for node in nodes: res += str(node)
+
+        if command_arr[0] == 'send':
+            file_info = ''
+
+            with open('blockchain/blocks/blk_0010.dat', 'rb') as f:
+                file_info = f.read()
+
+            # print()
+            # print(file_info)
+            print(file_info)
+            self.user.node.send_to_nodes(file_info)
 
 
         # elif command_arr[0] == 'show':
