@@ -46,7 +46,8 @@ class NodeConnection(threading.Thread):
         self.id = str(id) # Make sure the ID is a string
 
         # End of transmission character for the network streaming messages.
-        self.EOT_CHAR = 0x04.to_bytes(1, 'big')
+        # self.EOT_CHAR = 0x04.to_bytes(1, 'big')
+        self.EOT_CHAR = 0x04FDDFFD.to_bytes(2, 'big')
 
         # Datastore to store additional information concerning the node.
         self.info = {}
@@ -143,7 +144,7 @@ class NodeConnection(threading.Thread):
 
                 while eot_pos > 0:
                     packet = buffer[:eot_pos]
-                    buffer = buffer[eot_pos + 1:]
+                    buffer = buffer[eot_pos + 4:]
 
                     self.main_node.message_count_recv += 1
                     self.main_node.node_message( self, self.parse_packet(packet) )
