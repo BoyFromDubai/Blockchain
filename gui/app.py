@@ -22,52 +22,52 @@ from network.client import Node
 # from p2pnetwork.node import Node
 import socket
 
-class CCoinNode(Node):
+# class CCoinNode(Node):
 
-    # Python class constructor
-    def __init__(self, id=None, callback=None, max_connections=0):
-        super(CCoinNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
-        print("MyPeer2PeerNode: Started")
+#     # Python class constructor
+#     def __init__(self, id=None, callback=None, max_connections=0):
+#         super(CCoinNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
+#         print("MyPeer2PeerNode: Started")
 
-    # all the methods below are called when things happen in the network.
-    # implement your network node behavior to create the required functionality.
+#     # all the methods below are called when things happen in the network.
+#     # implement your network node behavior to create the required functionality.
 
-    def outbound_node_connected(self, node):
-        print("outbound_node_connected (" + self.id + "): " + node.id)
+#     def outbound_node_connected(self, node):
+#         print("outbound_node_connected (" + self.id + "): " + node.id)
         
-    def inbound_node_connected(self, node):
-        print("inbound_node_connected: (" + self.id + "): " + node.id)
+#     def inbound_node_connected(self, node):
+#         print("inbound_node_connected: (" + self.id + "): " + node.id)
 
-    def inbound_node_disconnected(self, node):
-        print("inbound_node_disconnected: (" + self.id + "): " + node.id)
+#     def inbound_node_disconnected(self, node):
+#         print("inbound_node_disconnected: (" + self.id + "): " + node.id)
 
-    def outbound_node_disconnected(self, node):
-        print("outbound_node_disconnected: (" + self.id + "): " + node.id)
+#     def outbound_node_disconnected(self, node):
+#         print("outbound_node_disconnected: (" + self.id + "): " + node.id)
 
-    def node_message(self, node, data):
-        print("node_message (" + self.id + ") from " + node.id + ": " + str(data))
+#     def node_message(self, node, data):
+#         print("node_message (" + self.id + ") from " + node.id + ": " + str(data))
         
-    def node_disconnect_with_outbound_node(self, node):
-        print("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
+#     def node_disconnect_with_outbound_node(self, node):
+#         print("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
         
-    def node_request_to_stop(self):
-        print("node is requested to stop (" + self.id + "): ")
+#     def node_request_to_stop(self):
+#         print("node is requested to stop (" + self.id + "): ")
 
-    def __get_local_ip(self):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     def __get_local_ip(self):
+#         try:
+#             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-            # Use Google Public DNS server to determine own IP
-            sock.connect(('8.8.8.8', 80))
+#             # Use Google Public DNS server to determine own IP
+#             sock.connect(('8.8.8.8', 80))
 
-            return sock.getsockname()[0]
-        except socket.error:
-            try:
-                return socket.gethostbyname(socket.gethostname()) 
-            except socket.gaierror:
-                return '127.0.0.1'
-        finally:
-            sock.close()
+#             return sock.getsockname()[0]
+#         except socket.error:
+#             try:
+#                 return socket.gethostbyname(socket.gethostname()) 
+#             except socket.gaierror:
+#                 return '127.0.0.1'
+#         finally:
+#             sock.close()
 
 class User():
     def __init__(self):
@@ -208,6 +208,8 @@ class TerminalInput(Terminal):
         self.history = ['']
         self.history_index = 0
 
+
+
         self.__clear_terminal()
 
     def __check_keys(func):
@@ -238,8 +240,11 @@ class TerminalInput(Terminal):
 
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
-                self.user.node.connectWithNode(command_arr[2], self.user.node.port)
-
+                try:
+                    self.user.node.connectWithNode(command_arr[2], self.user.node.port)
+                    self.user.node.sendMsgToAllNodes(self.user.node.types['version'], b'')
+                except Exception as e:
+                    print(e)
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
                 nodes = self.user.node.outboundNodes()
                 

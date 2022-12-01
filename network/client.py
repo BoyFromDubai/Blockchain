@@ -1,5 +1,7 @@
 import socket
 import threading
+import os
+
 class Connection(threading.Thread):
     def __init__(self, sock, ip, port):
         super(Connection, self).__init__()
@@ -16,6 +18,9 @@ class Connection(threading.Thread):
     def send(self, type, data):
         packet = self.__create_packet(type, data)
         self.sock.send(packet)
+
+    def __create_verack(self):
+        return len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
 
     def __create_packet(self, type, data):
         msg = b''
@@ -44,6 +49,8 @@ class Connection(threading.Thread):
                             buff += self.sock.recv(read_size)
                         else:
                             buff += self.sock.recv(size - i)
+                    
+                    self.send(type, buff)
 
                     print(f'MESSAGE from {self.port}')
                     print(buff)
@@ -85,7 +92,10 @@ class Node(threading.Thread):
 
         self.STOP_FLAG = threading.Event()
 
- 
+        self.types = {
+            'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
+            'verack': b'\x00\x00\x00\x00\x00\x00\x00\x01',
+        }
 
     def __init_server(self):
         self.sock.bind((self.ip, self.port))
