@@ -51,7 +51,7 @@ class Connection(threading.Thread):
         version_answer = self.main_node.meaning_of_msg['verack']
         match meaning:
             case version_request:
-                self.__msg_inv()
+                self.__msg_inv(msg)
                 
     def run(self):
         while not self.STOP_FLAG.is_set():
