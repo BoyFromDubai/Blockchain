@@ -71,12 +71,11 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class Node(threading.Thread):
-    def __init__(self, ip, port, name):
+    def __init__(self, ip, port):
         super(Node, self).__init__()
 
         self.ip = ip
         self.port = port
-        self.name = name
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__init_server()
