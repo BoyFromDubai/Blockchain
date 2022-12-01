@@ -17,8 +17,8 @@ import argparse
 
 from blockchain.blockchain import Blockchain
 # from network.client import Client
-# from network.node import Node
-from network.client import Node
+from network.node import Node
+# from network.client import Node
 # from p2pnetwork.node import Node
 import socket
 
@@ -72,8 +72,9 @@ class CCoinNode(Node):
 class User():
     def __init__(self):
         self.username = 'ccoin_client'
-        self.network_client = Node(self.__get_local_ip(), 9999)
+        # self.network_client = Node(self.__get_local_ip(), 9999)
         self.node = CCoinNode()
+        # self.node = Node(self.__get_local_ip(), 9999)
         self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
@@ -431,8 +432,8 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(exitAction)
 
     def closeEvent(self, event):
-        self.user.network_client.closeListening()
-        
+        # self.user.network_client.closeListening()
+        self.user.node.stop()
         
 
 def fillChainTable(table):
