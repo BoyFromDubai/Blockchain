@@ -43,7 +43,7 @@ class Connection(threading.Thread):
                 
                 if header != b'':
                     type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
-                    msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.self.SIZE_FIELD_OFFSET]
+                    msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
                     size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
                     print(type)
                     print(msg_meaning)
@@ -56,8 +56,6 @@ class Connection(threading.Thread):
                             buff += self.sock.recv(read_size)
                         else:
                             buff += self.sock.recv(size - i)
-                    
-                    self.send(type, buff)
 
                     print(f'MESSAGE from {self.port}')
                     print(buff)
