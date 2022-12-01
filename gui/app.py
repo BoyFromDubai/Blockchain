@@ -238,7 +238,7 @@ class TerminalInput(Terminal):
 
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
-                self.user.node.connect_with_node(command_arr[2], self.user.node.port)
+                self.user.node.connectWithNode(command_arr[2], self.user.node.port)
 
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
                 nodes = self.user.node.outboundNodes()

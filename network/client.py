@@ -120,6 +120,7 @@ class Node(threading.Thread):
                     # print(connection)
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
+                    print(conn_ip)
                     sock = Connection(connection, conn_ip, conn_port)
                     sock.start()
                     self.connections.append(sock)
