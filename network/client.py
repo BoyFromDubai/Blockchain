@@ -12,8 +12,9 @@ class Connection(threading.Thread):
         self.STOP_FLAG = threading.Event()
 
         self.TYPE_FIELD_OFFSET = 0
-        self.SIZE_FIELD_OFFSET = 8
-        self.MSG_FIELD_OFFSET = 24
+        self.MEANING_OF_MSG_OFFSET = 1
+        self.SIZE_FIELD_OFFSET = 9
+        self.MSG_FIELD_OFFSET = 25
 
     def send(self, type, data):
         packet = self.__create_packet(type, data)
@@ -29,6 +30,9 @@ class Connection(threading.Thread):
         msg += data
 
         return msg
+    
+    def __answer(self, type):
+        pass
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -37,9 +41,11 @@ class Connection(threading.Thread):
                 header = self.sock.recv(self.MSG_FIELD_OFFSET)
                 
                 if header != b'':
-                    type = header[self.TYPE_FIELD_OFFSET:self.SIZE_FIELD_OFFSET]
+                    type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
+                    msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.self.SIZE_FIELD_OFFSET]
                     size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
                     print(type)
+                    print(msg_meaning)
                     print(size)
 
                     read_size = 1024
@@ -91,8 +97,12 @@ class Node(threading.Thread):
         self.MAX_CONNECTIONS = 8
 
         self.STOP_FLAG = threading.Event()
-
         self.types = {
+            'answer': b'\x00',
+            'request': b'\x01',
+
+        }
+        self.meanings_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'verack': b'\x00\x00\x00\x00\x00\x00\x00\x01',
         }

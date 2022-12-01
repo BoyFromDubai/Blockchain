@@ -242,7 +242,7 @@ class TerminalInput(Terminal):
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 try:
                     self.user.node.connectWithNode(command_arr[2], self.user.node.port)
-                    self.user.node.sendMsgToAllNodes(self.user.node.types['version'], b'')
+                    self.user.node.sendMsgToAllNodes(self.user.node.types['request'], self.user.node.meanings_of_msg['version'], b'')
                 except Exception as e:
                     print(e)
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
