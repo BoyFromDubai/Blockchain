@@ -3,7 +3,7 @@ import threading
 import os
 
 class Connection(threading.Thread):
-    def __init__(self, sock, ip, port):
+    def __init__(self, main_node, sock, ip, port):
         super(Connection, self).__init__()
         self.ip = ip
         self.port = port
@@ -16,12 +16,15 @@ class Connection(threading.Thread):
         self.SIZE_FIELD_OFFSET = 9
         self.MSG_FIELD_OFFSET = 25
 
+        self.main_node = main_node
+
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
         self.sock.send(packet)
 
-    def __create_verack(self):
-        return len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
+    def __send_verack(self):
+        height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
+        self.send(self.main_node.types['answer'], self.main_node.meaning_of_msg['verack'], height)
 
     def __create_packet(self, type, meaning, data):
         msg = b''
@@ -32,8 +35,11 @@ class Connection(threading.Thread):
 
         return msg
     
-    def __answer(self, type):
-        pass
+    def __answer(self, meaning):
+        version_request = self.main_node.meaning_of_msg['version']
+        match meaning:
+            case version_request:
+                self.__send_verack()
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -49,16 +55,20 @@ class Connection(threading.Thread):
                     print(msg_meaning)
                     print(size)
 
-                    read_size = 1024
+                    if type == self.main_node.types['request']:
+                        self.__answer(msg_meaning)
+                    
+                    else:
+                        read_size = 1024
 
-                    for i in range(0, size, read_size):
-                        if size - i > read_size:
-                            buff += self.sock.recv(read_size)
-                        else:
-                            buff += self.sock.recv(size - i)
+                        for i in range(0, size, read_size):
+                            if size - i > read_size:
+                                buff += self.sock.recv(read_size)
+                            else:
+                                buff += self.sock.recv(size - i)
 
-                    print(f'MESSAGE from {self.port}')
-                    print(buff)
+                        print(f'MESSAGE from {self.port}')
+                        print(buff)
                     # buff += chunk
 
             except socket.timeout:
@@ -101,7 +111,7 @@ class Node(threading.Thread):
             'request': b'\x01',
 
         }
-        self.meanings_of_msg = {
+        self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'verack': b'\x00\x00\x00\x00\x00\x00\x00\x01',
         }
@@ -115,7 +125,7 @@ class Node(threading.Thread):
         if len(self.connections) < self.MAX_CONNECTIONS:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((ip, port))
-            thread = Connection(sock, ip, port)
+            thread = Connection(self, sock, ip, port,)
             thread.start()
             self.connections.append(thread)
         else:
@@ -140,7 +150,7 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
-                    sock = Connection(connection, conn_ip, conn_port)
+                    sock = Connection(self, connection, conn_ip, conn_port)
                     sock.start()
                     self.connections.append(sock)
                 else:
