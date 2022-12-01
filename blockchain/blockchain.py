@@ -55,7 +55,7 @@ block_structure = {
 
 class Blockchain:
     def __init__(self):
-        if not self.__get_chain_length():
+        if not self.getChainLen():
             self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
 
         # with open('wallet/wallet.bin', 'rb') as f:
@@ -172,12 +172,12 @@ class Blockchain:
         return value
     
     def __append_block(self, bytes):
-        file = f"blockchain/blocks/blk_{str(self.__get_chain_length() + 1).zfill(NUMS_NUM)}.dat"
+        file = f"blockchain/blocks/blk_{str(self.getChainLen() + 1).zfill(NUMS_NUM)}.dat"
         f = open(file, 'wb')
         f.write(bytes)
         f.close()
     
-    def __get_chain_length(self): 
+    def getChainLen(self): 
         if not os.path.isdir('blockchain/blocks'): 
             os.mkdir('blockchain/blocks')
             return 0

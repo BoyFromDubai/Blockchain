@@ -3,13 +3,15 @@ import threading
 import os
 
 class Connection(threading.Thread):
-    def __init__(self, main_node, sock, ip, port):
+    def __init__(self, main_node, sock, ip, port, blockchain):
         super(Connection, self).__init__()
         self.ip = ip
         self.port = port
         self.sock = sock
         self.sock.settimeout(1.0)
         self.STOP_FLAG = threading.Event()
+        
+        self.blockcain = blockchain
 
         self.TYPE_FIELD_OFFSET = 0
         self.MEANING_OF_MSG_OFFSET = 1
@@ -22,7 +24,7 @@ class Connection(threading.Thread):
         packet = self.__create_packet(type, meaning, data)
         self.sock.send(packet)
 
-    def __send_verack(self):
+    def __msg_verack(self):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['answer'], self.main_node.meaning_of_msg['verack'], height)
 
@@ -39,8 +41,18 @@ class Connection(threading.Thread):
         version_request = self.main_node.meaning_of_msg['version']
         match meaning:
             case version_request:
-                self.__send_verack()
+                self.__msg_verack()
 
+    def __msg_inv(self, msg):
+        if int.from_bytes(msg, 'big') < self.blockcain.getChainLen():
+            print(15555)
+
+    def __get(self, meaning, msg):
+        version_answer = self.main_node.meaning_of_msg['verack']
+        match meaning:
+            case version_request:
+                self.__msg_inv()
+                
     def run(self):
         while not self.STOP_FLAG.is_set():
             try:    # print(12)
@@ -67,7 +79,9 @@ class Connection(threading.Thread):
                             else:
                                 buff += self.sock.recv(size - i)
 
-                        print(f'MESSAGE from {self.port}')
+                        self.__get(msg_meaning, buff)
+
+                        print(f'MESSAGE from {self.ip}')
                         print(buff)
                     # buff += chunk
 
@@ -93,7 +107,7 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class Node(threading.Thread):
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, blockchain):
         super(Node, self).__init__()
 
         self.ip = ip
@@ -101,6 +115,7 @@ class Node(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__init_server()
+        self.blockchain = blockchain
         
         self.connections = []
         self.MAX_CONNECTIONS = 8
@@ -125,7 +140,7 @@ class Node(threading.Thread):
         if len(self.connections) < self.MAX_CONNECTIONS:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((ip, port))
-            thread = Connection(self, sock, ip, port,)
+            thread = Connection(self, sock, ip, port, self.blockchain)
             thread.start()
             self.connections.append(thread)
         else:
@@ -150,7 +165,7 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
-                    sock = Connection(self, connection, conn_ip, conn_port)
+                    sock = Connection(self, connection, conn_ip, conn_port, self.blockchain)
                     sock.start()
                     self.connections.append(sock)
                 else:

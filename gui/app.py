@@ -70,11 +70,11 @@ import socket
 #             sock.close()
 
 class User():
-    def __init__(self):
+    def __init__(self, blockchain):
         self.username = 'ccoin_client'
         # self.network_client = Node(self.__get_local_ip(), 9999)
         # self.node = CCoinNode()
-        self.node = Node(self.__get_local_ip(), 9999)
+        self.node = Node(self.__get_local_ip(), 9999, blockchain)
         self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
@@ -401,16 +401,16 @@ class MainWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.user = User()
-        blockchain = Blockchain()
+        self.blockchain = Blockchain()
+        self.user = User(self.blockchain)
 
         self.setWindowTitle('CCoin Core')
         self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
         self.setStyleSheet("background-color: grey;")
 
-        self.terminal_widget = TerminalWidget(self.user, blockchain, self) 
+        self.terminal_widget = TerminalWidget(self.user, self.blockchain, self) 
         self.main_widget = MainWidget(self) 
-        self.wallet_widget = WalletWidget(self.user, blockchain, self) 
+        self.wallet_widget = WalletWidget(self.user, self.blockchain, self) 
         self.overview_widget = OverviewWidget(self) 
 
         self.tabWidget = QtWidgets.QTabWidget()
