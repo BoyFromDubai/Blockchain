@@ -16,16 +16,17 @@ class Connection(threading.Thread):
         self.SIZE_FIELD_OFFSET = 9
         self.MSG_FIELD_OFFSET = 25
 
-    def send(self, type, data):
-        packet = self.__create_packet(type, data)
+    def send(self, type, meaning, data):
+        packet = self.__create_packet(type, meaning, data)
         self.sock.send(packet)
 
     def __create_verack(self):
         return len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
 
-    def __create_packet(self, type, data):
+    def __create_packet(self, type, meaning, data):
         msg = b''
         msg += type
+        msg += meaning
         msg += len(data).to_bytes(self.MSG_FIELD_OFFSET-self.SIZE_FIELD_OFFSET, 'big')
         msg += data
 
@@ -122,9 +123,9 @@ class Node(threading.Thread):
         else:
             print('MAX CONNECTIONS REACHED!')
 
-    def sendMsgToAllNodes(self, type, data):
+    def sendMsgToAllNodes(self, type, meaning, data):
         for sock in self.connections:
-            sock.send(type, data)
+            sock.send(type, meaning, data)
 
     def stop(self):
         self.STOP_FLAG.set()        
