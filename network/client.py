@@ -33,30 +33,55 @@ class Connection(threading.Thread):
 
         return msg
     
-    def __answer(self, meaning):
+
+
+    def __answer(self, request_msg_meaning):
         version_request = self.main_node.meaning_of_msg['version']
 
-        match meaning:
-            case version_request:
-                self.__answer_version_msg()
+        if request_msg_meaning == self.main_node.meaning_of_msg['version']:
+            self.__answer_version_msg()
+
+        elif request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
+            self.__answer_get_blocks_msg()
+        else:
+            pass
 
     def __answer_version_msg(self):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
-
+    def __answer_get_blocks_msg(self):
+        pass
+    
         
 
 
-    def __get(self, meaning, msg):
+    def __get(self, info_msg_meaning, msg):
         version_answer = self.main_node.meaning_of_msg['version']
+        get_blocks_answer = self.main_node.meaning_of_msg['get_blocks']
 
-        match meaning:
-            case version_answer:
-                self.__get_version_msg(msg)
-
+        
+        if info_msg_meaning == self.main_node.meaning_of_msg['version']:
+            self.__get_version_msg(msg)
+        elif info_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
+            pass
+            
+        else:
+            pass
+        # match meaning:
+        #     case 1:
+        #         pass
+        #     case version_answer:
+        #         pass
+        #     case _:
+        #         pass
+            # case version_answer:
+            # case get_blocks_answer:
+                # pass 
+        
     def __get_version_msg(self, msg):
         if int.from_bytes(msg, 'big') > self.main_node.chain_len:
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b'')
+            pass
+            # self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b'f')
 
     def __get_msg(self):
         
@@ -200,9 +225,11 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
-                    sock = Connection(self, connection, conn_ip, conn_port, self.debug_print)
-                    sock.start()
-                    self.connections.append(sock)
+                    connection = Connection(self, connection, conn_ip, conn_port, self.debug_print)
+                    connection.start()
+                    self.connections.append(connection)
+                    connection.send(self.types['request'], self.meaning_of_msg['version'], b'')
+
                 else:
                     print('MAX CONNECTIONS REACHED!')
 
