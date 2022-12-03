@@ -204,12 +204,9 @@ class Node(threading.Thread):
         self.sock.listen(1)
 
     def close_connection(self, conn):
-        for cur_conn in self.connections:
-            if cur_conn == conn:
-                print(True)
-            else:
-                print(False)
-
+        for i in range(len(self.connections)):
+            if self.connections[i] == conn:
+                del self.connections[i]
 
     def connectWithNode(self, ip, port):
         try:
