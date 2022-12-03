@@ -21,6 +21,7 @@ from blockchain.blockchain import Blockchain
 from network.client import Node
 # from p2pnetwork.node import Node
 import socket
+import sys
 
 # class CCoinNode(Node):
 

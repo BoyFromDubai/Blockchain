@@ -64,6 +64,10 @@ class Blockchain:
         #     self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
         self.mempool_tx_size_info = 2
 
+    def __create_genezis_block():
+        # data = 
+        pass
+
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
         res = prev_hash

@@ -247,7 +247,7 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
-                    print('LEN', len(self.connections))
+                    # print('LEN', len(self.connections))
                     connection = Connection(self, connection, conn_ip, conn_port, self.debug_print)
                     connection.start()
                     self.connections.append(connection)
@@ -260,7 +260,6 @@ class Node(threading.Thread):
                     # Basic information exchange (not secure) of the id's of the nodes!
             except socket.timeout:
                 # print(12)
-                print(len(self.connections))
                 continue
 
             except Exception as e:
