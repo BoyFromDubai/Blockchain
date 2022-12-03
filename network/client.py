@@ -71,8 +71,11 @@ class Connection(threading.Thread):
                     type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
                     msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
                     size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
-                    print(type)
-                    print(msg_meaning)
+                    
+                    # print(type)
+                    # print(msg_meaning)
+                    print(self.main_node.types.keys()[self.main_node.types.values().index(type)])
+                    print(self.main_node.meaning_of_msg.keys()[self.main_node.meaning_of_msg.values().index(msg_meaning)])
                     print(size)
 
                     if type == self.main_node.types['request']:
