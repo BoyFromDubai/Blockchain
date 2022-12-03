@@ -85,7 +85,6 @@ class Connection(threading.Thread):
         chain_len = self.main_node.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
-            print(1212112)
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_msg(self):
@@ -107,21 +106,21 @@ class Connection(threading.Thread):
 
     def run(self):
         while not self.STOP_FLAG.is_set():
-            try:    # print(12)
+            try:
                 buff = b''
                 header = self.sock.recv(self.MSG_FIELD_OFFSET)
                 
                 if header != b'':
                     msg_type, msg_meaning, size = self.__parse_header(header)
 
-                    for key, item in self.main_node.types.items():
-                        if item == msg_type:
-                            print(key)
+                    # for key, item in self.main_node.types.items():
+                    #     if item == msg_type:
+                    #         print(key)
                     print(msg_type)
 
-                    for key, item in self.main_node.meaning_of_msg.items():
-                        if item == msg_meaning:
-                            print(key)
+                    # for key, item in self.main_node.meaning_of_msg.items():
+                    #     if item == msg_meaning:
+                    #         print(key)
                     print(msg_meaning)
                         
 
@@ -147,6 +146,7 @@ class Connection(threading.Thread):
 
                         print(f'MESSAGE from {self.ip}')
                         print(buff)
+                        print()
                     # buff += chunk
 
             except socket.timeout:
@@ -260,10 +260,8 @@ class Node(threading.Thread):
                     print('MAX CONNECTIONS REACHED!')
 
                 # for conn in self.connections:
-                #     print(conn.port, self.name)
                     # Basic information exchange (not secure) of the id's of the nodes!
             except socket.timeout:
-                # print(12)
                 continue
 
             except Exception as e:
