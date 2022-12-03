@@ -95,8 +95,14 @@ class Connection(threading.Thread):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
     def __kill_socket(self):
-        # self.sock.close()
         self.main_node.close_connection(self)
+    
+    def __parse_header(self, header):
+        msg_type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
+        msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
+        size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
+
+        return (msg_type, msg_meaning, size)
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -105,25 +111,19 @@ class Connection(threading.Thread):
                 header = self.sock.recv(self.MSG_FIELD_OFFSET)
                 
                 if header != b'':
-                    type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
-                    msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
-                    size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
-                    
-                    # print(type)
-                    # print(msg_meaning)
-                    for key, item in self.main_node.types.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
-                        if item == type:
+                    msg_type, msg_meaning, size = self.__parse_header(header)
+
+                    for key, item in self.main_node.types.items():
+                        if item == msg_type:
                             print(key)
                     
-                    for key, item in self.main_node.meaning_of_msg.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+                    for key, item in self.main_node.meaning_of_msg.items():
                         if item == msg_meaning:
                             print(key)
 
-                    # print(self.main_node.types.keys()[self.main_node.types.values().index(type)])
-                    # print(self.main_node.meaning_of_msg.keys()[self.main_node.meaning_of_msg.values().index(msg_meaning)])
                     print(size)
 
-                    if type == self.main_node.types['request']:
+                    if msg_type == self.main_node.types['request']:
                         self.__answer(msg_meaning)
                     
                     else:
@@ -146,15 +146,13 @@ class Connection(threading.Thread):
                     # buff += chunk
 
             except socket.timeout:
-                # if self.sock.fileno
-                print(self.sock.fileno())
                 continue
 
             except socket.error as e:
                 raise e
-        # print("ALMOST KILLED")
-        # self.__stop_peer_socket()        
-        self.sock.settimeout(None)   
+
+        self.__stop_peer_socket()        
+        self.sock.settimeout(None)
         self.sock.close()
 
     def stop(self):
@@ -206,7 +204,9 @@ class Node(threading.Thread):
         self.sock.listen(1)
 
     def close_connection(self, conn):
-        print(555555)
+        for cur_conn in self.connections:
+            if cur_conn == conn:
+                print(True)
 
     def connectWithNode(self, ip, port):
         try:
@@ -260,7 +260,7 @@ class Node(threading.Thread):
                     # Basic information exchange (not secure) of the id's of the nodes!
             except socket.timeout:
                 # print(12)
-                print(self.connections)
+                print(len(self.connections))
                 continue
 
             except Exception as e:
