@@ -109,7 +109,7 @@ class Blockchain:
 
     def __get_last_blk_txid(self):
         blk_data = self.__get_last_blk()
-
+        
     def __get_last_blk_header(self):
         f = open('blockchain/blocks/' + self.__get_last_blk(), 'rb')
         

@@ -18,6 +18,8 @@ class Connection(threading.Thread):
         self.SIZE_FIELD_OFFSET = 9
         self.MSG_FIELD_OFFSET = 25
 
+        self.CHAIN_LEN_SIZE = 2 
+
         self.main_node = main_node
 
         self.__send_version_msg()
@@ -40,10 +42,10 @@ class Connection(threading.Thread):
     def __answer(self, request_msg_meaning):
         version_request = self.main_node.meaning_of_msg['version']
 
-        if request_msg_meaning == self.main_node.meaning_of_msg['version']:
-            self.__send_version_msg()
+        # if request_msg_meaning == self.main_node.meaning_of_msg['version']:
+            # self.__send_version_msg()
 
-        elif request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
+        if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
             self.__answer_get_blocks_msg()
         else:
             pass
@@ -60,7 +62,6 @@ class Connection(threading.Thread):
     def __get(self, info_msg_meaning, msg):
         version_answer = self.main_node.meaning_of_msg['version']
         get_blocks_answer = self.main_node.meaning_of_msg['get_blocks']
-
         
         if info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
@@ -81,9 +82,11 @@ class Connection(threading.Thread):
                 # pass 
         
     def __get_version_msg(self, msg):
-        if int.from_bytes(msg, 'big') > self.main_node.chain_len:
+        chain_len = self.main_node.getChainLen()
+
+        if int.from_bytes(msg, 'big') > chain_len:
             print(1212112)
-            # self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b'f')
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_msg(self):
         
@@ -164,22 +167,24 @@ class Node(threading.Thread):
         self.__init_server()
 
         self.debug_print = debug_print
-
-        self.chain_len = blockchain.getChainLen()
+        self.blockchain = blockchain
+        # self.chain_len = blockchain.getChainLen()
 
         self.connections = []
         self.MAX_CONNECTIONS = 8
 
         self.STOP_FLAG = threading.Event()
+
         self.types = {
             'info': b'\x00',
             'request': b'\x01',
         }
-
         self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
         }
+
+    def getChainLen(self): return self.blockchain.getChainLen()
 
     def __init_server(self):
         self.sock.bind((self.ip, self.port))
