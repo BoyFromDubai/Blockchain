@@ -24,10 +24,6 @@ class Connection(threading.Thread):
         packet = self.__create_packet(type, meaning, data)
         self.sock.send(packet)
 
-    def __msg_verack(self):
-        height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
-        self.send(self.main_node.types['answer'], self.main_node.meaning_of_msg['verack'], height)
-
     def __create_packet(self, type, meaning, data):
         msg = b''
         msg += type
@@ -39,20 +35,32 @@ class Connection(threading.Thread):
     
     def __answer(self, meaning):
         version_request = self.main_node.meaning_of_msg['version']
+
         match meaning:
             case version_request:
                 self.__msg_verack()
 
-    def __msg_inv(self, msg):
+    def __answer_version(self):
+        height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
+        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
+
+        
+
+
+    def __get(self, meaning, msg):
+        version_answer = self.main_node.meaning_of_msg['version']
+
+        match meaning:
+            case version_answer:
+                self.__get_inv(msg)
+
+    def __get_inv(self, msg):
         if int.from_bytes(msg, 'big') < self.blockcain.getChainLen():
             print(15555)
 
-    def __get(self, meaning, msg):
-        version_answer = self.main_node.meaning_of_msg['verack']
-        match meaning:
-            case version_request:
-                self.__msg_inv(msg)
-                
+
+
+
     def run(self):
         while not self.STOP_FLAG.is_set():
             try:    # print(12)
@@ -122,10 +130,10 @@ class Node(threading.Thread):
 
         self.STOP_FLAG = threading.Event()
         self.types = {
-            'answer': b'\x00',
+            'info': b'\x00',
             'request': b'\x01',
-
         }
+
         self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'verack': b'\x00\x00\x00\x00\x00\x00\x00\x01',
@@ -137,21 +145,31 @@ class Node(threading.Thread):
         self.sock.listen(1)
 
     def connectWithNode(self, ip, port):
-        if len(self.connections) < self.MAX_CONNECTIONS:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((ip, port))
-            thread = Connection(self, sock, ip, port, self.blockchain)
-            thread.start()
-            self.connections.append(thread)
-        else:
-            print('MAX CONNECTIONS REACHED!')
+        try:
+            for node in self.connections:
+                if node.ip == ip:
+                    raise ConnectionRefusedError('This host is already connected')
+
+            if len(self.connections) < self.MAX_CONNECTIONS:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((ip, port))
+                thread = Connection(self, sock, ip, port, self.blockchain)
+                thread.start()
+                self.connections.append(thread)
+            else:
+                raise ConnectionRefusedError('MAX CONNECTIONS REACHED!')
+
+        except Exception as e:
+            raise e
+
 
     def sendMsgToAllNodes(self, type, meaning, data):
         for sock in self.connections:
-            sock.send(type, meaning, data)
+            sending_thread = threading.Thread(target=sock.send, args=(type, meaning, data))
+            sending_thread.start()
 
     def stop(self):
-        self.STOP_FLAG.set()        
+        self.STOP_FLAG.set()
 
     def run(self):
 
