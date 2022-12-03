@@ -18,10 +18,9 @@ class Connection(threading.Thread):
         self.SIZE_FIELD_OFFSET = 9
         self.MSG_FIELD_OFFSET = 25
 
-        self.__send_version_msg()
-
-
         self.main_node = main_node
+
+        self.__send_version_msg()
 
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
@@ -42,14 +41,14 @@ class Connection(threading.Thread):
         version_request = self.main_node.meaning_of_msg['version']
 
         if request_msg_meaning == self.main_node.meaning_of_msg['version']:
-            self.__send_version_msg()
+            self.send_version_msg()
 
         elif request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
             self.__answer_get_blocks_msg()
         else:
             pass
 
-    def __send_version_msg(self):
+    def send_version_msg(self):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     def __answer_get_blocks_msg(self):
