@@ -74,8 +74,16 @@ class Connection(threading.Thread):
                     
                     # print(type)
                     # print(msg_meaning)
-                    print(self.main_node.types.keys()[self.main_node.types.values().index(type)])
-                    print(self.main_node.meaning_of_msg.keys()[self.main_node.meaning_of_msg.values().index(msg_meaning)])
+                    for key, item in self.main_node.types.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+                        if item == type:
+                            print(key)
+                    
+                    for key, item in self.main_node.meaning_of_msg.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+                        if item == msg_meaning:
+                            print(key)
+
+                    # print(self.main_node.types.keys()[self.main_node.types.values().index(type)])
+                    # print(self.main_node.meaning_of_msg.keys()[self.main_node.meaning_of_msg.values().index(msg_meaning)])
                     print(size)
 
                     if type == self.main_node.types['request']:
