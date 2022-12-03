@@ -38,9 +38,9 @@ class Connection(threading.Thread):
 
         match meaning:
             case version_request:
-                self.__msg_verack()
+                self.__answer_version_msg()
 
-    def __answer_version(self):
+    def __answer_version_msg(self):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
 
@@ -52,9 +52,9 @@ class Connection(threading.Thread):
 
         match meaning:
             case version_answer:
-                self.__get_inv(msg)
+                self.__get_inv_msg(msg)
 
-    def __get_inv(self, msg):
+    def __get_inv_msg(self, msg):
         if int.from_bytes(msg, 'big') < self.blockcain.getChainLen():
             print(15555)
 
