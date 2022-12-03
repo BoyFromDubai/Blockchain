@@ -154,9 +154,9 @@ class Connection(threading.Thread):
 
                         self.__get(msg_meaning, buff)
 
-                        print(f'MESSAGE from {self.ip} of meaning {x}')
-                        print(buff)
-                        print()
+                    print(f'MESSAGE from {self.ip} of meaning {x}')
+                    print(buff)
+                    print()
                     # buff += chunk
 
             except socket.timeout:
