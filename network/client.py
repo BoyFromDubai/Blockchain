@@ -95,7 +95,7 @@ class Connection(threading.Thread):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
     def __kill_socket(self):
-        self.sock.close()
+        # self.sock.close()
         self.main_node.close_connection(self)
 
     def run(self):
@@ -146,6 +146,8 @@ class Connection(threading.Thread):
                     # buff += chunk
 
             except socket.timeout:
+                # if self.sock.fileno
+                print(self.sock.fileno())
                 continue
 
             except socket.error as e:
@@ -153,7 +155,7 @@ class Connection(threading.Thread):
         # print("ALMOST KILLED")
         # self.__stop_peer_socket()        
         self.sock.settimeout(None)   
-        self.sock.close()
+        self.sock.shutdown()
 
     def stop(self):
         self.STOP_FLAG.set()
@@ -204,7 +206,7 @@ class Node(threading.Thread):
         self.sock.listen(1)
 
     def close_connection(self, conn):
-        print(conn)
+        print(555555)
 
     def connectWithNode(self, ip, port):
         try:
