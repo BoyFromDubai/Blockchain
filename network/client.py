@@ -26,7 +26,7 @@ class Connection(threading.Thread):
 
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
-        print('PRINT')
+        print('SEND')
         print(packet)
         print()
         self.sock.send(packet)
@@ -120,6 +120,7 @@ class Connection(threading.Thread):
                     msg_type, msg_meaning, size = self.__parse_header(header)
 
                     print('GOT')
+                    x = None
                     for key, item in self.main_node.types.items():
                         if item == msg_type:
                             print(key)
@@ -128,10 +129,12 @@ class Connection(threading.Thread):
                     for key, item in self.main_node.meaning_of_msg.items():
                         if item == msg_meaning:
                             print(key)
+                            x = key
                     print(msg_meaning)
                         
 
                     print(size)
+
 
                     if msg_type == self.main_node.types['request']:
                         self.__answer(msg_meaning)
@@ -151,7 +154,7 @@ class Connection(threading.Thread):
 
                         self.__get(msg_meaning, buff)
 
-                        print(f'MESSAGE from {self.ip} of meaning {msg_meaning}')
+                        print(f'MESSAGE from {self.ip} of meaning {x}')
                         print(buff)
                         print()
                     # buff += chunk
