@@ -207,6 +207,7 @@ class Node(threading.Thread):
         for i in range(len(self.connections)):
             if self.connections[i] == conn:
                 del self.connections[i]
+                break
 
     def connectWithNode(self, ip, port):
         try:
