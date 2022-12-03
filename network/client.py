@@ -228,7 +228,6 @@ class Node(threading.Thread):
                     connection = Connection(self, connection, conn_ip, conn_port, self.debug_print)
                     connection.start()
                     self.connections.append(connection)
-                    connection.send(self.types['info'], self.meaning_of_msg['version'], b'')
 
                 else:
                     print('MAX CONNECTIONS REACHED!')
