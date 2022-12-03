@@ -207,6 +207,9 @@ class Node(threading.Thread):
         for cur_conn in self.connections:
             if cur_conn == conn:
                 print(True)
+            else:
+                print(False)
+
 
     def connectWithNode(self, ip, port):
         try:
@@ -225,7 +228,6 @@ class Node(threading.Thread):
 
         except Exception as e:
             raise e
-
 
     def sendMsgToAllNodes(self, type, meaning, data):
         for sock in self.connections:
