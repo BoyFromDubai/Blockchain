@@ -74,7 +74,7 @@ class User():
         self.username = 'ccoin_client'
         # self.network_client = Node(self.__get_local_ip(), 9999)
         # self.node = CCoinNode()
-        self.node = Node(self.__get_local_ip(), 9999, blockchain)
+        self.node = Node(self.__get_local_ip(), 9999, blockchain, True)
         self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
@@ -242,7 +242,7 @@ class TerminalInput(Terminal):
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 try:
                     self.user.node.connectWithNode(command_arr[2], self.user.node.port)
-                    self.user.node.sendMsgToAllNodes(self.user.node.types['request'], self.user.node.meaning_of_msg['version'], b'')
+                    # self.user.node.sendMsgToAllNodes(self.user.node.types['request'], self.user.node.meaning_of_msg['version'], b'')
                 except Exception as e:
                     print(e)
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
@@ -258,7 +258,7 @@ class TerminalInput(Terminal):
 
             # print()
             # print(file_info)
-            print(file_info)
+            # print(file_info)
             self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
 
 
@@ -417,8 +417,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabWidget)
 
         self.tab_v1 = QtWidgets.QWidget()
-        self.tabWidget.addTab(self.overview_widget, "Overview")
         self.tabWidget.addTab(self.terminal_widget, "Terminal")
+        self.tabWidget.addTab(self.overview_widget, "Overview")
         self.tabWidget.addTab(self.main_widget, "Explore")
         self.tabWidget.addTab(self.wallet_widget, "Wallet")
 

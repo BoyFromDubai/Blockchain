@@ -3,15 +3,15 @@ import threading
 import os
 
 class Connection(threading.Thread):
-    def __init__(self, main_node, sock, ip, port, blockchain):
+    def __init__(self, main_node, sock, ip, port, debug_print):
         super(Connection, self).__init__()
         self.ip = ip
         self.port = port
         self.sock = sock
         self.sock.settimeout(1.0)
         self.STOP_FLAG = threading.Event()
-        
-        self.blockcain = blockchain
+
+        self.debug_print = debug_print
 
         self.TYPE_FIELD_OFFSET = 0
         self.MEANING_OF_MSG_OFFSET = 1
@@ -52,11 +52,15 @@ class Connection(threading.Thread):
 
         match meaning:
             case version_answer:
-                self.__get_inv_msg(msg)
+                self.__get_version_msg(msg)
 
-    def __get_inv_msg(self, msg):
-        if int.from_bytes(msg, 'big') > self.blockcain.getChainLen():
-            print(15555)
+    def __get_version_msg(self, msg):
+        if int.from_bytes(msg, 'big') > self.main_node.chain_len:
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], )
+
+    def __get_msg(self):
+        
+        pass
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -123,7 +127,7 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class Node(threading.Thread):
-    def __init__(self, ip, port, blockchain):
+    def __init__(self, ip, port, blockchain, debug_print = False):
         super(Node, self).__init__()
 
         self.ip = ip
@@ -131,8 +135,11 @@ class Node(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__init_server()
-        self.blockchain = blockchain
-        
+
+        self.debug_print = debug_print
+
+        self.chain_len = blockchain.getChainLen()
+
         self.connections = []
         self.MAX_CONNECTIONS = 8
 
@@ -144,7 +151,7 @@ class Node(threading.Thread):
 
         self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
-            'verack': b'\x00\x00\x00\x00\x00\x00\x00\x01',
+            'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
         }
 
     def __init_server(self):
@@ -161,9 +168,11 @@ class Node(threading.Thread):
             if len(self.connections) < self.MAX_CONNECTIONS:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((ip, port))
-                thread = Connection(self, sock, ip, port, self.blockchain)
-                thread.start()
-                self.connections.append(thread)
+                connection = Connection(self, sock, ip, port, self.debug_print)
+                connection.start()
+                self.connections.append(connection)
+
+                connection.send(self.user.node.types['request'], self.user.node.meaning_of_msg['version'], b'')
             else:
                 raise ConnectionRefusedError('MAX CONNECTIONS REACHED!')
 
@@ -191,7 +200,7 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
-                    sock = Connection(self, connection, conn_ip, conn_port, self.blockchain)
+                    sock = Connection(self, connection, conn_ip, conn_port, self.debug_print)
                     sock.start()
                     self.connections.append(sock)
                 else:
