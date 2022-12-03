@@ -151,12 +151,12 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
         # print("ALMOST KILLED")
+        # self.__stop_peer_socket()        
         self.sock.settimeout(None)   
         self.sock.close()
 
     def stop(self):
         self.STOP_FLAG.set()
-        self.__stop_peer_socket()        
 
     def __repr__(self):
         return f'''
