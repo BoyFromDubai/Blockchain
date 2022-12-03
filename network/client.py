@@ -87,7 +87,8 @@ class Connection(threading.Thread):
         chain_len = self.main_node.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            # self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b''))
 
     def __get_msg(self):
         
