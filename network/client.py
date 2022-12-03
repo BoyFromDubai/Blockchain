@@ -26,6 +26,7 @@ class Connection(threading.Thread):
 
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
+        print(packet)
         self.sock.send(packet)
 
     def __create_packet(self, type, meaning, data):
@@ -116,10 +117,13 @@ class Connection(threading.Thread):
                     for key, item in self.main_node.types.items():
                         if item == msg_type:
                             print(key)
-                    
+                    print(msg_type)
+
                     for key, item in self.main_node.meaning_of_msg.items():
                         if item == msg_meaning:
                             print(key)
+                    print(msg_meaning)
+                        
 
                     print(size)
 
