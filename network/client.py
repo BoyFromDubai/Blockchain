@@ -155,7 +155,7 @@ class Connection(threading.Thread):
         # print("ALMOST KILLED")
         # self.__stop_peer_socket()        
         self.sock.settimeout(None)   
-        self.sock.shutdown()
+        self.sock.close()
 
     def stop(self):
         self.STOP_FLAG.set()
@@ -260,6 +260,7 @@ class Node(threading.Thread):
                     # Basic information exchange (not secure) of the id's of the nodes!
             except socket.timeout:
                 # print(12)
+                print(self.connections)
                 continue
 
             except Exception as e:
