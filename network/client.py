@@ -56,7 +56,7 @@ class Connection(threading.Thread):
 
     def __get_version_msg(self, msg):
         if int.from_bytes(msg, 'big') > self.main_node.chain_len:
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], )
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b'')
 
     def __get_msg(self):
         
