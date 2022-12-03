@@ -85,6 +85,9 @@ class Connection(threading.Thread):
         
     def __get_version_msg(self, msg):
         chain_len = self.main_node.getChainLen()
+        print()
+        print(chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+        print()
 
         if int.from_bytes(msg, 'big') > chain_len:
             # self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
@@ -148,7 +151,7 @@ class Connection(threading.Thread):
 
                         self.__get(msg_meaning, buff)
 
-                        print(f'MESSAGE from {self.ip}')
+                        print(f'MESSAGE from {self.ip} of meaning {msg_meaning}')
                         print(buff)
                         print()
                     # buff += chunk
