@@ -80,7 +80,7 @@ class Connection(threading.Thread):
         
     def __get_version_msg(self, msg):
         if int.from_bytes(msg, 'big') > self.main_node.chain_len:
-            pass
+            print(1212112)
             # self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], b'f')
 
     def __get_msg(self):
@@ -197,7 +197,7 @@ class Node(threading.Thread):
                 connection.start()
                 self.connections.append(connection)
 
-                connection.send(self.types['request'], self.meaning_of_msg['version'], b'')
+                connection.send(self.types['info'], self.meaning_of_msg['version'], connection.__answer_version_msg())
             else:
                 raise ConnectionRefusedError('MAX CONNECTIONS REACHED!')
 
