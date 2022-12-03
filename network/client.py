@@ -119,15 +119,15 @@ class Connection(threading.Thread):
                 if header != b'':
                     msg_type, msg_meaning, size = self.__parse_header(header)
 
-                    # for key, item in self.main_node.types.items():
-                    #     if item == msg_type:
-                    #         print(key)
                     print('GOT')
+                    for key, item in self.main_node.types.items():
+                        if item == msg_type:
+                            print(key)
                     print(msg_type)
 
-                    # for key, item in self.main_node.meaning_of_msg.items():
-                    #     if item == msg_meaning:
-                    #         print(key)
+                    for key, item in self.main_node.meaning_of_msg.items():
+                        if item == msg_meaning:
+                            print(key)
                     print(msg_meaning)
                         
 
