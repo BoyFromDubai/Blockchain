@@ -259,7 +259,7 @@ class TerminalInput(Terminal):
             # print()
             # print(file_info)
             print(file_info)
-            self.user.node.sendMsgToAllNodes(file_info)
+            self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
 
 
         # elif command_arr[0] == 'show':

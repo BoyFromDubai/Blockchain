@@ -55,11 +55,8 @@ class Connection(threading.Thread):
                 self.__get_inv_msg(msg)
 
     def __get_inv_msg(self, msg):
-        if int.from_bytes(msg, 'big') < self.blockcain.getChainLen():
+        if int.from_bytes(msg, 'big') > self.blockcain.getChainLen():
             print(15555)
-
-
-
 
     def run(self):
         while not self.STOP_FLAG.is_set():
