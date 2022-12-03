@@ -96,7 +96,7 @@ class Connection(threading.Thread):
 
     def __kill_socket(self):
         self.sock.close()
-        self.main_node.__close_connection(self)
+        self.main_node.close_connection(self)
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -203,7 +203,7 @@ class Node(threading.Thread):
         self.sock.settimeout(1.0)
         self.sock.listen(1)
 
-    def __close_connection(self, conn):
+    def close_connection(self, conn):
         print(conn)
 
     def connectWithNode(self, ip, port):
