@@ -60,14 +60,13 @@ class Connection(threading.Thread):
 
 
     def __get(self, info_msg_meaning, msg):
-        version_answer = self.main_node.meaning_of_msg['version']
-        get_blocks_answer = self.main_node.meaning_of_msg['get_blocks']
         
         if info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
             pass
-            
+        elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
+            self.__kill_socket()
         else:
             pass
         # match meaning:
@@ -91,6 +90,13 @@ class Connection(threading.Thread):
     def __get_msg(self):
         
         pass
+
+    def __stop_peer_socket(self):
+        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
+
+    def __kill_socket(self):
+        self.sock.close()
+        self.main_node.__close_connection(self)
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -123,11 +129,15 @@ class Connection(threading.Thread):
                     else:
                         read_size = 1024
 
-                        for i in range(0, size, read_size):
-                            if size - i > read_size:
-                                buff += self.sock.recv(read_size)
-                            else:
-                                buff += self.sock.recv(size - i)
+                        if read_size > size:
+                            buff += self.sock.recv(size)
+                        
+                        else:
+                            for i in range(0, size, read_size):
+                                if size - i > read_size:
+                                    buff += self.sock.recv(read_size)
+                                else:
+                                    buff += self.sock.recv(size - i)
 
                         self.__get(msg_meaning, buff)
 
@@ -146,7 +156,7 @@ class Connection(threading.Thread):
 
     def stop(self):
         self.STOP_FLAG.set()
-
+        self.__stop_peer_socket()        
 
     def __repr__(self):
         return f'''
@@ -182,6 +192,8 @@ class Node(threading.Thread):
         self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
+
+            'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
 
     def getChainLen(self): return self.blockchain.getChainLen()
@@ -190,6 +202,9 @@ class Node(threading.Thread):
         self.sock.bind((self.ip, self.port))
         self.sock.settimeout(1.0)
         self.sock.listen(1)
+
+    def __close_connection(self, conn):
+        print(conn)
 
     def connectWithNode(self, ip, port):
         try:
@@ -230,6 +245,7 @@ class Node(threading.Thread):
                     conn_ip = client_address[0] # backward compatibilty
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
+                    print('LEN', len(self.connections))
                     connection = Connection(self, connection, conn_ip, conn_port, self.debug_print)
                     connection.start()
                     self.connections.append(connection)
