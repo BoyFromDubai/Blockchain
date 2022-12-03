@@ -57,7 +57,7 @@ class Connection(threading.Thread):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     def __answer_get_blocks_msg(self):
-        pass
+        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['get_blocks'], b'\x07\x07')
     
         
 
