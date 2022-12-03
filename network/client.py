@@ -172,7 +172,7 @@ class Node(threading.Thread):
                 connection.start()
                 self.connections.append(connection)
 
-                connection.send(self.user.node.types['request'], self.user.node.meaning_of_msg['version'], b'')
+                connection.send(self.types['request'], self.meaning_of_msg['version'], b'')
             else:
                 raise ConnectionRefusedError('MAX CONNECTIONS REACHED!')
 
