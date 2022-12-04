@@ -102,10 +102,8 @@ class Blockchain:
         return value
     
     def __append_block(self, blk):
-        file = f"blockchain/blocks/blk_{str(getBlockchainLen() + 1).zfill(NUMS_NUM)}.dat"
-        f = open(file, 'wb')
-        f.write(blk)
-        f.close()
+        with open(f"blockchain/blocks/blk_{str(getBlockchainLen() + 1).zfill(NUMS_NUM)}.dat", 'wb') as f:
+            f.write(blk)
 
     def mine_block(self, pk):
         emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], sk=None, isTransaction=False)
