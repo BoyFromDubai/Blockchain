@@ -85,7 +85,7 @@ class Connection(threading.Thread):
     def __get_blocks_msg(self, msg):
         print('ADDED')
         cur_len = BlockchainParser.getBlockchainLen()
-        with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}', 'wb') as f:
+        with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}.dat', 'wb') as f:
             f.write(msg)
 
     def __stop_peer_socket(self):
