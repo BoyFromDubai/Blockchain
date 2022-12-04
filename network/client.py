@@ -22,8 +22,8 @@ class Connection(threading.Thread):
 
         self.main_node = main_node
 
-        # self.__send_version_msg()
-        self.__answer_get_blocks_msg()
+        self.__send_version_msg()
+        # self.__answer_get_blocks_msg()
 
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
