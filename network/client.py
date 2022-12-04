@@ -111,17 +111,14 @@ class Connection(threading.Thread):
                     print('Header')
                     print(header)
                     print('------------')
-                    x = None
                     for key, item in self.main_node.types.items():
                         if item == msg_type:
                             print(key)
-                    print(msg_type)
 
                     for key, item in self.main_node.meaning_of_msg.items():
                         if item == msg_meaning:
                             print(key)
                             x = key
-                    print(msg_meaning)
                     print(size)
                     print('------------')
 
