@@ -77,6 +77,7 @@ class Connection(threading.Thread):
         print()
 
         if int.from_bytes(msg, 'big') > chain_len:
+            print('SENDING CHAIN LEN')
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_msg(self):
@@ -106,6 +107,10 @@ class Connection(threading.Thread):
                     msg_type, msg_meaning, size = self.__parse_header(header)
 
                     print('GOT')
+                    print()
+                    print('Header')
+                    print(header)
+                    print('------------')
                     x = None
                     for key, item in self.main_node.types.items():
                         if item == msg_type:
@@ -117,10 +122,8 @@ class Connection(threading.Thread):
                             print(key)
                             x = key
                     print(msg_meaning)
-                        
-
                     print(size)
-
+                    print('------------')
 
                     if msg_type == self.main_node.types['request']:
                         self.__answer(msg_meaning)
