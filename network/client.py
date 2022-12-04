@@ -23,6 +23,7 @@ class Connection(threading.Thread):
         self.main_node = main_node
 
         # self.__send_version_msg()
+        self.__get_version_msg()
 
     def send(self, type, meaning, data):
         packet = self.__create_packet(type, meaning, data)
@@ -69,14 +70,15 @@ class Connection(threading.Thread):
         else:
             pass
 
-    def __get_version_msg(self, msg):
+    def __get_version_msg(self, msg=b''):
         chain_len = self.main_node.getChainLen()
         print()
         print(chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
         print()
+        self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
-        if int.from_bytes(msg, 'big') > chain_len:
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+        # if int.from_bytes(msg, 'big') > chain_len:
+        #     self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_msg(self):
         
