@@ -43,7 +43,7 @@ class Connection(threading.Thread):
     
 
 
-    def __answer(self, request_msg_meaning):
+    def __answer(self, request_msg_meaning, msg):
 
         if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
             self.__answer_get_blocks_msg()
@@ -125,21 +125,23 @@ class Connection(threading.Thread):
                     print(size)
                     print('------------')
 
-                    if msg_type == self.main_node.types['request']:
-                        self.__answer(msg_meaning)
+                    read_size = 1024
+
+                    if read_size > size:
+                        buff += self.sock.recv(size)
                     
                     else:
-                        read_size = 1024
+                        for i in range(0, size, read_size):
+                            if size - i > read_size:
+                                buff += self.sock.recv(read_size)
+                            else:
+                                buff += self.sock.recv(size - i)
 
-                        if read_size > size:
-                            buff += self.sock.recv(size)
-                        
-                        else:
-                            for i in range(0, size, read_size):
-                                if size - i > read_size:
-                                    buff += self.sock.recv(read_size)
-                                else:
-                                    buff += self.sock.recv(size - i)
+                    if msg_type == self.main_node.types['request']:
+
+                        self.__answer(msg_meaning, buff)
+                    
+                    else:
 
                         self.__get(msg_meaning, buff)
 
