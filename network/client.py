@@ -84,6 +84,7 @@ class Connection(threading.Thread):
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_blocks_msg(self, msg):
+        print('ADDED')
         cur_len = BlockchainParser.getBlockchainLen()
         with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}', 'wb') as f:
             f.write(msg)
