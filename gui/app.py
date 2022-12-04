@@ -16,65 +16,14 @@ import threading
 import argparse
 
 from blockchain.blockchain import Blockchain
-# from network.client import Client
-# from network.node import Node
 from network.client import Node
-# from p2pnetwork.node import Node
 import socket
 import sys
 
-# class CCoinNode(Node):
-
-#     # Python class constructor
-#     def __init__(self, id=None, callback=None, max_connections=0):
-#         super(CCoinNode, self).__init__(self.__get_local_ip(), 9999, id, callback, max_connections)
-#         print("MyPeer2PeerNode: Started")
-
-#     # all the methods below are called when things happen in the network.
-#     # implement your network node behavior to create the required functionality.
-
-#     def outbound_node_connected(self, node):
-#         print("outbound_node_connected (" + self.id + "): " + node.id)
-        
-#     def inbound_node_connected(self, node):
-#         print("inbound_node_connected: (" + self.id + "): " + node.id)
-
-#     def inbound_node_disconnected(self, node):
-#         print("inbound_node_disconnected: (" + self.id + "): " + node.id)
-
-#     def outbound_node_disconnected(self, node):
-#         print("outbound_node_disconnected: (" + self.id + "): " + node.id)
-
-#     def node_message(self, node, data):
-#         print("node_message (" + self.id + ") from " + node.id + ": " + str(data))
-        
-#     def node_disconnect_with_outbound_node(self, node):
-#         print("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
-        
-#     def node_request_to_stop(self):
-#         print("node is requested to stop (" + self.id + "): ")
-
-#     def __get_local_ip(self):
-#         try:
-#             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-#             # Use Google Public DNS server to determine own IP
-#             sock.connect(('8.8.8.8', 80))
-
-#             return sock.getsockname()[0]
-#         except socket.error:
-#             try:
-#                 return socket.gethostbyname(socket.gethostname()) 
-#             except socket.gaierror:
-#                 return '127.0.0.1'
-#         finally:
-#             sock.close()
 
 class User():
     def __init__(self, blockchain):
         self.username = 'ccoin_client'
-        # self.network_client = Node(self.__get_local_ip(), 9999)
-        # self.node = CCoinNode()
         self.node = Node(self.__get_local_ip(), 9999, blockchain, True)
         self.node.start()
         self.wallet = Wallet()
@@ -88,7 +37,6 @@ class User():
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-            # Use Google Public DNS server to determine own IP
             sock.connect(('8.8.8.8', 80))
 
             return sock.getsockname()[0]
@@ -206,10 +154,9 @@ class TerminalInput(Terminal):
         self.terminal_output = terminal_output
         self.user = user
         self.prefix = prefix
-        self.history = ['']
-        self.history_index = 0
-
-
+        self.history = self.__recover_history()
+        print(self.history)
+        self.history_index = len(self.history) - 1
 
         self.__clear_terminal()
 
@@ -257,12 +204,12 @@ class TerminalInput(Terminal):
             with open('blockchain/blocks/blk_0010.dat', 'rb') as f:
                 file_info = f.read()
 
-            # print()
-            # print(file_info)
-            # print(file_info)
             self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
 
-
+        if command_arr[0] == 'history':
+            if command_arr[1] == '-c' or command_arr[1] == '--clear':
+                open('gui/history.txt', 'w').close()
+            
         # elif command_arr[0] == 'show':
         #     if command_arr[1] == 'srv-ip':
         #         with open('network/server.txt', 'r') as f:
@@ -274,6 +221,13 @@ class TerminalInput(Terminal):
 
         # self.__add_info_to_output(command, res)
         self.__print_event(command, res)
+
+    def __recover_history(self):
+        if os.path.exists('gui/history.txt'):
+            with open('gui/history.txt', 'r') as f:
+                return f.read().split('\n')
+        else:
+            return ['']
 
     def __print_event(self, command, res):
         self.terminal_output.addEvent(command, res)
@@ -299,22 +253,14 @@ class TerminalInput(Terminal):
         self.__clear_terminal()
 
         self.history_index -= 1
-        
-        if self.history_index == -1:
-            self.history_index += 1
-        else:
-            self.insertPlainText(f'{self.history[self.history_index]}')
 
+        self.insertPlainText(f'{self.history[self.history_index]}')
+        
     def __next_command(self):
         self.__clear_terminal()
 
         self.history_index += 1 #TODO change the behavior of the first elem
-        if self.history_index == len(self.history):
-            self.history_index -= 1
-            
-            self.insertPlainText(f'{self.history[self.history_index]}')
-        else:
-            self.insertPlainText(f'{self.history[self.history_index]}')
+        self.insertPlainText(f'{self.history[self.history_index]}')
 
     def keyPressEvent(self, event):
 
@@ -324,10 +270,12 @@ class TerminalInput(Terminal):
                 return
 
         if event.key() == Qt.Key_Up:
-            self.__previous_command()
+            if (self.history_index != 0):
+                self.__previous_command()
 
         if event.key() == Qt.Key_Down:
-            self.__next_command()
+            if (self.history_index != len(self.history) - 1):
+                self.__next_command()
 
         if event.key() == Qt.Key_Backspace:
             if self.toPlainText() == self.prefix:
@@ -342,6 +290,9 @@ class TerminalInput(Terminal):
             self.history.append('')
             self.history_index = len(self.history) - 1
             
+            with open('gui/history.txt', 'a') as f:
+                f.write(command + '\n')
+
             self.__execute_command(command)
             
             self.__clear_terminal()

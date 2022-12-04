@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+from blocks_parser.parser import BlockchainParser
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port, debug_print):
@@ -46,15 +47,20 @@ class Connection(threading.Thread):
     def __answer(self, request_msg_meaning, msg):
 
         if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
-            self.__answer_get_blocks_msg()
+            self.__answer_get_blocks_msg(msg)
         else:
             pass
 
     def __send_version_msg(self):
         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
-    def __answer_get_blocks_msg(self):
-        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['get_blocks'], b'\x07\x07')
+    def __answer_get_blocks_msg(self, msg):
+        peer_cur_len = int.from_bytes(msg, 'big')
+        blocks_files = BlockchainParser.getBlockFiles()
+        
+        for i in range(peer_cur_len, len(blocks_files)):
+            with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
+                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['get_blocks'], f.read())
     
         
 
@@ -64,25 +70,23 @@ class Connection(threading.Thread):
         if info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
         if info_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
-            pass
+            self.__get_blocks_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
             self.__kill_socket()
         else:
             pass
 
     def __get_version_msg(self, msg):
-        chain_len = self.main_node.getChainLen()
-        print()
-        print(chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
-        print()
+        chain_len = BlockchainParser.getBlockchainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
             print('SENDING CHAIN LEN')
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
-    def __get_msg(self):
-        
-        pass
+    def __get_blocks_msg(self, msg):
+        cur_len = BlockchainParser.getBlockchainLen()
+        with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}', 'wb') as f:
+            f.write(msg)
 
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
@@ -180,7 +184,6 @@ class Node(threading.Thread):
 
         self.debug_print = debug_print
         self.blockchain = blockchain
-        # self.chain_len = blockchain.getChainLen()
 
         self.connections = []
         self.MAX_CONNECTIONS = 8
@@ -198,7 +201,6 @@ class Node(threading.Thread):
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
 
-    def getChainLen(self): return self.blockchain.getChainLen()
 
     def __init_server(self):
         self.sock.bind((self.ip, self.port))
