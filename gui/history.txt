@@ -22,3 +22,14 @@ mining -o
 mining -o
 mining -o
 mining -o
+network -c 192.168.0.124
+network -c 192.168.0.128
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+network -c 192.168.0.128

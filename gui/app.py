@@ -47,6 +47,7 @@ class User():
 class UTXOWindow(QWidget):
     def __init__(self, wallet, parent=None):
         super(UTXOWindow, self).__init__(parent)
+        self.wallet = wallet
 
 class OverviewWidget(QWidget):
     def __init__(self, parent=None):
