@@ -193,17 +193,18 @@ class TerminalInput(Terminal):
                 except Exception as e:
                     print(e)
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
-                nodes = self.user.node.outboundNodes()
-                
+                nodes = self.user.node.getPeers()
+                res = ''
                 for node in nodes: res += str(node)
+                print(res)
 
-        if command_arr[0] == 'send':
-            file_info = ''
+        # if command_arr[0] == 'send':
+        #     file_info = ''
 
-            with open('blockchain/blocks/blk_0010.dat', 'rb') as f:
-                file_info = f.read()
+        #     with open('blockchain/blocks/blk_0010.dat', 'rb') as f:
+        #         file_info = f.read()
 
-            self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
+        #     self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
 
         if command_arr[0] == 'history':
             if command_arr[1] == '-c' or command_arr[1] == '--clear':
@@ -242,10 +243,10 @@ class TerminalInput(Terminal):
             self.blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())
 
     def __mining_once(self):
-        # from blockchain.blockchain import Blockchain
+        blk_info = self.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())  
 
-        # blk_info = Blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())      
-        blk_info = self.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())      
+        self.user.node.newBlockMessage(blk_info)   
+        
         return blk_info
 
     def __previous_command(self):

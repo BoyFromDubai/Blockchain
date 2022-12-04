@@ -62,7 +62,6 @@ class Connection(threading.Thread):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
                 self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], f.read())
     
-        
 
 
     def __get(self, info_msg_meaning, msg):
@@ -232,13 +231,16 @@ class Node(threading.Thread):
         except Exception as e:
             raise e
 
-    def sendMsgToAllNodes(self, type, meaning, data):
+    def __send_msg_to_peers(self, type, meaning, data):
         for sock in self.connections:
             sending_thread = threading.Thread(target=sock.send, args=(type, meaning, data))
             sending_thread.start()
 
     def stop(self):
         self.STOP_FLAG.set()
+
+    def newBlockMessage(self, blk_info):
+        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], blk_info)
 
     def run(self):
 
