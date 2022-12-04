@@ -3,7 +3,13 @@ from blockchain.blk_structure import *
 import hashlib
 # class BlockchainParser():
 
-def getBlockchainLen(): return len(os.listdir('blockchain/blocks')) if os.path.exists('blockchain/blocks') else 0 
+def getBlockchainLen(): 
+    if os.path.exists('blockchain/blocks'):
+        return len(os.listdir('blockchain/blocks')) 
+    else:
+        os.mkdir('blockchain/blocks')
+        return 0
+
 
 def getBlockFiles(): return sorted(os.listdir('blockchain/blocks'))
 
