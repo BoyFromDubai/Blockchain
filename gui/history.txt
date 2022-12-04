@@ -1,14 +1,24 @@
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
-network -c 192.168.0.123
 mining -o
-network -c 192.168.0.123
-network -c 192.168.0.123
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
 mining -o

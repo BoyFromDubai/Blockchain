@@ -2,7 +2,7 @@ from website import create_app
 from gui.app import MainWindow, QApplication
 import sys
 
-app = create_app()
+# app = create_app()
 # wallet = Wallet()
 
 if __name__ == '__main__':

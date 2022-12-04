@@ -1,24 +1,19 @@
-from cProfile import label
-from copy import copy
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import QKeySequence, QColor, QTextCursor
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-# from network.client import Node
 from wallet.wallet import Wallet
 import os
 
 import ecdsa
 import hashlib
 import threading
-import argparse
 
 from blockchain.blockchain import Blockchain
 from network.client import Node
 import socket
-import sys
 
 
 class User():
@@ -47,11 +42,11 @@ class User():
                 return '127.0.0.1'
         finally:
             sock.close()
-                
 
-class TestWindow(QWidget):
-    def __init__(self, parent=None):
-        super(TestWindow, self).__init__(parent)
+
+class UTXOWindow(QWidget):
+    def __init__(self, wallet, parent=None):
+        super(UTXOWindow, self).__init__(parent)
 
 class OverviewWidget(QWidget):
     def __init__(self, parent=None):
@@ -189,7 +184,8 @@ class TerminalInput(Terminal):
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 try:
-                    self.user.node.connectWithNode(command_arr[2], self.user.node.port)
+                    conn_thread = threading.Thread(target=self.user.node.connectWithNode, args=(command_arr[2], self.user.node.port))
+                    conn_thread.start()
                 except Exception as e:
                     print(e)
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
@@ -356,11 +352,15 @@ class MainWindow(QMainWindow):
         self.blockchain = Blockchain()
         self.user = User(self.blockchain)
 
+        if not self.blockchain.verifyChain():
+            print('Chain isn\'t valid')
+
         self.setWindowTitle('CCoin Core')
         self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
         self.setStyleSheet("background-color: grey;")
 
         self.terminal_widget = TerminalWidget(self.user, self.blockchain, self) 
+        self.utxo_window = UTXOWindow(self.user.wallet, self)
         self.main_widget = MainWidget(self) 
         self.wallet_widget = WalletWidget(self.user, self.blockchain, self) 
         self.overview_widget = OverviewWidget(self) 
