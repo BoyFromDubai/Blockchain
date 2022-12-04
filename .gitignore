@@ -7,4 +7,5 @@ database/database.db
 database/tables.sql
 /env
 .vscode/
-
+network/*.txt
+gui/*.txt

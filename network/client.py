@@ -60,7 +60,7 @@ class Connection(threading.Thread):
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
-                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['get_blocks'], f.read())
+                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], f.read())
     
         
 
@@ -69,7 +69,7 @@ class Connection(threading.Thread):
         
         if info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
-        if info_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
+        if info_msg_meaning == self.main_node.meaning_of_msg['block']:
             self.__get_blocks_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
             self.__kill_socket()
@@ -80,7 +80,6 @@ class Connection(threading.Thread):
         chain_len = BlockchainParser.getBlockchainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
-            print('SENDING CHAIN LEN')
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_blocks_msg(self, msg):
@@ -198,6 +197,7 @@ class Node(threading.Thread):
         self.meaning_of_msg = {
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
+            'block': b'\x00\x00\x00\x00\x00\x00\x00\x02',
 
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
