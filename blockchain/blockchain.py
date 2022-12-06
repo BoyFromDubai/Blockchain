@@ -10,26 +10,9 @@ import time
 import ecdsa
 from blocks_parser.parser import *
 from blockchain.blk_structure import *
+import plyvel
 
-# blk_structure = [
-#     4, # size
-#     36, # prev_blk_hash
-#     68, # mrkl_root
-#     72, # time
-#     76, # difficulty
-#     80, # nonce
-#     81, # 
-#     85, # 
-#     86, # 
-#     118, # 
-#     122, # 
-#     # # 
-#     # # 
-#     123, # 
-#     131, # 
-#     135, # 
-#     139 # 
-# ]
+
 
 class Blockchain:
     def __init__(self):
@@ -41,21 +24,29 @@ class Blockchain:
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
         res = prev_hash
+        print('prev_hash:', prev_hash)
 
         if transactions:
             res += MerkleTree(transactions).root
+            print('mrkl_root: ', MerkleTree(transactions).root.hex())
         else:
             res += (0).to_bytes(block_structure['mrkl_root'], byteorder='little')
 
 
         res += int(time.time()).to_bytes(block_structure['time'], byteorder='little')
+        print('time: ', int(time.time()).to_bytes(block_structure['time'], byteorder='little'))
         res += difficulty.to_bytes(block_structure['difficulty'], byteorder='little')
+        print('difficulty: ', difficulty.to_bytes(block_structure['difficulty'], byteorder='little'))
         res += nonce.to_bytes(block_structure['nonce'], byteorder='little')
+        print('nonce: ', nonce.to_bytes(block_structure['nonce'], byteorder='little'))
         res += len(transactions).to_bytes(block_structure['tx_count'], byteorder='little')
+        print('tx_count: ', len(transactions).to_bytes(block_structure['tx_count'], byteorder='little'))
         for tx in transactions:
+            print(tx)
             res += tx
 
         size = len(res).to_bytes(block_structure['size'], byteorder='little')
+        print('size: ', len(res).to_bytes(block_structure['size'], byteorder='little'))
 
         return size + res
 
@@ -88,18 +79,6 @@ class Blockchain:
                     return cur_offset
         
         return cur_offset
-
-    def __get_property_size(self, name, cur_dict = block_structure):
-        for key, value in cur_dict.items():
-            if isinstance(value, dict):
-                self.__get_property_size(name, value)
-                
-                return value
-            else:
-                if key == name:
-                    return value
-
-        return value
     
     def __append_block(self, blk):
         with open(f"blockchain/blocks/blk_{str(getBlockchainLen() + 1).zfill(NUMS_NUM)}.dat", 'wb') as f:
@@ -127,36 +106,36 @@ class Blockchain:
             header = getBlockHeader(check_block)
             
             if hashInHex(header)[:num_of_zeros] == difficulty:
-                print(difficulty)
-                print(header.hex()) 
+                # print(difficulty)
+                # print(header.hex()) 
                 check_proof = True
                 self.__append_block(check_block)
                 self.__clear_mempool()
 
-                # db = plyvel.DB('chainstate/', create_if_missing=True)
-                # info_for_db = []
+                db = plyvel.DB('chainstate/', create_if_missing=True)
+                info_for_db = []
                 
-                # #TODO allow adding transaction into leveldb 
-                # # for i in range(self.__get_tx_number(check_block)):
-                # #     vout_n_arr = []
-                # #     print(self.__get_tx_number(check_block))
+                #TODO allow adding transaction into leveldb 
+                # for i in range(self.__get_tx_number(check_block)):
+                #     vout_n_arr = []
+                #     print(self.__get_tx_number(check_block))
 
-                # #     if check_block['transactions'][i]:
-                # #         for vout in check_block['transactions'][i]['vout']:
-                # #             vout_n_arr.append(vout['n'])
-                # #             info_for_db.append({
-                # #                 'coinbase': True if not i else False, 
-                # #                 'height': check_block['index'],
-                # #                 'vout_info': {
-                # #                     'vout': vout['n'],
-                # #                     'spent': False,
-                # #                     'scriptPubKey': vout['scriptPubKey']
-                # #                 }
-                # #             })
+                #     if check_block['transactions'][i]:
+                #         for vout in check_block['transactions'][i]['vout']:
+                #             vout_n_arr.append(vout['n'])
+                #             info_for_db.append({
+                #                 'coinbase': True if not i else False, 
+                #                 'height': check_block['index'],
+                #                 'vout_info': {
+                #                     'vout': vout['n'],
+                #                     'spent': False,
+                #                     'scriptPubKey': vout['scriptPubKey']
+                #                 }
+                #             })
 
-                # #     db.put(hashlib.sha256(pickle.dumps(check_block['transactions'][i])).digest(), pickle.dumps(info_for_db))
+                #     db.put(hashlib.sha256(pickle.dumps(check_block['transactions'][i])).digest(), pickle.dumps(info_for_db))
                 
-                # db.close()
+                db.close()
 
                 return check_block
 
@@ -187,7 +166,7 @@ class Blockchain:
 
     def add_transaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
 
-        print(sk)
+        # print(sk)
         version = (0).to_bytes(block_structure['version'], "little")
         tx_data = version
         inputs_num = len(txid).to_bytes(block_structure['input_count'], "little")
@@ -223,13 +202,14 @@ class Blockchain:
     def __create_vin(self, txid, vout_num, sk):
         if not txid or not vout_num:
             return None
-
+        # print(121212)
+        # print(sk.sign(int(txid, 16).to_bytes(block_structure['txid'], 'little')))
+        # print(len(sk.sign(int(txid, 16).to_bytes(block_structure['txid'], 'little'))))
         vin_data = int(txid, 16).to_bytes(block_structure['txid'], 'little')
         vin_data += vout_num.to_bytes(block_structure['vout'], "little")
 
-        # TODO: change scriptSig
-        scriptSig = (100).to_bytes(1, "big")
-        vin_data += (1).to_bytes(1, "big") #ScriptSig size
+        scriptSig = sk.sign(int(txid, 16).to_bytes(block_structure['txid'], 'little'))
+        vin_data += len(scriptSig).to_bytes(block_structure['script_sig_size'], "little") #ScriptSig size
         vin_data += scriptSig #ScriptSig
 
         return vin_data
@@ -239,8 +219,8 @@ class Blockchain:
         vout_data = int(value).to_bytes(block_structure['value'], "little")
 
         # TODO: change scriptPubKey
-        len_of_script_pub_key = math.ceil(len(address) / 2)
-        vout_data += len_of_script_pub_key.to_bytes(1, "big") #ScriptPubKey size
-        vout_data += int(address, 16).to_bytes(len_of_script_pub_key, 'big')#ScriptPubKey
+        script_pub_key = int(address, 16).to_bytes(len(address) // 2, 'big') 
+        vout_data += len(script_pub_key).to_bytes(block_structure['script_sig_size'], "little") #ScriptPubKey size
+        vout_data += script_pub_key #ScriptPubKey
 
         return vout_data

@@ -1,8 +1,13 @@
-with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
-    print(f.read())
+# with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
+#     print(f.read())
 
-import socket
+from blocks_parser.parser import *
+import json
+# getNthBlockTxs(9)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(1.0)
-sock.connect(('12.12.12.12', 8888))
+
+
+with open('tmp.json', 'w') as f:
+    json.dump(parseBlock(7), f)
+
+print(parseBlock(7))

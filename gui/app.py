@@ -4,16 +4,16 @@ from PyQt5.QtGui import QKeySequence, QColor, QTextCursor
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from wallet.wallet import Wallet
 import os
 
 import ecdsa
 import hashlib
 import threading
+import socket
 
 from blockchain.blockchain import Blockchain
+from wallet.wallet import Wallet
 from network.client import Node
-import socket
 
 
 class User():
@@ -54,6 +54,23 @@ class OverviewWidget(QWidget):
         super(QWidget, self).__init__(parent)
 
 class WalletWidget(QWidget):
+    def __init__(self, user, parent=None):
+        super(QWidget, self).__init__(parent)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.sk = user.sk
+        self.pk = self.sk.get_verifying_key()
+        sk_label = QLabel(str(self.sk.to_string().hex()))
+        pk_label = QLabel(str(self.pk.to_string().hex()))
+
+        sk_label.setAlignment(Qt.AlignLeft)
+        pk_label.setAlignment(Qt.AlignLeft)
+        self.layout.addWidget(sk_label)
+        self.layout.addWidget(pk_label)
+
+
+
+class TransactionWidget(QWidget):
     def __init__(self, user, blockchain, parent=None):
         super(QWidget, self).__init__(parent)
         self.user = user
@@ -67,6 +84,8 @@ class WalletWidget(QWidget):
             'vouts': [],
             'txids': [],
         }
+
+
 
         self.vin_box = QGroupBox('VIN')
         self.vin_box_layout = QVBoxLayout()
@@ -362,8 +381,9 @@ class MainWindow(QMainWindow):
 
         self.terminal_widget = TerminalWidget(self.user, self.blockchain, self) 
         self.utxo_window = UTXOWindow(self.user.wallet, self)
-        self.main_widget = MainWidget(self) 
-        self.wallet_widget = WalletWidget(self.user, self.blockchain, self) 
+        self.main_widget = MainWidget(self)
+        self.wallet_widget = WalletWidget(self.user, self) 
+        self.transaction_widget = TransactionWidget(self.user, self.blockchain, self) 
         self.overview_widget = OverviewWidget(self) 
 
         self.tabWidget = QtWidgets.QTabWidget()
@@ -374,8 +394,9 @@ class MainWindow(QMainWindow):
         self.tabWidget.addTab(self.overview_widget, "Overview")
         self.tabWidget.addTab(self.main_widget, "Explore")
         self.tabWidget.addTab(self.wallet_widget, "Wallet")
+        self.tabWidget.addTab(self.transaction_widget, "Create transaction")
 
-        self.setFixedSize(700, 800)
+        self.setFixedSize(1300, 800)
 
 
         exitAction = QAction('&Exit', self)
