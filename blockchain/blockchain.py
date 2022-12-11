@@ -11,42 +11,44 @@ import ecdsa
 from blocks_parser.parser import *
 from blockchain.blk_structure import *
 import plyvel
+from leveldb.database_code import *
 
 
 
 class Blockchain:
-    def __init__(self):
+    def __init__(self, wallet):
         if not getBlockchainLen():
             self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
+
+        self.wallet = wallet
 
         self.mempool_tx_size_info = 2
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
         res = prev_hash
-        print('prev_hash:', prev_hash)
+        # print('prev_hash:', prev_hash)
 
         if transactions:
             res += MerkleTree(transactions).root
-            print('mrkl_root: ', MerkleTree(transactions).root.hex())
+            # print('mrkl_root: ', MerkleTree(transactions).root.hex())
         else:
             res += (0).to_bytes(block_structure['mrkl_root'], byteorder='little')
 
-
         res += int(time.time()).to_bytes(block_structure['time'], byteorder='little')
-        print('time: ', int(time.time()).to_bytes(block_structure['time'], byteorder='little'))
+        # print('time: ', int(time.time()).to_bytes(block_structure['time'], byteorder='little'))
         res += difficulty.to_bytes(block_structure['difficulty'], byteorder='little')
-        print('difficulty: ', difficulty.to_bytes(block_structure['difficulty'], byteorder='little'))
+        # print('difficulty: ', difficulty.to_bytes(block_structure['difficulty'], byteorder='little'))
         res += nonce.to_bytes(block_structure['nonce'], byteorder='little')
-        print('nonce: ', nonce.to_bytes(block_structure['nonce'], byteorder='little'))
+        # print('nonce: ', nonce.to_bytes(block_structure['nonce'], byteorder='little'))
         res += len(transactions).to_bytes(block_structure['tx_count'], byteorder='little')
-        print('tx_count: ', len(transactions).to_bytes(block_structure['tx_count'], byteorder='little'))
+        # print('tx_count: ', len(transactions).to_bytes(block_structure['tx_count'], byteorder='little'))
         for tx in transactions:
-            print(tx)
+            # print(tx)
             res += tx
 
         size = len(res).to_bytes(block_structure['size'], byteorder='little')
-        print('size: ', len(res).to_bytes(block_structure['size'], byteorder='little'))
+        # print('size: ', len(res).to_bytes(block_structure['size'], byteorder='little'))
 
         return size + res
 
@@ -113,27 +115,16 @@ class Blockchain:
                 self.__clear_mempool()
 
                 db = plyvel.DB('chainstate/', create_if_missing=True)
-                info_for_db = []
                 
-                #TODO allow adding transaction into leveldb 
-                # for i in range(self.__get_tx_number(check_block)):
-                #     vout_n_arr = []
-                #     print(self.__get_tx_number(check_block))
+                # for transactions[i] in transactions:
+                for i in range(len(transactions)):
+                    txid = hashlib.sha256(transactions[i]).digest()
+                    vout_info = createVoutsStruct(txid, i, transactions[i], self.wallet)
 
-                #     if check_block['transactions'][i]:
-                #         for vout in check_block['transactions'][i]['vout']:
-                #             vout_n_arr.append(vout['n'])
-                #             info_for_db.append({
-                #                 'coinbase': True if not i else False, 
-                #                 'height': check_block['index'],
-                #                 'vout_info': {
-                #                     'vout': vout['n'],
-                #                     'spent': False,
-                #                     'scriptPubKey': vout['scriptPubKey']
-                #                 }
-                #             })
+                    db.put(txid, vout_info)
 
-                #     db.put(hashlib.sha256(pickle.dumps(check_block['transactions'][i])).digest(), pickle.dumps(info_for_db))
+                    with open('txids.txt', 'w') as f:
+                        f.write(hashlib.sha256(transactions[i]).hexdigest())
                 
                 db.close()
 
@@ -144,7 +135,6 @@ class Blockchain:
         
         return 1
 
-    #TODO change mempool from json to bytes
     def __clear_mempool(self):
         with open('blockchain/mempool/mempool.dat', 'w'): 
             pass
@@ -165,8 +155,6 @@ class Blockchain:
             return True
 
     def add_transaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
-
-        # print(sk)
         version = (0).to_bytes(block_structure['version'], "little")
         tx_data = version
         inputs_num = len(txid).to_bytes(block_structure['input_count'], "little")
@@ -180,10 +168,11 @@ class Blockchain:
         for i in range(len(addresses)):
             tx_data += self.__create_vout(int(value[i]), addresses[i])
         
-        # bytes.fromhex(txid[i] if not len(txid[i]) % 2 else '0' + txid[i])
         if isTransaction:
             self.__append_to_mempool(tx_data)
-
+        
+        print(tx_data)
+        
         return tx_data
 
     def __append_to_mempool(self, tx_bytes):
@@ -202,9 +191,6 @@ class Blockchain:
     def __create_vin(self, txid, vout_num, sk):
         if not txid or not vout_num:
             return None
-        # print(121212)
-        # print(sk.sign(int(txid, 16).to_bytes(block_structure['txid'], 'little')))
-        # print(len(sk.sign(int(txid, 16).to_bytes(block_structure['txid'], 'little'))))
         vin_data = int(txid, 16).to_bytes(block_structure['txid'], 'little')
         vin_data += vout_num.to_bytes(block_structure['vout'], "little")
 
@@ -218,8 +204,7 @@ class Blockchain:
 
         vout_data = int(value).to_bytes(block_structure['value'], "little")
 
-        # TODO: change scriptPubKey
-        script_pub_key = int(address, 16).to_bytes(len(address) // 2, 'big') 
+        script_pub_key = int(address, 16).to_bytes(math.ceil(len(address) / 2), 'big') 
         vout_data += len(script_pub_key).to_bytes(block_structure['script_sig_size'], "little") #ScriptPubKey size
         vout_data += script_pub_key #ScriptPubKey
 

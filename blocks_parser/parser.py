@@ -12,13 +12,18 @@ def getPropertyOffset(name):
         else:
             res += size
 
+def getPropertyDataFromBlock(name, n):
+    block = getNthBlock(n)
+    offset = getPropertyOffset(name)
+
+    return block[offset:offset + block_structure[name]]
+
 def getBlockchainLen(): 
     if os.path.exists('blockchain/blocks'):
         return len(os.listdir('blockchain/blocks')) 
     else:
         os.mkdir('blockchain/blocks')
         return 0
-
 
 def getBlockFiles(): return sorted(os.listdir('blockchain/blocks'))
 
@@ -33,11 +38,8 @@ def getBlockHeader(data):
             break
         res += data[prev_value:prev_value + size]
         prev_value += size
-
-    print(prev_value)
     
     return res
-
 
 def hashInHex(data): return hashlib.sha256(data).hexdigest()
 
@@ -55,10 +57,6 @@ def hashNthBlockInHex(n): return hashInHex(getNthBlock(n)[block_structure['size'
 
 def hashNthBlockInDigest(n): return hashInDigest(getNthBlock(n)[block_structure['size']:])
 
-def getDataOnExactPlace(data, prop_name):
-    offset = getPropertyOffset(prop_name)
-    return data[offset:offset + block_structure['tx_count']]
-
 def getNthBlockTxs(n):  
     block = getNthBlock(n)
     
@@ -66,8 +64,10 @@ def getNthBlockTxs(n):
         'vin': [],
         'vout': []
     }
-    txs_num = int.from_bytes(getDataOnExactPlace(block, 'tx_count'), 'little')
 
+    txs_num = int.from_bytes(block[getPropertyOffset('tx_count'), block_structure['tx_count']], 'little')
+    cur_offset = getPropertyOffset('tx_count') + block_structure['tx_count']
+    
     for _ in range(txs_num):
         pass
 
@@ -84,6 +84,72 @@ def getLastBlockHash(): return getNthBlockPrevHash(getBlockchainLen() - 1)
 def hashLastBlockInHex(): return hashNthBlockInHex(getBlockchainLen() - 1)
 
 def hashLastBlockInDigest(): return hashNthBlockInDigest(getBlockchainLen() - 1)
+
+def getVinsInfo(tx_data, cur_offset):
+    vins = []
+
+    cur_offset = block_structure['version']
+    vins_field_len = block_structure['input_count']
+    vins_num = int.from_bytes(tx_data[cur_offset:cur_offset + vins_field_len], 'little')
+    cur_offset += vins_field_len
+
+    for _ in range(vins_num):
+        vin = {}
+        vin['txid'] = tx_data[cur_offset:cur_offset + block_structure['txid']]
+        cur_offset += block_structure['txid']
+        vin['vout'] = tx_data[cur_offset:cur_offset + block_structure['vout']]
+        cur_offset += block_structure['vout']
+        vin['script_sig_size'] = tx_data[cur_offset:cur_offset + block_structure['script_sig_size']]
+        # script_sig_size = block_structure['script_sig_size'] 
+        script_sig = int.from_bytes(tx_data[cur_offset:cur_offset + vin['script_sig_size']], 'little')
+        cur_offset += vin['script_sig_size']
+        vin['script_sig'] = tx_data[cur_offset:cur_offset + block_structure['script_sig']]
+        cur_offset += script_sig
+        vins.append(vin)
+
+    return vins
+
+def getVoutsInfo(tx_data):
+    vouts = []
+    
+    cur_offset = block_structure['version']
+    vins_field_len = block_structure['input_count']
+    vins_num = int.from_bytes(tx_data[cur_offset:cur_offset + vins_field_len], 'little')
+    cur_offset += vins_field_len
+
+    for _ in range(vins_num):
+        cur_offset += block_structure['txid']
+        cur_offset += block_structure['vout']
+        script_sig_size = block_structure['script_sig_size'] 
+        script_sig = int.from_bytes(tx_data[cur_offset:cur_offset + script_sig_size], 'little')
+        cur_offset += script_sig_size
+        cur_offset += script_sig
+        
+    vouts_field_len = block_structure['output_count']
+    vouts_num = int.from_bytes(tx_data[cur_offset:cur_offset + vouts_field_len], 'little')
+    cur_offset += vouts_field_len
+
+    for _ in range(vouts_num):
+        vout = {}
+        value = tx_data[cur_offset:cur_offset + block_structure['value']]
+        cur_offset += block_structure['value']
+        vout['value'] = value
+        script_pub_key_size = tx_data[cur_offset:cur_offset + block_structure['script_pub_key_size']]
+        cur_offset += block_structure['script_pub_key_size']
+        vout['script_pub_key_size'] = script_pub_key_size
+        script_sig = tx_data[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
+        cur_offset += int.from_bytes(script_pub_key_size, 'little')
+        vout['script_pub_key'] = script_sig
+
+        vouts.append(vout)
+    
+    return vouts
+    
+
+
+
+
+
 
 def parseBlock(n):
     block = getNthBlock(n)
@@ -120,7 +186,6 @@ def parseBlock(n):
         cur_offset += block_structure['version']
         tx['version'] = version
         input_count = int.from_bytes(block[cur_offset:cur_offset + block_structure['input_count']], 'little')
-        print(input_count)
         cur_offset += block_structure['input_count']
         tx['input_count'] = input_count
         vins = []

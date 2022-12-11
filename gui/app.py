@@ -17,9 +17,9 @@ from network.client import Node
 
 
 class User():
-    def __init__(self, blockchain):
+    def __init__(self):
         self.username = 'ccoin_client'
-        self.node = Node(self.__get_local_ip(), 9999, blockchain, True)
+        self.node = Node(self.__get_local_ip(), 9999, True)
         self.node.start()
         self.wallet = Wallet()
         if os.path.exists('wallet/wallet.bin'):
@@ -58,15 +58,53 @@ class WalletWidget(QWidget):
         super(QWidget, self).__init__(parent)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.sk = user.sk
-        self.pk = self.sk.get_verifying_key()
-        sk_label = QLabel(str(self.sk.to_string().hex()))
-        pk_label = QLabel(str(self.pk.to_string().hex()))
+        self.wallet = user.wallet
+        
 
+        self.utxos_box = QGroupBox('UTXOs')
+        self.utxos_box_layout = QVBoxLayout()
+        self.utxos_box.setLayout(self.utxos_box_layout)
+        self.layout.addWidget(self.utxos_box, 5)
+        # self.__create_utxo()
+
+        self.wallet_box = QGroupBox('Wallet Keys')
+        self.wallet_box_layout = QVBoxLayout()
+        self.wallet_box.setLayout(self.wallet_box_layout)
+        self.layout.addWidget(self.wallet_box, 1)
+        sk_label = QLabel(str(user.sk.to_string().hex()))
+        pk_label = QLabel(str(user.sk.get_verifying_key().to_string().hex()))
         sk_label.setAlignment(Qt.AlignLeft)
         pk_label.setAlignment(Qt.AlignLeft)
-        self.layout.addWidget(sk_label)
-        self.layout.addWidget(pk_label)
+
+        self.wallet_box_layout.addWidget(sk_label)
+        self.wallet_box_layout.addWidget(pk_label)
+
+    def __create_utxo(self):
+
+        for utxo in self.wallet.utxos:
+            utxo_box = QGroupBox(list(utxo.keys())[0])
+            utxo_box_layout = QVBoxLayout()
+            # print(list(utxo))
+            # print(list(utxo.keys())[0])
+            # print(utxo[list(utxo.keys())[0]][0])
+            # print(utxo.keys()[0])
+            utxo_box.setLayout(utxo_box_layout)
+
+            value, n = utxo[list(utxo.keys())[0]]
+            value = QLabel('value: ' + str(value))
+            n = QLabel('n: ' + str(n))
+            utxo_box_layout.addWidget(value)
+            utxo_box_layout.addWidget(n)
+
+            self.utxos_box_layout.addWidget(utxo_box, 1)
+
+            
+
+    def reloadPage(self):
+        for _ in range(self.utxos_box_layout.count()):
+            self.utxos_box_layout.itemAt(0).widget().setParent(None)
+
+        self.__create_utxo()
 
 
 
@@ -84,8 +122,6 @@ class TransactionWidget(QWidget):
             'vouts': [],
             'txids': [],
         }
-
-
 
         self.vin_box = QGroupBox('VIN')
         self.vin_box_layout = QVBoxLayout()
@@ -113,10 +149,10 @@ class TransactionWidget(QWidget):
         self.layout.addWidget(send_tx, 1)
 
     def sendTransaction(self):
-        print([sum.text() for sum in self.info_fields['sums']])
-        print([address.text() for address in self.info_fields['addresses']])
-        print([txid.text() for txid in self.info_fields['txids']])
-        print([int(vout.text()) for vout in self.info_fields['vouts']])
+        # print([sum.text() for sum in self.info_fields['sums']])
+        # print([address.text() for address in self.info_fields['addresses']])
+        # print([txid.text() for txid in self.info_fields['txids']])
+        # print([int(vout.text()) for vout in self.info_fields['vouts']])
 
         self.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
         [address.text() for address in self.info_fields['addresses']],
@@ -163,15 +199,17 @@ class Terminal(QTextEdit):
         self.setStyleSheet("""QTextEdit { background-color: black; color: white }""")
         
 class TerminalInput(Terminal):
-    def __init__(self, terminal_output, user, prefix, blockchain):
+    def __init__(self, terminal_output, user, prefix, blockchain, callbackWallet):
         super().__init__()
         self.blockchain = blockchain
         self.terminal_output = terminal_output
         self.user = user
         self.prefix = prefix
         self.history = self.__recover_history()
-        print(self.history)
+        # print(self.history)
         self.history_index = len(self.history) - 1
+
+        self.callback_wallet = callbackWallet
 
         self.__clear_terminal()
 
@@ -199,7 +237,16 @@ class TerminalInput(Terminal):
             if command_arr[1] == '-s' or command_arr[1] == '--start':
                 res = self.__start_inf_mining()
             elif command_arr[1] == '-o' or command_arr[1] == '--once':
-                res = self.__mining_once()
+                mining_thread = threading.Thread(target=self.__mining_once)
+                mining_thread.start()
+                mining_thread.join()
+                self.callback_wallet()     
+
+           
+                # res = self.__mining_once()
+
+        if command_arr[0] == 'abc':
+            print(self.user.wallet.utxos)
 
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
@@ -214,28 +261,11 @@ class TerminalInput(Terminal):
                 for node in nodes: res += str(node)
                 print(res)
 
-        # if command_arr[0] == 'send':
-        #     file_info = ''
-
-        #     with open('blockchain/blocks/blk_0010.dat', 'rb') as f:
-        #         file_info = f.read()
-
-        #     self.user.node.sendMsgToAllNodes(b'\x00', b'\x00\x00\x00\x00\x00\x00\x00\x00', file_info)
-
         if command_arr[0] == 'history':
             if command_arr[1] == '-c' or command_arr[1] == '--clear':
                 open('gui/history.txt', 'w').close()
-            
-        # elif command_arr[0] == 'show':
-        #     if command_arr[1] == 'srv-ip':
-        #         with open('network/server.txt', 'r') as f:
-        #             res = f.read()
-
-        # elif command_arr[0] == 'add':
-        #     if command_arr[1] == 'srv-ip':
-        #         self.user.network_client.changeServerToConnectWith(command_arr[2])
-
-        # self.__add_info_to_output(command, res)
+                self.history = ['']
+        
         self.__print_event(command, res)
 
     def __recover_history(self):
@@ -260,9 +290,13 @@ class TerminalInput(Terminal):
 
     def __mining_once(self):
         blk_info = self.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())  
+        # mining_thread = threading.Thread(target=self.blockchain.mine_block, args=(self.user.wallet.sk.get_verifying_key().to_string().hex()))
+        # mining_thread.start()
+
+        # self.callback_wallet()     
 
         self.user.node.newBlockMessage(blk_info)   
-        
+
         return blk_info
 
     def __previous_command(self):
@@ -305,7 +339,7 @@ class TerminalInput(Terminal):
             self.history.append(command)
             self.history.append('')
             self.history_index = len(self.history) - 1
-            
+        
             with open('gui/history.txt', 'a') as f:
                 f.write(command + '\n')
 
@@ -333,13 +367,13 @@ class TerminalOutput(Terminal):
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
 class TerminalWidget(QWidget):
-    def __init__(self, user, blockchain, parent=None):
+    def __init__(self, user, blockchain, callbackWallet, parent=None):
         super(QWidget, self).__init__(parent)
         self.prefix = f'{user.username}@ '
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.terminal_output = TerminalOutput(self.prefix)
-        self.terminal_input = TerminalInput(self.terminal_output, user, self.prefix, blockchain)
+        self.terminal_input = TerminalInput(self.terminal_output, user, self.prefix, blockchain, callbackWallet)
 
         self.layout.addWidget(self.terminal_output, 20)
         self.layout.addWidget(self.terminal_input, 1)
@@ -369,8 +403,8 @@ class MainWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.blockchain = Blockchain()
-        self.user = User(self.blockchain)
+        self.user = User()
+        self.blockchain = Blockchain(self.user.wallet)
 
         if not self.blockchain.verifyChain():
             print('Chain isn\'t valid')
@@ -379,10 +413,10 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QtGui.QIcon('gui/logo.png'))
         self.setStyleSheet("background-color: grey;")
 
-        self.terminal_widget = TerminalWidget(self.user, self.blockchain, self) 
+        self.wallet_widget = WalletWidget(self.user, self) 
+        self.terminal_widget = TerminalWidget(self.user, self.blockchain, self.wallet_widget.reloadPage, self) 
         self.utxo_window = UTXOWindow(self.user.wallet, self)
         self.main_widget = MainWidget(self)
-        self.wallet_widget = WalletWidget(self.user, self) 
         self.transaction_widget = TransactionWidget(self.user, self.blockchain, self) 
         self.overview_widget = OverviewWidget(self) 
 

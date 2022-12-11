@@ -36,7 +36,7 @@ block_structure = {
     'script_sig': None, #tx info              
     'output_count': 1, #tx info             little
     'value': 8, #tx info                    little
-    'script_pub_key_size': 8, #tx info      liittle
+    'script_pub_key_size': 8, #tx info      little
     'script_pub_key': None, #tx info        
     'locktime': 4, #tx info                 little
 }

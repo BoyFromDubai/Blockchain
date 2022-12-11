@@ -2,6 +2,12 @@ import ecdsa
 import hashlib
 import os
 
+UTXOS_STRUCT = {
+    'txid': 32,
+    'n': 1,
+    'value': 8,
+}
+
 class Wallet:
     def __init__(self):
 
@@ -10,17 +16,21 @@ class Wallet:
                 self.sk = ecdsa.SigningKey.from_string(f.read(), ecdsa.SECP256k1)
         
             self.pk = self.sk.get_verifying_key()
-        self.utxo = []
+        self.utxos = []
 
-    def add_utxo(self, transaction):
+    def appendUTXO(self, txid, n, value):
+        # for utxo in self.utxos:
+        #     if txid.hex() in utxo.keys():
+        #         utxo[txid.hex()] = (n, value)
+        #         return
         
-        tmp_arr = []
-        id = hashlib.sha256(str(transaction).encode()).hexdigest()
-        sum = transaction['vout'][0]['value']
-        tmp_arr.append(id)
-        tmp_arr.append(sum)
-        self.utxo.append(tmp_arr)
+        self.utxos.append({txid.hex(): (n, value)})
 
+        with open('wallet/utxos.dat', 'ab') as f:
+            f.write(txid)
+            f.write(n)
+            f.write(value)
+    
     def generateKeys(self):
         
         self.sk = ecdsa.SigningKey.generate(ecdsa.SECP256k1)

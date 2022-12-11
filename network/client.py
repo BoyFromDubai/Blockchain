@@ -171,7 +171,7 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class Node(threading.Thread):
-    def __init__(self, ip, port, blockchain, debug_print = False):
+    def __init__(self, ip, port, debug_print = False):
         super(Node, self).__init__()
 
         self.ip = ip
@@ -181,7 +181,6 @@ class Node(threading.Thread):
         self.__init_server()
 
         self.debug_print = debug_print
-        self.blockchain = blockchain
 
         self.connections = []
         self.MAX_CONNECTIONS = 8

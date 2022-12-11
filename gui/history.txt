@@ -22,8 +22,6 @@ mining -o
 mining -o
 mining -o
 mining -o
-network -c 192.168.0.124
-network -c 192.168.0.128
 mining -o
 mining -o
 mining -o
@@ -32,7 +30,6 @@ mining -o
 mining -o
 mining -o
 mining -o
-network -c 192.168.0.128
 mining -o
 mining -o
 mining -o
@@ -40,7 +37,113 @@ mining -o
 mining -o
 mining -o
 mining -o
-
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+abc
+mining -o
+abc
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+abc
+mining -o
+mining -o
+abc
+abc
+abc
+mining -o
+abc
+abc
+mining -o
+abc
+mining -o
+mining -o
+abc
+mining -o
+abc
+mining -o
+abc
+abc
+mining -o
+abc
+mining -o
+abc
+mining -o
+abc
+abc
+abc
+mining -o
+abc
+abc
+mining -o
+abc
+abc
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
+mining -o
 mining -o
 mining -o
 mining -o
