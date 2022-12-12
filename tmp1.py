@@ -1,11 +1,15 @@
-with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
-    print(f.read())
+# with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
+#     print(f.read())
 
-from blocks_parser.parser import *
-import json
-getNthBlockTxs(2)
+# import json
+# # getNthBlockTxs(2)
 
-with open('tmp.json', 'w') as f:
-    json.dump(parseBlock(14), f)
+# with open('tmp.json', 'w') as f:
+#     json.dump(parseBlock(1), f)
 
-print(getPropertyDataFromBlock('tx_count', 15))
+# with open('blockchain/blocks/blk_0002.dat', 'rb') as f:
+#     print(getBlockTxs(f.read()))
+# # print(getPropertyDataFromBlock('tx_count', 15))
+# from blockchain.mrkl_tree import MerkleTree
+# import time
+

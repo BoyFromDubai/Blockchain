@@ -1,7 +1,7 @@
 import socket
 import threading
 import os
-from blocks_parser.parser import *
+from blockchain.blockchain import Blockchain
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port, debug_print):
@@ -56,7 +56,7 @@ class Connection(threading.Thread):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     def __answer_get_blocks_msg(self, msg):
         peer_cur_len = int.from_bytes(msg, 'big')
-        blocks_files = getBlockFiles()
+        blocks_files = Blockchain.getBlockFiles()
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
@@ -76,14 +76,15 @@ class Connection(threading.Thread):
             pass
 
     def __get_version_msg(self, msg):
-        chain_len = getBlockchainLen()
+        # Block
+        chain_len = Blockchain.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_blocks_msg(self, msg):
         print('ADDED')
-        cur_len = getBlockchainLen()
+        cur_len = Blockchain.getChainLen()
         with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}.dat', 'wb') as f:
             f.write(msg)
 

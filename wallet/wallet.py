@@ -23,6 +23,8 @@ class Wallet:
         #     if txid.hex() in utxo.keys():
         #         utxo[txid.hex()] = (n, value)
         #         return
+
+        n = n.to_bytes(UTXOS_STRUCT['n'], 'little')
         
         self.utxos.append({txid.hex(): (n, value)})
 
@@ -30,6 +32,8 @@ class Wallet:
             f.write(txid)
             f.write(n)
             f.write(value)
+
+        print(self.utxos)
     
     def generateKeys(self):
         

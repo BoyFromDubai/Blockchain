@@ -59,22 +59,33 @@ class WalletWidget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.wallet = user.wallet
-        
 
         self.utxos_box = QGroupBox('UTXOs')
         self.utxos_box_layout = QVBoxLayout()
         self.utxos_box.setLayout(self.utxos_box_layout)
-        self.layout.addWidget(self.utxos_box, 5)
-        # self.__create_utxo()
+        # self.layout.addWidget(self.utxos_box, 5)
+        self.__create_utxo()
+
+        scroll = QScrollArea(self)
+        self.layout.addWidget(scroll, 5)
+        scroll.setWidgetResizable(True)
+        scrollContent = QWidget(scroll)
+
+        self.scrollLayout = QVBoxLayout(scrollContent)
+        scrollContent.setLayout(self.scrollLayout)
+        self.scrollLayout.addWidget(self.utxos_box)
+        scroll.setWidget(scrollContent)
 
         self.wallet_box = QGroupBox('Wallet Keys')
         self.wallet_box_layout = QVBoxLayout()
         self.wallet_box.setLayout(self.wallet_box_layout)
         self.layout.addWidget(self.wallet_box, 1)
-        sk_label = QLabel(str(user.sk.to_string().hex()))
-        pk_label = QLabel(str(user.sk.get_verifying_key().to_string().hex()))
+        sk_label = QLabel('Secret key: ' + str(user.sk.to_string().hex()))
+        pk_label = QLabel('Public key: ' + str(user.sk.get_verifying_key().to_string().hex()))
         sk_label.setAlignment(Qt.AlignLeft)
         pk_label.setAlignment(Qt.AlignLeft)
+        sk_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        pk_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
         self.wallet_box_layout.addWidget(sk_label)
         self.wallet_box_layout.addWidget(pk_label)
@@ -82,23 +93,21 @@ class WalletWidget(QWidget):
     def __create_utxo(self):
 
         for utxo in self.wallet.utxos:
-            utxo_box = QGroupBox(list(utxo.keys())[0])
+            utxo_box = QGroupBox('UTXO')
             utxo_box_layout = QVBoxLayout()
-            # print(list(utxo))
-            # print(list(utxo.keys())[0])
-            # print(utxo[list(utxo.keys())[0]][0])
-            # print(utxo.keys()[0])
             utxo_box.setLayout(utxo_box_layout)
-
-            value, n = utxo[list(utxo.keys())[0]]
-            value = QLabel('value: ' + str(value))
-            n = QLabel('n: ' + str(n))
+            txid = QLabel('txid: ' + list(utxo.keys())[0])
+            n, value = utxo[list(utxo.keys())[0]]
+            value = QLabel('value: ' + str(int.from_bytes(value, 'little')))
+            n = QLabel('n: ' + str(int.from_bytes(n, 'little')))
+            txid.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            n.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            utxo_box_layout.addWidget(txid)
             utxo_box_layout.addWidget(value)
             utxo_box_layout.addWidget(n)
 
             self.utxos_box_layout.addWidget(utxo_box, 1)
-
-            
 
     def reloadPage(self):
         for _ in range(self.utxos_box_layout.count()):
@@ -149,17 +158,72 @@ class TransactionWidget(QWidget):
         self.layout.addWidget(send_tx, 1)
 
     def sendTransaction(self):
-        # print([sum.text() for sum in self.info_fields['sums']])
-        # print([address.text() for address in self.info_fields['addresses']])
-        # print([txid.text() for txid in self.info_fields['txids']])
-        # print([int(vout.text()) for vout in self.info_fields['vouts']])
+        try:
+            for sum in self.info_fields['sums']:
+                try:
+                    if sum.text() == '':
+                        raise Exception('Coins field must be filled!')    
 
-        self.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
-        [address.text() for address in self.info_fields['addresses']],
-        self.user.sk,
-        [txid.text() for txid in self.info_fields['txids']],
-        [vout.text() for vout in self.info_fields['vouts']])
+                    int(sum.text())
 
+                except ValueError as e:
+                    raise ValueError('Number of coins must be int!')
+
+                except Exception as e:
+                    # print(e)
+                    raise e
+            
+            for address in self.info_fields['addresses']:
+                try:
+                    if address.text() == '':
+                        raise Exception('Address field must be filled!')    
+
+                    hex(int(address.text(), 16))
+
+                except ValueError as e:
+                    raise ValueError('Adress must be a hex value!')
+
+                except Exception as e:
+                    raise e
+
+            for txid in self.info_fields['txids']:
+                try:
+                    if txid.text() == '':
+                        raise Exception('TXID field must be filled!')    
+
+                    hex(int(txid.text(), 16))
+
+                except ValueError as e:
+                    raise ValueError('TXID must be a hex value!')
+
+                except Exception as e:
+                    raise e
+
+            for vout in self.info_fields['vouts']:
+                try:
+                    if vout.text() == '':
+                        raise Exception('Vout field must be filled!')    
+
+                    int(vout.text())
+
+                except ValueError as e:
+                    raise ValueError('Vout number must be int!')
+
+                except Exception as e:
+                    raise e
+
+            self.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
+            [address.text() for address in self.info_fields['addresses']],
+            self.user.sk,
+            [txid.text() for txid in self.info_fields['txids']],
+            [vout.text() for vout in self.info_fields['vouts']])
+            
+        except Exception as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText(str(e))
+            msg.setWindowTitle("Error")
+            msg.exec_()
     def addVout(self):
         # for i in range(len(self.info_fields['txids'])):
         #     print(self.info_fields['txids'][i].text())
