@@ -523,5 +523,4 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # self.user.network_client.closeListening()
         self.user.node.stop()
-        self.wallet_widget.stop()
         
