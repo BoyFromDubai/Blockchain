@@ -89,9 +89,6 @@ class Block():
         block_info = {}
 
         cur_offset = 0
-        size = int.from_bytes(block[cur_offset:cur_offset + Block.SIZE], 'little')
-        cur_offset += header_struct['size']
-        block_info['size'] = size
         prev_blk_hash = block[cur_offset:cur_offset + header_struct['prev_blk_hash']].hex()
         cur_offset += header_struct['prev_blk_hash']
         block_info['prev_blk_hash'] = prev_blk_hash
@@ -106,7 +103,7 @@ class Block():
         block_info['difficulty'] = difficulty
         nonce = int.from_bytes(block[cur_offset:cur_offset + header_struct['nonce']], 'little')
         cur_offset += header_struct['nonce']
-        block_info['time'] = nonce
+        block_info['nonce'] = nonce
         tx_count = int.from_bytes(block[cur_offset:cur_offset + txs_struct['tx_count']], 'little')
         cur_offset += txs_struct['tx_count']
         block_info['tx_count '] = tx_count
@@ -180,9 +177,6 @@ class Block():
         block_info = {}
 
         cur_offset = 0
-        size = block[cur_offset:cur_offset + Block.SIZE]
-        cur_offset += header_struct['size']
-        block_info['size'] = size
         prev_blk_hash = block[cur_offset:cur_offset + header_struct['prev_blk_hash']]
         cur_offset += header_struct['prev_blk_hash']
         block_info['prev_blk_hash'] = prev_blk_hash
@@ -197,7 +191,7 @@ class Block():
         block_info['difficulty'] = difficulty
         nonce = block[cur_offset:cur_offset + header_struct['nonce']]
         cur_offset += header_struct['nonce']
-        block_info['time'] = nonce
+        block_info['nonce'] = nonce
         tx_count = block[cur_offset:cur_offset + txs_struct['tx_count']]
         cur_offset += txs_struct['tx_count']
         block_info['tx_count '] = tx_count
@@ -224,8 +218,8 @@ class Block():
                 script_sig_size = block[cur_offset:cur_offset + txs_struct['script_sig_size']]
                 cur_offset += BlkTransactions.TXS_STRUCT['script_sig_size']
                 vin['script_sig_size'] = script_sig_size
-                script_sig = block[cur_offset:cur_offset + script_sig_size]
-                cur_offset += script_sig_size
+                script_sig = block[cur_offset:cur_offset + int.from_bytes(script_sig_size, 'little')]
+                cur_offset += int.from_bytes(script_sig_size, 'little')
                 vin['script_sig'] = script_sig
 
                 vins.append(vin)
@@ -247,8 +241,8 @@ class Block():
                 script_pub_key_size = block[cur_offset:cur_offset + txs_struct['script_pub_key_size']]
                 cur_offset += txs_struct['script_pub_key_size']
                 vout['script_pub_key_size'] = script_pub_key_size
-                script_sig = block[cur_offset:cur_offset + script_pub_key_size]
-                cur_offset += script_pub_key_size
+                script_sig = block[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
+                cur_offset += int.from_bytes(script_pub_key_size, 'little')
                 vout['script_pub_key'] = script_sig
 
                 vouts.append(vout)
@@ -299,7 +293,7 @@ class BlkHeader():
 
     @staticmethod
     def getBlockMrklRoot(data):
-        header = BlkHeader.getBlockHeader(data)
+        header = BlkHeader.getBlockHeader(data[Block.SIZE])
         cur_offset = 0
         size = 0
         for key in BlkHeader.HEADER_STRUCT:
@@ -610,7 +604,7 @@ class Blockchain:
         Blockchain.appendToMempool(tx_data)     
 
     def getNewBlockFromPeer(self, blk_data):
-
+        
         supposed_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         
         txs = BlkTransactions.getBlockTxs(blk_data)

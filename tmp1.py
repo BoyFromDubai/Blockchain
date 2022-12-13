@@ -13,3 +13,7 @@ with open('blockchain/blocks/blk_0000.dat', 'rb') as f:
 # from blockchain.mrkl_tree import MerkleTree
 # import time
 
+from blockchain.blockchain import Block 
+# with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
+print(Block.parseBlock(4))
+print(Block.parseBlockDigest(4))
