@@ -11,8 +11,8 @@ UTXOS_STRUCT = {
 class Wallet:
     def __init__(self):
 
-        if os.path.exists('wallet/wallet.bin'):
-            with open('wallet/wallet.bin', 'rb') as f:
+        if os.path.exists('wallet/wallet.dat'):
+            with open('wallet/wallet.dat', 'rb') as f:
                 self.sk = ecdsa.SigningKey.from_string(f.read(), ecdsa.SECP256k1)
         
             self.pk = self.sk.get_verifying_key()
@@ -43,5 +43,5 @@ class Wallet:
         self.sk = ecdsa.SigningKey.generate(ecdsa.SECP256k1)
         self.pk = self.sk.get_verifying_key()
 
-        with open('wallet/wallet.bin', 'wb') as f:
+        with open('wallet/wallet.dat', 'wb') as f:
             f.write(self.sk.to_string())

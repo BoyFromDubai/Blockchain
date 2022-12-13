@@ -481,7 +481,7 @@ class Blockchain:
                 for tx in transactions:
                     db.createVoutsStruct(hashlib.sha256(tx).digest(), tx, self.wallet)
 
-                    with open('txids.txt', 'w') as f:
+                    with open('wallet/txids.txt', 'w') as f:
                         f.write(hashlib.sha256(tx).hexdigest())
 
                 return block_data

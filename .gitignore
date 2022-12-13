@@ -1,6 +1,7 @@
 chainstate/
 **/__pycache__
 wallet/*.dat
+wallet/*.txt
 blockchain/blocks
 blockchain/mempool
 database/database.db
@@ -9,4 +10,3 @@ database/tables.sql
 .vscode/
 network/*.txt
 gui/*.txt
-txids.txt
