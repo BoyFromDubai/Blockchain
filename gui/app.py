@@ -39,10 +39,10 @@ from network.client import Node
 class User():
     def __init__(self):
         self.username = 'ccoin_client'
-        self.node = Node(self.__get_local_ip(), 9999, True)
-        self.node.start()
         self.wallet = Wallet()
         self.blockchain = Blockchain(self.wallet)
+        self.node = Node(self.__get_local_ip(), 9999, self.blockchain, True,)
+        self.node.start()
 
     def __get_local_ip(self):
         try:
@@ -140,7 +140,6 @@ class WalletWidget(QWidget):
             self.utxos_box_layout.addWidget(utxo_box, 1)
 
     def reloadPage(self):
-        print('Reloaded!!')
         for _ in range(self.utxos_box_layout.count()):
             self.utxos_box_layout.itemAt(0).widget().setParent(None)
 
@@ -240,7 +239,7 @@ class TransactionWidget(QWidget):
                 except Exception as e:
                     raise e
 
-            tx_data = self.user.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
+            tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
                 [address.text() for address in self.info_fields['addresses']],
                 self.user.wallet.sk,
                 [txid.text() for txid in self.info_fields['txids']],
@@ -366,11 +365,11 @@ class TerminalInput(Terminal):
     def __start_inf_mining(self):
 
         while True:
-            self.user.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())
+            self.user.blockchain.mineBlock(self.user.wallet.sk.get_verifying_key().to_string().hex())
 
     def __mining_once(self):
-        blk_info = self.user.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())  
-        # mining_thread = threading.Thread(target=self.blockchain.mine_block, args=(self.user.wallet.sk.get_verifying_key().to_string().hex()))
+        blk_info = self.user.blockchain.mineBlock(self.user.wallet.sk.get_verifying_key().to_string().hex())  
+        # mining_thread = threading.Thread(target=self.blockchain.mineBlock, args=(self.user.wallet.sk.get_verifying_key().to_string().hex()))
         # mining_thread.start()
 
         # self.callback_wallet()     

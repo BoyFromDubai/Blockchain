@@ -1,16 +1,18 @@
 import socket
 import threading
 import os
-from blockchain.blockchain import Blockchain
+# from blockchain.blockchain import Blockchain
 
 class Connection(threading.Thread):
-    def __init__(self, main_node, sock, ip, port, debug_print):
+    def __init__(self, main_node, sock, ip, port, blockchain, debug_print):
         super(Connection, self).__init__()
         self.ip = ip
         self.port = port
         self.sock = sock
         self.sock.settimeout(1.0)
         self.STOP_FLAG = threading.Event()
+
+        self.blockchain = blockchain
 
         self.debug_print = debug_print
 
@@ -56,7 +58,7 @@ class Connection(threading.Thread):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     def __answer_get_blocks_msg(self, msg):
         peer_cur_len = int.from_bytes(msg, 'big')
-        blocks_files = Blockchain.getBlockFiles()
+        blocks_files = self.blockchain.getBlockFiles()
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
@@ -79,21 +81,19 @@ class Connection(threading.Thread):
             pass
 
     def __get_version_msg(self, msg):
-        # Block
-        chain_len = Blockchain.getChainLen()
+        chain_len = self.blockchain.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_blocks_msg(self, msg):
         print('ADDED')
-        cur_len = Blockchain.getChainLen()
-        with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
-            f.write(msg)
+
+        self.blockchain.getNewBlockFromPeer(msg)
 
     def __get_tx_msg(self, msg):
         print('TX_MSG')
-        Blockchain.verifyTransaction(msg)
+        self.blockchain.verifyTransaction(msg)
 
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
@@ -179,7 +179,7 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class Node(threading.Thread):
-    def __init__(self, ip, port, debug_print = False):
+    def __init__(self, ip, port, blockchain, debug_print = False):
         super(Node, self).__init__()
 
         self.ip = ip
@@ -189,6 +189,8 @@ class Node(threading.Thread):
         self.__init_server()
 
         self.debug_print = debug_print
+
+        self.blockchain = blockchain
 
         self.connections = []
         self.MAX_CONNECTIONS = 8
@@ -230,7 +232,7 @@ class Node(threading.Thread):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(2.0)
                 sock.connect((ip, port))
-                connection = Connection(self, sock, ip, port, self.debug_print)
+                connection = Connection(self, sock, ip, port, self.blockchain, self.debug_print)
                 connection.start()
                 self.connections.append(connection)
 

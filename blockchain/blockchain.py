@@ -24,7 +24,6 @@ class DB():
 
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
-        pass
 
     def __del__(self):
         self.db.close()
@@ -194,11 +193,8 @@ class BlkHeader():
     
         res = self.prev_hash
     
-        # print('prev_hash:', prev_hash)
-
         if self.txs:
             res += MerkleTree(self.txs).root
-            # print('mrkl_root: ', MerkleTree(transactions).root.hex())
         else:
             res += (0).to_bytes(self.HEADER_STRUCT['mrkl_root'], byteorder='little')
 
@@ -209,16 +205,35 @@ class BlkHeader():
         self.header = res
 
         return res
+
+    @staticmethod
+    def getBlockMrklRoot(data):
+        header = BlkHeader.getBlockHeader(data)
+        cur_offset = 0
+        size = 0
+        for key in BlkHeader.HEADER_STRUCT:
+            if key == 'mrkl_root':
+                size = BlkHeader.HEADER_STRUCT[key]
+                break
+            else:
+                cur_offset += BlkHeader.HEADER_STRUCT[key]
+        
+        return header[cur_offset:size] 
     
     @staticmethod
-    def getNthBlockHeader(n): 
-        block = Block.getNthBlock(n)
-        
+    def getBlockHeader(data):
         cur_offset = 0
         for key in BlkHeader.HEADER_STRUCT:
             cur_offset += BlkHeader.HEADER_STRUCT[key]
         
-        return block[:cur_offset]
+        return data[:cur_offset]
+
+    @staticmethod
+    def getNthBlockHeader(n): 
+        data = Block.getNthBlock(n)
+        
+        return BlkHeader.getBlockHeader(data)
+        
 
     @staticmethod
     def getNthBlockPrevHash(n):
@@ -403,10 +418,10 @@ class Blockchain:
 
     def __init__(self, wallet):
         if not self.getChainLen():
-            self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
+            self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
 
         self.wallet = wallet
-
+        self.db = DB()
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
@@ -432,8 +447,8 @@ class Blockchain:
         with open(f"blockchain/blocks/blk_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'wb') as f:
             f.write(blk)
 
-    def mine_block(self, pk):
-        emission = self.add_transaction([math.ceil(random.random() * 100)], [pk], sk=None, isTransaction=False)
+    def mineBlock(self, pk):
+        emission = self.addTransaction([math.ceil(random.random() * 100)], [pk], sk=None, isTransaction=False)
         transactions = [emission]
         # mempool = self.__get_mempool()[1:]
         mempool = self.__get_mempool()
@@ -458,19 +473,13 @@ class Blockchain:
             header = check_block.header.header
             
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
-                # print(difficulty)
-                # print(header.hex()) 
+
                 check_proof = True
                 self.__append_block(block_data)
                 self.__clear_mempool()
-                # db = plyvel.DB()
-                db = DB()
-                # for transactions[i] in transactions:
-                for tx in transactions:
-                    db.createVoutsStruct(hashlib.sha256(tx).digest(), tx, self.wallet)
 
-                    with open('wallet/txids.txt', 'w') as f:
-                        f.write(hashlib.sha256(tx).hexdigest())
+                for tx in transactions:
+                    self.appendVoutsToDb(tx)
 
                 return block_data
 
@@ -480,8 +489,14 @@ class Blockchain:
         return 1
 
     def __clear_mempool(self):
-        with open('blockchain/mempool/mempool.dat', 'w'): 
+        with open('blockchain/mempool/mempool.dat', 'wb'): 
             pass
+
+    def appendVoutsToDb(self, tx):
+        self.db.createVoutsStruct(hashlib.sha256(tx).digest(), tx, self.wallet)
+
+        with open('wallet/txids.txt', 'w') as f:
+            f.write(hashlib.sha256(tx).hexdigest())
 
     @staticmethod
     def getChainLen():
@@ -501,7 +516,25 @@ class Blockchain:
 
         ## TODO: tx verification
 
-        Blockchain.appendToMempool(tx_data)        
+        Blockchain.appendToMempool(tx_data)     
+
+    def getNewBlockFromPeer(self, blk_data):
+
+        supposed_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
+        
+        txs = BlkTransactions.getBlockTxs(blk_data)
+        
+        actual_mrkl_root = MerkleTree(self.txs).root
+
+        print(txs)
+        print(supposed_mrkl_root)
+        print(actual_mrkl_root)
+        print(actual_mrkl_root == supposed_mrkl_root)
+
+        cur_len = self.getChainLen()
+        with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
+            f.write(blk_data)
+   
 
     def verifyChain(self):
         block_files = self.getBlockFiles()
@@ -528,7 +561,7 @@ class Blockchain:
             
         return True
 
-    def add_transaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
+    def addTransaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
         version = (0).to_bytes(BlkTransactions.TXS_STRUCT['version'], "little")
         tx_data = version
         inputs_num = len(txid).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
@@ -555,9 +588,6 @@ class Blockchain:
         with open('blockchain/mempool/mempool.dat', 'ab') as f:
             f.write(len(tx_bytes).to_bytes(Blockchain.MEMPOOL_TX_SIZE_INFO, 'little'))
             f.write(tx_bytes)
-
-        # with open('blockchain/mempool/mempool.dat', 'wb') as f:
-        #     pass
             
     def get_chain(self): return data.get_chain()
 

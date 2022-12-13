@@ -29,7 +29,7 @@ def wallet():
         address = request.form.getlist('address[]')
 
         from main import blockchain
-        tx = blockchain.add_transaction(sum, address, txid, vout)
+        tx = blockchain.addTransaction(sum, address, txid, vout)
         data.save_to_mempool(tx)
 
     from main import wallet
