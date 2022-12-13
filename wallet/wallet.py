@@ -16,6 +16,9 @@ class Wallet:
                 self.sk = ecdsa.SigningKey.from_string(f.read(), ecdsa.SECP256k1)
         
             self.pk = self.sk.get_verifying_key()
+        else:
+            self.generateKeys()
+
         self.utxos = []
 
     def appendUTXO(self, txid, n, value):

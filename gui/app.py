@@ -280,22 +280,22 @@ class TerminalInput(Terminal):
 
         self.__clear_terminal()
 
-    def __check_keys(func):
-        def wrapper(*args):
-            if not os.path.exists('wallet/wallet.bin'):
-                message = '[WARNING] Private key wasn\'t generated!\nGenerating key...\n'
-                args[0].user.wallet.generateKeys()
+    # def __check_keys(func):
+    #     def wrapper(*args):
+    #         if not os.path.exists('wallet/wallet.bin'):
+    #             message = '[WARNING] Private key wasn\'t generated!\nGenerating key...\n'
+    #             args[0].user.wallet.generateKeys()
 
-                message += 'Key generated successfully'
-                print(*args)
-                args[0].__print_event(args[1], message)
+    #             message += 'Key generated successfully'
+    #             print(*args)
+    #             args[0].__print_event(args[1], message)
 
-            else:
-                func(*args)
+    #         else:
+    #             func(*args)
 
-        return wrapper
+    #     return wrapper
 
-    @__check_keys
+    # @__check_keys
     def __execute_command(self, command):
         command_arr = command.split()
         res = ''
