@@ -2,3 +2,4 @@ clear -h
 network -c 192.168.0.128
 mining -o
 mining -o
+mining -o

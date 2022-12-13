@@ -22,19 +22,15 @@ class Wallet:
         self.utxos = []
 
     def appendUTXO(self, txid, n, value):
-        # for utxo in self.utxos:
-        #     if txid.hex() in utxo.keys():
-        #         utxo[txid.hex()] = (n, value)
-        #         return
-
+        
         n = n.to_bytes(UTXOS_STRUCT['n'], 'little')
         
         self.utxos.append({txid.hex(): (n, value)})
 
-        with open('wallet/utxos.dat', 'ab') as f:
-            f.write(txid)
-            f.write(n)
-            f.write(value)
+        # with open('wallet/utxos.dat', 'ab') as f:
+        #     f.write(txid)
+        #     f.write(n)
+        #     f.write(value)
 
         print(self.utxos)
     
