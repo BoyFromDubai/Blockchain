@@ -1,1 +1,2 @@
 clear -h
+network -c 192.168.0.128

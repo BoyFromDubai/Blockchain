@@ -88,7 +88,7 @@ class Connection(threading.Thread):
     def __get_blocks_msg(self, msg):
         print('ADDED')
         cur_len = Blockchain.getChainLen()
-        with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}.dat', 'wb') as f:
+        with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
             f.write(msg)
 
     def __get_tx_msg(self, msg):
