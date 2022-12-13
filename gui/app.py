@@ -16,25 +16,25 @@ from blockchain.blockchain import Blockchain
 from wallet.wallet import Wallet
 from network.client import Node
 
-class Worker(QObject):
-    new_file = pyqtSignal(int)
+# class Worker(QObject):
+#     new_file = pyqtSignal(int)
 
-    def __init__(self, parent=None):
-        super(QObject, self).__init__(parent)
+#     def __init__(self, parent=None):
+#         super(QObject, self).__init__(parent)
 
-        self.closed_signal = False
+#         self.closed_signal = False
 
-    @pyqtSlot(int)
-    def do_work(self):
-        while not self.closed_signal:
-            before_state = sorted(os.listdir('blockchain/blocks'))
-            time.sleep(1) 
-            after_state = sorted(os.listdir('blockchain/blocks'))
+#     @pyqtSlot(int)
+#     def do_work(self):
+#         while not self.closed_signal:
+#             before_state = sorted(os.listdir('blockchain/blocks'))
+#             time.sleep(1) 
+#             after_state = sorted(os.listdir('blockchain/blocks'))
 
-            if after_state > before_state:
-                for i in range(len(after_state) - 1, -1, -1):
-                    # self.main_window.reloadPage()
-                    self.new_file.emit(1)
+#             if after_state > before_state:
+#                 for i in range(len(after_state) - 1, -1, -1):
+#                     # self.main_window.reloadPage()
+#                     self.new_file.emit(1)
 
 class User():
     def __init__(self):
@@ -65,7 +65,7 @@ class OverviewWidget(QWidget):
 
 class WalletWidget(QWidget):
 
-    work_requested = pyqtSignal(int)
+    # work_requested = pyqtSignal(int)
 
     def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
@@ -104,18 +104,18 @@ class WalletWidget(QWidget):
         self.wallet_box_layout.addWidget(pk_label)
 
 
-        #TODO: understand how it works))))
-        self.worker = Worker()
-        self.worker_thread = QThread()
+        # #TODO: understand how it works))))
+        # self.worker = Worker()
+        # self.worker_thread = QThread()
 
-        self.worker.new_file.connect(self.reloadPage)
-        self.work_requested.connect(self.worker.do_work)
+        # self.worker.new_file.connect(self.reloadPage)
+        # self.work_requested.connect(self.worker.do_work)
 
-        self.worker.moveToThread(self.worker_thread)
+        # self.worker.moveToThread(self.worker_thread)
 
-        self.worker_thread.start()
+        # self.worker_thread.start()
 
-        self.work_requested.emit(1)
+        # self.work_requested.emit(1)
 
     def __del__(self):
         self.worker.closed_signal = True
