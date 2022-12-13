@@ -405,13 +405,15 @@ class BlkTransactions():
         pass
 
 class Blockchain:
+    
+    MEMPOOL_TX_SIZE_INFO = 2
+
     def __init__(self, wallet):
         if not self.getChainLen():
             self.genezis_block = self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
 
         self.wallet = wallet
 
-        self.mempool_tx_size_info = 2
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
@@ -428,7 +430,7 @@ class Blockchain:
             f.seek(0)
 
             while f.tell() < len(all_data):
-                tx_info_len = int.from_bytes(f.read(self.mempool_tx_size_info), 'little')
+                tx_info_len = int.from_bytes(f.read(self.MEMPOOL_TX_SIZE_INFO), 'little')
                 transactions.append(f.read(tx_info_len))
 
         return transactions
@@ -509,8 +511,9 @@ class Blockchain:
     def verifyTransaction(tx_data):
         vins = BlkTransactions.getVins(tx_data)
 
-        print('BBBBBB')
-        print(vins)
+        ## TODO: tx verification
+
+        Blockchain.appendToMempool(tx_data)        
 
     def verifyChain(self):
         block_files = self.getBlockFiles()
@@ -555,18 +558,19 @@ class Blockchain:
             tx_data += self.__create_vout(int(value[i]), addresses[i])
         
         if isTransaction:
-            self.__append_to_mempool(tx_data)
+            self.appendToMempool(tx_data)
         
         print(tx_data)
         
         return tx_data
 
-    def __append_to_mempool(self, tx_bytes):
+    @staticmethod
+    def appendToMempool(tx_bytes):
         if not os.path.isdir('blockchain/mempool'): 
             os.mkdir('blockchain/mempool')
         
         with open('blockchain/mempool/mempool.dat', 'ab') as f:
-            f.write(len(tx_bytes).to_bytes(self.mempool_tx_size_info, 'little'))
+            f.write(len(tx_bytes).to_bytes(Blockchain.MEMPOOL_TX_SIZE_INFO, 'little'))
             f.write(tx_bytes)
 
         # with open('blockchain/mempool/mempool.dat', 'wb') as f:

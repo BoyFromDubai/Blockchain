@@ -70,6 +70,9 @@ class Connection(threading.Thread):
             self.__get_version_msg(msg)
         if info_msg_meaning == self.main_node.meaning_of_msg['block']:
             self.__get_blocks_msg(msg)
+        elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
+            self.__get_tx_msg(msg)
+
         elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
             self.__kill_socket()
         else:
@@ -87,6 +90,10 @@ class Connection(threading.Thread):
         cur_len = Blockchain.getChainLen()
         with open(f'blockchain/blocks/blk_{str(cur_len + 1).zfill(4)}.dat', 'wb') as f:
             f.write(msg)
+
+    def __get_tx_msg(self, msg):
+        print('TX_MSG')
+        Blockchain.verifyTransaction(msg)
 
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
@@ -249,7 +256,7 @@ class Node(threading.Thread):
     def newBlockMessage(self, blk_info):
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], blk_info)
 
-    def newBlockMessage(self, tx_data):
+    def newTxMessage(self, tx_data):
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['tx'], tx_data)
 
     def run(self):

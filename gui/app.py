@@ -212,13 +212,14 @@ class TransactionWidget(QWidget):
                     raise e
 
             tx_data = self.user.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
-            [address.text() for address in self.info_fields['addresses']],
-            self.user.sk,
-            [txid.text() for txid in self.info_fields['txids']],
-            [vout.text() for vout in self.info_fields['vouts']])
+                [address.text() for address in self.info_fields['addresses']],
+                self.user.sk,
+                [txid.text() for txid in self.info_fields['txids']],
+                [vout.text() for vout in self.info_fields['vouts']])
 
 
-            Blockchain.verifyTransaction(tx_data)
+            # Blockchain.verifyTransaction(tx_data)
+            self.user.node.newTxMessage(tx_data)
 
         except Exception as e:
             msg = QMessageBox()
