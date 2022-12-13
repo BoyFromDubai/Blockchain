@@ -117,8 +117,8 @@ class WalletWidget(QWidget):
 
         # self.work_requested.emit(1)
 
-    def __del__(self):
-        self.worker.closed_signal = True
+    # def __del__(self):
+    #     self.worker.closed_signal = True
 
     def __create_utxos(self):
 

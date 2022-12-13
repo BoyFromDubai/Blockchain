@@ -287,8 +287,6 @@ class BlkTransactions():
 
     @staticmethod
     def getVoutOffset(tx_data):
-        print('tx_data')
-        print(tx_data)
         cur_offset = BlkTransactions.TXS_STRUCT['version']
         vins_num = int.from_bytes(tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['input_count']], 'little')
         cur_offset += BlkTransactions.TXS_STRUCT['input_count']
@@ -305,9 +303,6 @@ class BlkTransactions():
     @staticmethod
     def getVouts(tx_data):
         vouts_offset = BlkTransactions.getVoutOffset(tx_data)
-        print('AAA')
-        print(tx_data)
-        print(tx_data[vouts_offset:])
 
         vouts_info = tx_data[vouts_offset:]
         cur_offset = 0
@@ -396,8 +391,6 @@ class BlkTransactions():
 
             txs.append(tx)
 
-        print(txs)
-
         return txs
 
     @staticmethod
@@ -454,8 +447,6 @@ class Blockchain:
         difficulty = ''.zfill(num_of_zeros)
             
         prev_block_hash = Block.hashLastBlockInDigest()
-        print('prev_block_hash')
-        print(prev_block_hash)
 
         while (not(check_proof)):
 
@@ -463,9 +454,6 @@ class Blockchain:
 
             check_block = Block(nonce, prev_block_hash, num_of_zeros, transactions)
             block_data = check_block.createBlock()
-
-            print('BLOCK_INFO')
-            print(block_data)
 
             header = check_block.header.header
             
@@ -537,9 +525,6 @@ class Blockchain:
 
                         if vouts[i]['script_pub_key'].hex() == self.wallet.sk.get_verifying_key().to_string().hex():
                             self.wallet.appendUTXO(hashlib.sha256(tx).digest(), i, vouts[i]['value'])
-
-                    print(self.wallet.utxos)
-
             
         return True
 
@@ -559,9 +544,7 @@ class Blockchain:
         
         if isTransaction:
             self.appendToMempool(tx_data)
-        
-        print(tx_data)
-        
+                
         return tx_data
 
     @staticmethod
