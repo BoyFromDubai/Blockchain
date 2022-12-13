@@ -293,7 +293,7 @@ class BlkHeader():
 
     @staticmethod
     def getBlockMrklRoot(data):
-        header = BlkHeader.getBlockHeader(data[Block.SIZE])
+        header = BlkHeader.getBlockHeader(data[Block.SIZE:])
         cur_offset = 0
         size = 0
         for key in BlkHeader.HEADER_STRUCT:
