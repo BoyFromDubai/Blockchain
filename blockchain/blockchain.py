@@ -171,6 +171,97 @@ class Block():
         return block_info
 
 
+    @staticmethod
+    def parseBlockDigest(n):
+        block = Block.getNthBlock(n)
+        header_struct = BlkHeader.HEADER_STRUCT
+        txs_struct = BlkTransactions.TXS_STRUCT
+
+        block_info = {}
+
+        cur_offset = 0
+        size = block[cur_offset:cur_offset + Block.SIZE]
+        cur_offset += header_struct['size']
+        block_info['size'] = size
+        prev_blk_hash = block[cur_offset:cur_offset + header_struct['prev_blk_hash']]
+        cur_offset += header_struct['prev_blk_hash']
+        block_info['prev_blk_hash'] = prev_blk_hash
+        mrkl_root = block[cur_offset:cur_offset + header_struct['mrkl_root']].hex()
+        cur_offset += header_struct['mrkl_root']
+        block_info['mrkl_root'] = mrkl_root
+        time = block[cur_offset:cur_offset + header_struct['time']]
+        cur_offset += header_struct['time']
+        block_info['time'] = time
+        difficulty = block[cur_offset:cur_offset + header_struct['difficulty']]
+        cur_offset += header_struct['difficulty']
+        block_info['difficulty'] = difficulty
+        nonce = block[cur_offset:cur_offset + header_struct['nonce']]
+        cur_offset += header_struct['nonce']
+        block_info['time'] = nonce
+        tx_count = block[cur_offset:cur_offset + txs_struct['tx_count']]
+        cur_offset += txs_struct['tx_count']
+        block_info['tx_count '] = tx_count
+        txs = []
+        
+        for _ in range(int.from_bytes(tx_count, 'little')):
+            tx = {}
+            version = block[cur_offset:cur_offset + txs_struct['version']]
+            cur_offset += txs_struct['version']
+            tx['version'] = version
+            input_count = block[cur_offset:cur_offset + txs_struct['input_count']]
+            cur_offset += txs_struct['input_count']
+            tx['input_count'] = input_count
+            vins = []
+            
+            for __ in range(int.from_bytes(input_count, 'little')):
+                vin = {}
+                txid = block[cur_offset:cur_offset + txs_struct['txid']]
+                cur_offset += txs_struct['txid']
+                vin['txid'] = txid
+                vout = block[cur_offset:cur_offset + txs_struct['vout']]
+                cur_offset += txs_struct['vout']
+                vin['vout'] = vout
+                script_sig_size = block[cur_offset:cur_offset + txs_struct['script_sig_size']]
+                cur_offset += BlkTransactions.TXS_STRUCT['script_sig_size']
+                vin['script_sig_size'] = script_sig_size
+                script_sig = block[cur_offset:cur_offset + script_sig_size]
+                cur_offset += script_sig_size
+                vin['script_sig'] = script_sig
+
+                vins.append(vin)
+            
+            tx['vins'] = vins
+
+            output_count = block[cur_offset:cur_offset + txs_struct['output_count']]
+            cur_offset += txs_struct['output_count']
+            tx['output_count'] = output_count
+
+            vouts = []
+
+            for __ in range(int.from_bytes(output_count, 'little')):
+                vout = {}
+
+                value = block[cur_offset:cur_offset + txs_struct['value']]
+                cur_offset += txs_struct['value']
+                vout['value'] = value
+                script_pub_key_size = block[cur_offset:cur_offset + txs_struct['script_pub_key_size']]
+                cur_offset += txs_struct['script_pub_key_size']
+                vout['script_pub_key_size'] = script_pub_key_size
+                script_sig = block[cur_offset:cur_offset + script_pub_key_size]
+                cur_offset += script_pub_key_size
+                vout['script_pub_key'] = script_sig
+
+                vouts.append(vout)
+
+            tx['vouts'] = vouts
+
+            txs.append(tx)
+
+        block_info['txs'] = txs
+        
+        return block_info
+
+
 
 class BlkHeader():
     HEADER_STRUCT = {
@@ -526,6 +617,7 @@ class Blockchain:
         
         actual_mrkl_root = MerkleTree(txs).root
 
+        print('TX_DATA')
         print(txs)
         print(supposed_mrkl_root)
         print(actual_mrkl_root)
