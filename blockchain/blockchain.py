@@ -524,7 +524,7 @@ class Blockchain:
         
         txs = BlkTransactions.getBlockTxs(blk_data)
         
-        actual_mrkl_root = MerkleTree(self.txs).root
+        actual_mrkl_root = MerkleTree(txs).root
 
         print(txs)
         print(supposed_mrkl_root)
