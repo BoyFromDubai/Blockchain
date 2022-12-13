@@ -274,7 +274,7 @@ class Node(threading.Thread):
                     conn_port = client_address[1] # backward compatibilty
                     print(conn_ip)
                     # print('LEN', len(self.connections))
-                    connection = Connection(self, connection, conn_ip, conn_port, self.debug_print)
+                    connection = Connection(self, connection, conn_ip, conn_port, self.blockchain, self.debug_print)
                     connection.start()
                     self.connections.append(connection)
 
