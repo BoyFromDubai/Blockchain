@@ -276,11 +276,11 @@ class BlkTransactions():
             cur_offset += BlkTransactions.TXS_STRUCT['txid']
             vin['vout'] = tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['vout']]
             cur_offset += BlkTransactions.TXS_STRUCT['vout']
-            vin['script_sig_size'] = int.from_bytes(tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['script_sig_size']], 'little')
-            script_sig = tx_data[cur_offset:cur_offset + vin['script_sig_size']]
-            cur_offset += vin['script_sig_size']
-            vin['script_sig'] = tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['script_sig']]
-            cur_offset += script_sig
+            vin['script_sig_size'] = tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['script_sig_size']]
+            # script_sig = tx_data[cur_offset:cur_offset + vin['script_sig_size']]
+            cur_offset += BlkTransactions.TXS_STRUCT['script_sig_size']
+            vin['script_sig'] = tx_data[cur_offset:cur_offset + int.from_bytes(vin['script_sig_size'], 'little')]
+            cur_offset += int.from_bytes(vin['script_sig_size'], 'little')
             vins.append(vin)
 
         return vins
@@ -505,10 +505,16 @@ class Blockchain:
     def getBlockFiles():
         return sorted(os.listdir('blockchain/blocks'))
 
+    @staticmethod
+    def verifyTransaction(tx_data):
+        vins = BlkTransactions.getVins(tx_data)
+
+        print('BBBBBB')
+        print(vins)
+
     def verifyChain(self):
         block_files = self.getBlockFiles()
         prev_blk_hash = Block.hashNthBlockInDigest(0)
-        print(prev_blk_hash)
         
         if len(block_files) > 1:
             for i in range(1, len(block_files)):
@@ -523,26 +529,16 @@ class Blockchain:
 
                 for tx in block_txs:
                     vouts = BlkTransactions.getVouts(tx)
-                    print(vouts)
 
                     for i in range(len(vouts)):
 
                         if vouts[i]['script_pub_key'].hex() == self.wallet.sk.get_verifying_key().to_string().hex():
                             self.wallet.appendUTXO(hashlib.sha256(tx).digest(), i, vouts[i]['value'])
 
-
                     print(self.wallet.utxos)
-                    
-
-                    # for i in range(len(tx['vouts'])):
-                    #     print(self.wallet.sk.get_verifying_key().to_string().hex())
-                    #     print(tx['vouts'][i]['script_pub_key'])
-                    #     if tx['vouts'][i]['script_pub_key'] == self.wallet.sk.get_verifying_key().to_string().hex():
-                    #         print(self.wallet.utxos)
-                    #         self.wallet.appendUTXO(hashlib.sha256(tx).digest(), i, tx['vouts'][i]['value'])
 
             
-            return True
+        return True
 
     def add_transaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
         version = (0).to_bytes(BlkTransactions.TXS_STRUCT['version'], "little")

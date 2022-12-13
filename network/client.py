@@ -196,6 +196,7 @@ class Node(threading.Thread):
             'version': b'\x00\x00\x00\x00\x00\x00\x00\x00',
             'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
             'block': b'\x00\x00\x00\x00\x00\x00\x00\x02',
+            'tx': b'\x00\x00\x00\x00\x00\x00\x00\x03',
 
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
@@ -247,6 +248,9 @@ class Node(threading.Thread):
 
     def newBlockMessage(self, blk_info):
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], blk_info)
+
+    def newBlockMessage(self, tx_data):
+        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['tx'], tx_data)
 
     def run(self):
 
