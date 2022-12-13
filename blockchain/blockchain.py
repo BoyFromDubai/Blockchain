@@ -29,7 +29,7 @@ class DB():
     def __del__(self):
         self.db.close()
 
-    def createVoutsStruct(self, txid, n, tx_info, wallet):
+    def createVoutsStruct(self, txid, tx_info, wallet):
         vouts = BlkTransactions.getVouts(tx_info)
         res = Blockchain.getChainLen().to_bytes(DB.VOUT_STRUCT['height'], 'little')
         res += len(vouts).to_bytes(DB.VOUT_STRUCT['vouts_num'], 'little')
@@ -400,6 +400,10 @@ class BlkTransactions():
 
         return txs
 
+    @staticmethod
+    def verifyBlock(blk_info):
+        pass
+
 class Blockchain:
     def __init__(self, wallet):
         if not self.getChainLen():
@@ -472,11 +476,11 @@ class Blockchain:
                 # db = plyvel.DB()
                 db = DB()
                 # for transactions[i] in transactions:
-                for i in range(len(transactions)):
-                    db.createVoutsStruct(hashlib.sha256(transactions[i]).digest(), i, transactions[i], self.wallet)
+                for tx in transactions:
+                    db.createVoutsStruct(hashlib.sha256(tx).digest(), tx, self.wallet)
 
                     with open('txids.txt', 'w') as f:
-                        f.write(hashlib.sha256(transactions[i]).hexdigest())
+                        f.write(hashlib.sha256(tx).hexdigest())
 
                 return block_data
 
@@ -500,7 +504,6 @@ class Blockchain:
     @staticmethod
     def getBlockFiles():
         return sorted(os.listdir('blockchain/blocks'))
-    
 
     def verifyChain(self):
         block_files = self.getBlockFiles()

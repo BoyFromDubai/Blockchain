@@ -1,5 +1,5 @@
-# with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
-#     print(f.read())
+with open('blockchain/blocks/blk_0000.dat', 'rb') as f:
+    print(f.read())
 
 # import json
 # # getNthBlockTxs(2)
