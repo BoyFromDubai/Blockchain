@@ -24,12 +24,6 @@ class User():
         self.wallet = Wallet()
         self.blockchain = Blockchain(self.wallet)
 
-        if os.path.exists('wallet/wallet.bin'):
-            with open('wallet/wallet.bin', 'rb') as f:
-                key = f.read()
-
-                self.sk = ecdsa.SigningKey.from_string(key, ecdsa.SECP256k1, hashfunc=hashlib.sha256)
-    
     def __get_local_ip(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -82,8 +76,8 @@ class WalletWidget(QWidget):
         self.wallet_box_layout = QVBoxLayout()
         self.wallet_box.setLayout(self.wallet_box_layout)
         self.layout.addWidget(self.wallet_box, 1)
-        sk_label = QLabel('Secret key: ' + str(user.sk.to_string().hex()))
-        pk_label = QLabel('Public key: ' + str(user.sk.get_verifying_key().to_string().hex()))
+        sk_label = QLabel('Secret key: ' + str(user.wallet.sk.to_string().hex()))
+        pk_label = QLabel('Public key: ' + str(user.wallet.sk.get_verifying_key().to_string().hex()))
         sk_label.setAlignment(Qt.AlignLeft)
         pk_label.setAlignment(Qt.AlignLeft)
         sk_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -213,7 +207,7 @@ class TransactionWidget(QWidget):
 
             tx_data = self.user.blockchain.add_transaction([sum.text() for sum in self.info_fields['sums']],
                 [address.text() for address in self.info_fields['addresses']],
-                self.user.sk,
+                self.user.wallet.sk,
                 [txid.text() for txid in self.info_fields['txids']],
                 [vout.text() for vout in self.info_fields['vouts']])
 
@@ -280,22 +274,6 @@ class TerminalInput(Terminal):
 
         self.__clear_terminal()
 
-    # def __check_keys(func):
-    #     def wrapper(*args):
-    #         if not os.path.exists('wallet/wallet.bin'):
-    #             message = '[WARNING] Private key wasn\'t generated!\nGenerating key...\n'
-    #             args[0].user.wallet.generateKeys()
-
-    #             message += 'Key generated successfully'
-    #             print(*args)
-    #             args[0].__print_event(args[1], message)
-
-    #         else:
-    #             func(*args)
-
-    #     return wrapper
-
-    # @__check_keys
     def __execute_command(self, command):
         command_arr = command.split()
         res = ''
@@ -353,7 +331,7 @@ class TerminalInput(Terminal):
     def __start_inf_mining(self):
 
         while True:
-            self.user.blockchain.mine_block(self.user.sk.get_verifying_key().to_string().hex())
+            self.user.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())
 
     def __mining_once(self):
         blk_info = self.user.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())  
