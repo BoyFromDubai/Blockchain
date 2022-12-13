@@ -10,11 +10,31 @@ import ecdsa
 import hashlib
 import threading
 import socket
+import time
 
 from blockchain.blockchain import Blockchain
 from wallet.wallet import Wallet
 from network.client import Node
 
+class Worker(QObject):
+    new_file = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super(QObject, self).__init__(parent)
+
+        self.closed_signal = False
+
+    @pyqtSlot(int)
+    def do_work(self):
+        while not self.closed_signal:
+            before_state = sorted(os.listdir('blockchain/blocks'))
+            time.sleep(1) 
+            after_state = sorted(os.listdir('blockchain/blocks'))
+
+            if after_state > before_state:
+                for i in range(len(after_state) - 1, -1, -1):
+                    # self.main_window.reloadPage()
+                    self.new_file.emit(1)
 
 class User():
     def __init__(self):
@@ -39,17 +59,14 @@ class User():
         finally:
             sock.close()
 
-
-class UTXOWindow(QWidget):
-    def __init__(self, wallet, parent=None):
-        super(UTXOWindow, self).__init__(parent)
-        self.wallet = wallet
-
 class OverviewWidget(QWidget):
     def __init__(self, parent=None):
         super(QWidget, self).__init__(parent)
 
 class WalletWidget(QWidget):
+
+    work_requested = pyqtSignal(int)
+
     def __init__(self, user, parent=None):
         super(QWidget, self).__init__(parent)
         self.wallet = user.wallet
@@ -60,7 +77,7 @@ class WalletWidget(QWidget):
         self.utxos_box_layout = QVBoxLayout()
         self.utxos_box.setLayout(self.utxos_box_layout)
         # self.layout.addWidget(self.utxos_box, 5)
-        self.__create_utxo()
+        self.__create_utxos()
 
         scroll = QScrollArea(self)
         self.layout.addWidget(scroll, 5)
@@ -86,7 +103,24 @@ class WalletWidget(QWidget):
         self.wallet_box_layout.addWidget(sk_label)
         self.wallet_box_layout.addWidget(pk_label)
 
-    def __create_utxo(self):
+
+        #TODO: understand how it works))))
+        self.worker = Worker()
+        self.worker_thread = QThread()
+
+        self.worker.new_file.connect(self.reloadPage)
+        self.work_requested.connect(self.worker.do_work)
+
+        self.worker.moveToThread(self.worker_thread)
+
+        self.worker_thread.start()
+
+        self.work_requested.emit(1)
+
+    def __del__(self):
+        self.worker.closed_signal = True
+
+    def __create_utxos(self):
 
         for utxo in self.wallet.utxos:
             utxo_box = QGroupBox('UTXO')
@@ -106,10 +140,11 @@ class WalletWidget(QWidget):
             self.utxos_box_layout.addWidget(utxo_box, 1)
 
     def reloadPage(self):
+        print('Reloaded!!')
         for _ in range(self.utxos_box_layout.count()):
             self.utxos_box_layout.itemAt(0).widget().setParent(None)
 
-        self.__create_utxo()
+        self.__create_utxos()
 
 class TransactionWidget(QWidget):
     def __init__(self, user, parent=None):
@@ -439,8 +474,6 @@ class MainWidget(QWidget):
         chain_table.setColumnWidth(1, 70)
         chain_table.setColumnWidth(2, 200)
         chain_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        fillChainTable(chain_table)
         outerLayout.addWidget(chain_table)
         
         self.setLayout(outerLayout)
@@ -459,7 +492,6 @@ class MainWindow(QMainWindow):
 
         self.wallet_widget = WalletWidget(self.user, self) 
         self.terminal_widget = TerminalWidget(self.user, self.wallet_widget.reloadPage, self) 
-        self.utxo_window = UTXOWindow(self.user.wallet, self)
         self.main_widget = MainWidget(self)
         self.transaction_widget = TransactionWidget(self.user, self) 
         self.overview_widget = OverviewWidget(self) 
@@ -491,14 +523,5 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # self.user.network_client.closeListening()
         self.user.node.stop()
+        self.wallet_widget.stop()
         
-
-def fillChainTable(table):
-    # from main import blockchain
-    # chain = blockchain.get_chain()[::-1]
-    # # chain = dict(reversed(chain))
-    # for (i, block) in enumerate(chain):
-    #     item = QTableWidgetItem(f"{block['index']}")
-    #     f = table.setItem(i, 0, item)
-    #     table.setItem(i, 1, QTableWidgetItem(f"{block['header']['timestamp']}"))
-    pass
