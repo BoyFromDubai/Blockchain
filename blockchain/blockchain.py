@@ -648,7 +648,7 @@ class Blockchain:
             txs_to_update = []
             
             for tx in txs:
-                vin = {}
+                vin_info_to_add = {}
                 print('vins')
                 print(BlkTransactions.getVins(tx))
                 print('vouts')
@@ -656,12 +656,13 @@ class Blockchain:
 
                 vins = BlkTransactions.getVins(tx)
 
-                if len(vins):
-                    vin['txid'] = vins['txid']
-                    vin['vout'] = vins['vout']
-                    vin['script_sig'] = vins['script_sig']
+                for vin in vins:
+                    if len(vins):
+                        vin_info_to_add['txid'] = vin['txid']
+                        vin_info_to_add['vout'] = vin['vout']
+                        vin_info_to_add['script_sig'] = vin['script_sig']
 
-                    txs_to_update.append(vin)
+                        txs_to_update.append(vin)
 
 
 
