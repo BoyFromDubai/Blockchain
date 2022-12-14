@@ -106,7 +106,7 @@ class DB():
 
 
 
-        tx_utxos = self.__create_utxo_struct(txid)
+        tx_utxos = self.__create_utxo_struct(tx_info)
         
         self.db.put(hashlib.sha256(tx_info).digest(), tx_utxos)
 
