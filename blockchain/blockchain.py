@@ -123,11 +123,8 @@ class DB():
 
         for vin in vins:
             txid = vin['txid']
-            vout = vin['vout']
+            vout = int.from_bytes(vin['vout'], 'little')
             self.__spend_utxo(txid, vout)
-
-
-
 
         tx_utxos = self.__create_utxo_struct(tx_info)
         
