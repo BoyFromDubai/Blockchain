@@ -41,6 +41,16 @@ class DB():
             res += vouts[i]['script_pub_key']
 
         return res
+    
+    def showDB(self):
+        arr = []
+        for key, value in self.db:
+            print(key)
+            print(value)
+
+            arr.append((key, self.__parse_tx_utxos(value)))
+
+        return arr
 
     def __parse_tx_utxos(self, tx_utxos_digest):
         cur_offset = 0
@@ -80,8 +90,10 @@ class DB():
 
             if i == vout:
                 if not int.from_bytes(spent, 'little'):
+                    print('SPENT SUCCESSFULLY')
                     res += (1).to_bytes(self.VOUTS_STRUCT['spent'], 'little') 
                 else:
+                    print('CANT\' BE SPENT')
                     return False
 
             cur_offset += self.VOUTS_STRUCT['spent']

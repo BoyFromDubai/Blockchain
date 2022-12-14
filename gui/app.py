@@ -327,6 +327,9 @@ class TerminalInput(Terminal):
         if command_arr[0] == 'abc':
             print(self.user.wallet.utxos)
 
+        if command_arr[0] == 'showdb':
+            res = str(self.user.blockchain.db.showDB())
+
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 try:
