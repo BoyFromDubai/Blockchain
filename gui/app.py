@@ -417,13 +417,17 @@ class TerminalInput(Terminal):
         if event.key() in (Qt.Key_Enter, Qt.Key_Return):
             command = self.toPlainText()[len(self.prefix):]
             
-            self.history.pop()
-            self.history.append(command)
-            self.history.append('')
-            self.history_index = len(self.history) - 1
-        
-            with open('gui/history.txt', 'a') as f:
-                f.write(command + '\n')
+            if len(self.history) > 1 and command != self.history[-2]:
+                self.history.pop()
+                self.history.append(command)
+                self.history.append('')
+                self.history_index = len(self.history) - 1
+            
+                with open('gui/history.txt', 'a') as f:
+                    f.write(command + '\n')
+
+            else:
+                self.history_index = len(self.history) - 1
 
             self.__execute_command(command)
             
