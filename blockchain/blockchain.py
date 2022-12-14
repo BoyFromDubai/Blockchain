@@ -712,13 +712,14 @@ class Blockchain:
         Blockchain.appendToMempool(tx_data)     
 
     def getNewBlockFromPeer(self, blk_data):
+        print('BLOCK DATA')
+        print(blk_data)
+        
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         print(txs)
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
-        print('BLOCK DATA')
-        print(blk_data)
 
         
         print('ROOTS')
