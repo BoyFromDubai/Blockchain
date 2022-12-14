@@ -347,6 +347,7 @@ class TerminalInput(Terminal):
             if command_arr[1] == '-c' or command_arr[1] == '--clear':
                 open('gui/history.txt', 'w').close()
                 self.history = ['']
+                self.history_index = 0
         
         self.__print_event(command, res)
 
@@ -359,6 +360,7 @@ class TerminalInput(Terminal):
 
     def __print_event(self, command, res):
         self.terminal_output.addEvent(command, res)
+
     def __clear_terminal(self):
         self.clear()
         self.setTextColor(QColor(17, 255, 0))
@@ -402,11 +404,11 @@ class TerminalInput(Terminal):
                 return
 
         if event.key() == Qt.Key_Up:
-            if (self.history_index != 0):
+            if self.history_index != 0:
                 self.__previous_command()
 
         if event.key() == Qt.Key_Down:
-            if (self.history_index != len(self.history) - 1):
+            if self.history_index != len(self.history) - 1:
                 self.__next_command()
 
         if event.key() == Qt.Key_Backspace:
