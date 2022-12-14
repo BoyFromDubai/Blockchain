@@ -101,6 +101,8 @@ class DB():
                 else:
                     print('CANT\' BE SPENT')
                     return False
+            else:
+                res += spent
 
             cur_offset += self.VOUTS_STRUCT['spent']
             pub_key_size = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']] 
