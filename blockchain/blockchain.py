@@ -610,6 +610,8 @@ class Blockchain:
         header = BlkHeader.getBlockHeader(blk_data[Block.SIZE:])
         
         txs = BlkTransactions.getBlockTxs(blk_data[Block.SIZE + len(header):])
+        print('txs_data')
+        print(blk_data[Block.SIZE + len(header):])
         
         actual_mrkl_root = MerkleTree(txs).root
 

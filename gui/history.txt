@@ -34,3 +34,4 @@ mining -o
 network -c 192.168.0.128
 mining -o
 network -c 192.168.0.128
+network -c 192.168.0.128
