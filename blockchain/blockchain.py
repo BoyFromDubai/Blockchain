@@ -45,32 +45,29 @@ class DB():
     def showDB(self):
         arr = []
         for key, value in self.db:
-            print(key)
-            print(value)
-
-            arr.append((key, self.__parse_tx_utxos(value)))
+            arr.append((key.hex(), self.__parse_tx_utxos(value)))
 
         return arr
 
     def __parse_tx_utxos(self, tx_utxos_digest):
         cur_offset = 0
         utxos_dict = {}
-        utxos_dict['hight'] = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
+        utxos_dict['hight'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']], 'little')
         cur_offset += self.VOUTS_STRUCT['height']
-        utxos_dict['vouts_num'] = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
+        utxos_dict['vouts_num'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']], 'little')
         cur_offset += self.VOUTS_STRUCT['vouts_num']
 
         utxos = []
 
-        for _ in range(int.from_bytes(utxos_dict['vouts_num'], 'little')):
+        for _ in range(utxos_dict['vouts_num']):
             utxo = {}
 
-            utxo['spent'] = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
+            utxo['spent'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']], 'little')
             cur_offset += self.VOUTS_STRUCT['spent']
-            utxo['script_pub_key_size'] = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
+            utxo['script_pub_key_size'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']], 'little')
             cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
-            utxo['script_pub_key'] = tx_utxos_digest[cur_offset:cur_offset + int.from_bytes(utxo['script_pub_key_size'], 'little')]
-            cur_offset += int.from_bytes(utxo['script_pub_key_size'], 'little')
+            utxo['script_pub_key'] = tx_utxos_digest[cur_offset:cur_offset + utxo['script_pub_key_size']].hex()
+            cur_offset += utxo['script_pub_key_size']
 
             utxos.append(utxo)
 
