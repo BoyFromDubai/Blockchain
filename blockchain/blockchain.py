@@ -86,6 +86,7 @@ class DB():
         cur_offset = 0
 
         print('SPENDING STARTED!!!')
+        print(vout)
         
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
