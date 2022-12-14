@@ -494,10 +494,6 @@ class BlkTransactions():
 
         return txs
 
-    @staticmethod
-    def verifyBlock(blk_info):
-        pass
-
 class Blockchain:
     
     MEMPOOL_TX_SIZE_INFO = 2
@@ -605,26 +601,22 @@ class Blockchain:
         Blockchain.appendToMempool(tx_data)     
 
     def getNewBlockFromPeer(self, blk_data):
-        
-        header = BlkHeader.getBlockHeader(blk_data)
-        
-        txs = BlkTransactions.getBlockTxs(blk_data[len(header):])
-        print('txs_data')
-        print(blk_data[len(header):])
+        txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
-        print()
-        print('TX_DATA')
-        print(txs)
-        print(got_mrkl_root)
-        print(real_mrkl_root)
-        print(real_mrkl_root == got_mrkl_root)
+        if real_mrkl_root == got_mrkl_root:
+            cur_len = Blockchain.getChainLen()
+            # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
+            #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
 
-        # cur_len = self.getChainLen()
-        # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
-        #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
+            for tx in txs:
+                print(BlkTransactions.getVins(tx))
+
+            self.db
+        else:
+            print('[ERROR]: New Block was falsified')
    
 
     def verifyChain(self):
