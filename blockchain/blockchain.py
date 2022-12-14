@@ -336,24 +336,27 @@ class BlkHeader():
 
 class BlkTransactions():
     TXS_STRUCT = {
-        'tx_count': 1, #                        little
-        'version': 4, #tx info                  little
-        'input_count': 1, #tx info              little
-        'txid': 32, #tx info                    little
-        'vout': 4, #tx info                     little
-        'script_sig_size': 8, #tx info          little
-        'script_sig': None, #tx info              
-        'output_count': 1, #tx info             little
-        'value': 8, #tx info                    little
-        'script_pub_key_size': 8, #tx info      little
-        'script_pub_key': None, #tx info        
+        'tx_count':             1,      #                        little
+        'version':              4,      #tx info                  little
+        'input_count':          1,      #tx info              little
+        'txid':                 32,     #tx info                    little
+        'vout':                 4,      #tx info                     little
+        'script_sig_size':      8,      #tx info          little
+        'script_sig':           None,   #tx info              
+        'output_count':         1,      #tx info             little
+        'value':                8,      #tx info                    little
+        'script_pub_key_size':  8,      #tx info      little
+        'script_pub_key':       None,   #tx info        
     }
 
     def __init__(self, txs = []) -> None:
         self.txs = txs
 
     def createTxs(self):
-        res = len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='little')
+        print(self.TXS_STRUCT['tx_count'])
+        print('len')
+        print(len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='big'))
+        res = len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='big')
         for tx in self.txs:
             res += tx
 
@@ -440,7 +443,7 @@ class BlkTransactions():
 
         tx_count = int.from_bytes(data[:BlkTransactions.TXS_STRUCT['tx_count']], 'little')
         cur_offset = BlkTransactions.TXS_STRUCT['tx_count']
-        BlkTransactions.TXS_STRUCT['tx_count'] = tx_count
+        # BlkTransactions.TXS_STRUCT['tx_count'] = tx_count
         txs = []
     
         for _ in range(tx_count):
