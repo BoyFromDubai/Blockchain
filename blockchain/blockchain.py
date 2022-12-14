@@ -84,6 +84,8 @@ class DB():
 
     def __change_spent_field(self, tx_utxos_digest, vout):
         cur_offset = 0
+
+        print('SPENDING STARTED!!!')
         
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
