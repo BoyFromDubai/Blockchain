@@ -716,6 +716,14 @@ class Blockchain:
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
+        print('BLOCK DATA')
+        print(blk_data)
+
+        
+        print('ROOTS')
+        print(real_mrkl_root)
+        print(got_mrkl_root)
+
         if real_mrkl_root == got_mrkl_root:
             cur_len = Blockchain.getChainLen()
 
