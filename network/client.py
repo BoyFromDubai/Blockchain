@@ -1,7 +1,7 @@
 import socket
 import threading
 import os
-# from blockchain.blockchain import Blockchain
+from blockchain.blockchain import *
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port, blockchain, debug_print):
@@ -62,7 +62,7 @@ class Connection(threading.Thread):
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
-                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], f.read())
+                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], f.read()[Block.SIZE:])
     
 
 

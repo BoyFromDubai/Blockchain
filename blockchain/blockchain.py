@@ -605,26 +605,25 @@ class Blockchain:
 
     def getNewBlockFromPeer(self, blk_data):
         
-        supposed_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
-
-        header = BlkHeader.getBlockHeader(blk_data[Block.SIZE:])
+        header = BlkHeader.getBlockHeader(blk_data)
         
-        txs = BlkTransactions.getBlockTxs(blk_data[Block.SIZE + len(header):])
+        txs = BlkTransactions.getBlockTxs(blk_data[len(header):])
         print('txs_data')
         print(blk_data[Block.SIZE + len(header):])
         
-        actual_mrkl_root = MerkleTree(txs).root
+        real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
+        got_mrkl_root = MerkleTree(txs).root
 
         print()
         print('TX_DATA')
         print(txs)
-        print(supposed_mrkl_root)
-        print(actual_mrkl_root)
-        print(actual_mrkl_root == supposed_mrkl_root)
+        print(got_mrkl_root)
+        print(real_mrkl_root)
+        print(real_mrkl_root == got_mrkl_root)
 
         cur_len = self.getChainLen()
         with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
-            f.write(blk_data)
+            f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
    
 
     def verifyChain(self):
