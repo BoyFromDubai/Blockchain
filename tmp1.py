@@ -2,7 +2,8 @@ with open('blockchain/blocks/blk_0000.dat', 'rb') as f:
     print(f.read())
 
 # import json
-# # getNthBlockTxs(2)
+# from blockchain.blockchain import *
+# print(Block.parseBlock(2))
 
 # with open('tmp.json', 'w') as f:
 #     json.dump(parseBlock(1), f)
