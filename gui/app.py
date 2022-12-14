@@ -442,13 +442,12 @@ class TerminalOutput(Terminal):
         self.insertPlainText('***CCoin Terminal***' + '\n'*2)
 
     def addEvent(self, cmd, msg):
+        self.moveCursor(QTextCursor.End)
         self.setTextColor(QColor(17, 255, 0))
         self.insertPlainText(self.prefix)
         self.setTextColor(QColor('white')) 
         self.insertPlainText(str(cmd) + '\n' + str(msg) + '\n\n')
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
-        self.setCursor
-        self.moveCursor(QTextCursor.End)
 
 class TerminalWidget(QWidget):
     def __init__(self, user, callbackWallet, parent=None):
