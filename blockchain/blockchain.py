@@ -674,7 +674,7 @@ class Blockchain:
                 for tx in transactions:
                     self.appendVoutsToDb(tx)
 
-                return block_data
+                return block_data[Block.SIZE:]
 
             else:
                 nonce += 1
@@ -714,7 +714,7 @@ class Blockchain:
     def getNewBlockFromPeer(self, blk_data):
         print('BLOCK DATA')
         print(blk_data)
-        
+
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         print(txs)
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
