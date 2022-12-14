@@ -462,9 +462,6 @@ class BlkTransactions():
         self.txs = txs
 
     def createTxs(self):
-        print(self.TXS_STRUCT['tx_count'])
-        print('len')
-        print(len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='big'))
         res = len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='big')
         for tx in self.txs:
             res += tx
@@ -807,9 +804,6 @@ class Blockchain:
     def get_chain(self): return data.get_chain()
 
     def __create_vin(self, txid, vout_num, sk):
-        if not txid or not vout_num:
-            return None
-
         txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
         vout_num = vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
 
