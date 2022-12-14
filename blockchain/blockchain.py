@@ -119,7 +119,7 @@ class DB():
         if not updated_tx:
             raise ValueError('[ERROR] This vout if already spend!!!')
         else:
-            self.db.put()
+            self.db.put(txid, updated_tx)
 
 
 
