@@ -39,6 +39,7 @@ class Connection(threading.Thread):
         msg = b''
         msg += type
         msg += meaning
+        print(data)
         msg += len(data).to_bytes(self.MSG_FIELD_OFFSET-self.SIZE_FIELD_OFFSET, 'big')
         msg += data
 
