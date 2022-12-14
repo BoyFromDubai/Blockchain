@@ -67,7 +67,7 @@ class Connection(threading.Thread):
                 print("WHAT I SEND?!")
                 data = f.read()[Block.SIZE:]
                 print(data)
-                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], )
+                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
     
 
 
