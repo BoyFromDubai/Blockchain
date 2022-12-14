@@ -447,6 +447,8 @@ class TerminalOutput(Terminal):
         self.setTextColor(QColor('white')) 
         self.insertPlainText(str(cmd) + '\n' + str(msg) + '\n\n')
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+        self.setCursor
+        self.moveCursor(QTextCursor.End)
 
 class TerminalWidget(QWidget):
     def __init__(self, user, callbackWallet, parent=None):
