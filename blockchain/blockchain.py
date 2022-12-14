@@ -124,7 +124,10 @@ class DB():
 
     def __spend_utxo(self, txid, vout):
         tx_utxos = self.db.get(txid)
+        print('sfgsgffgdfgdfg')
+        print(tx_utxos)
         self.db.delete(txid)
+        print(tx_utxos)
 
         updated_tx = self.__change_spent_field(tx_utxos, vout)      
 
