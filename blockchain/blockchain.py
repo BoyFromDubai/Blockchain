@@ -28,7 +28,7 @@ class DB():
     def __del__(self):
         self.db.close()
 
-    def __create_utxo_struct(tx_info):
+    def __create_utxo_struct(self, tx_info):
         vouts = BlkTransactions.getVouts(tx_info)
 
         res = Blockchain.getChainLen().to_bytes(DB.VOUTS_STRUCT['height'], 'little')
