@@ -419,9 +419,6 @@ class BlkHeader():
         cur_offset = 0
         for key in BlkHeader.HEADER_STRUCT:
             cur_offset += BlkHeader.HEADER_STRUCT[key]
-
-        print('HEADER')
-        print(data[:cur_offset])
         
         return data[:cur_offset]
 
@@ -656,8 +653,6 @@ class Blockchain:
         prev_block_hash = Block.hashLastBlockInDigest()
 
         while (not(check_proof)):
-            print('transactions')
-            print(transactions)
 
             check_block = self.__create_block(nonce, prev_block_hash, num_of_zeros, transactions)
 
@@ -667,6 +662,10 @@ class Blockchain:
             header = check_block.header.header
             
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
+                print('transactions')
+                print(transactions)
+                print('HEADER')
+                print(header)
 
                 check_proof = True
                 self.__append_block(block_data)
@@ -714,7 +713,7 @@ class Blockchain:
 
     def getNewBlockFromPeer(self, blk_data):
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
-        
+        print(txs)
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
@@ -738,9 +737,6 @@ class Blockchain:
 
                 self.db.updateDB(tx)
 
-
-
-            # self.db.getInfoOfTxid()
         else:
             print('[ERROR]: New Block was falsified')
    
