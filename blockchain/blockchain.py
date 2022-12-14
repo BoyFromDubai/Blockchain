@@ -653,6 +653,8 @@ class Blockchain:
         prev_block_hash = Block.hashLastBlockInDigest()
 
         while (not(check_proof)):
+            print('transactions')
+            print(transactions)
 
             check_block = self.__create_block(nonce, prev_block_hash, num_of_zeros, transactions)
 
