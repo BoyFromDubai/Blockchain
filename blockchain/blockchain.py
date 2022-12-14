@@ -302,8 +302,7 @@ class BlkHeader():
                 break
             else:
                 cur_offset += BlkHeader.HEADER_STRUCT[key]
-        
-        return header[cur_offset:size] 
+        return header[cur_offset:cur_offset + size] 
     
     @staticmethod
     def getBlockHeader(data):
@@ -332,7 +331,7 @@ class BlkHeader():
             else:
                 cur_offset += BlkHeader.HEADER_STRUCT[key]
         
-        return header[cur_offset:size] 
+        return header[cur_offset:cur_offset + size] 
 
 class BlkTransactions():
     TXS_STRUCT = {
