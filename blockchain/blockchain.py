@@ -655,13 +655,15 @@ class Blockchain:
                 print(BlkTransactions.getVouts(tx))
 
                 vins = BlkTransactions.getVins(tx)
-                vin['txid'] = vins['txid']
-                vin['vout'] = vins['vout']
-                vin['script_sig'] = vins['script_sig']
+
+                if len(vins):
+                    vin['txid'] = vins['txid']
+                    vin['vout'] = vins['vout']
+                    vin['script_sig'] = vins['script_sig']
+
+                    txs_to_update.append(vin)
 
 
-
-                txs_to_update.append(vin)
 
             # self.db.getInfoOfTxid()
         else:
