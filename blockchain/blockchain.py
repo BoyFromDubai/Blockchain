@@ -347,7 +347,6 @@ class BlkTransactions():
         'value': 8, #tx info                    little
         'script_pub_key_size': 8, #tx info      little
         'script_pub_key': None, #tx info        
-        'locktime': 4, #tx info                 little
     }
 
     def __init__(self, txs = []) -> None:
@@ -621,9 +620,9 @@ class Blockchain:
         print(real_mrkl_root)
         print(real_mrkl_root == got_mrkl_root)
 
-        cur_len = self.getChainLen()
-        with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
-            f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
+        # cur_len = self.getChainLen()
+        # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
+        #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
    
 
     def verifyChain(self):
@@ -660,13 +659,17 @@ class Blockchain:
         for i in range(len(txid)):
             tx_data += self.__create_vin(txid[i], int(vout_num[i]), sk)
 
-        tx_data += len(addresses).to_bytes(1, "big") #outputs num
+        tx_data += len(addresses).to_bytes(1, "little") #outputs num
 
         for i in range(len(addresses)):
             tx_data += self.__create_vout(int(value[i]), addresses[i])
         
         if isTransaction:
             self.appendToMempool(tx_data)
+
+        print('TX Appended')
+        print(BlkTransactions.getBlockTxs(tx_data))
+        print(tx_data)
                 
         return tx_data
 

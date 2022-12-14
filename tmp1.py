@@ -15,5 +15,5 @@ with open('blockchain/blocks/blk_0000.dat', 'rb') as f:
 
 from blockchain.blockchain import Block 
 # with open('blockchain/blocks/blk_0001.dat', 'rb') as f:
-print(Block.parseBlock(4))
-print(Block.parseBlockDigest(4))
+print(Block.parseBlock(1))
+print(Block.parseBlockDigest(1))
