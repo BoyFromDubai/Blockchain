@@ -644,12 +644,24 @@ class Blockchain:
             cur_len = Blockchain.getChainLen()
             # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
             #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
+
+            txs_to_update = []
             
             for tx in txs:
+                vin = {}
+                print('vins')
                 print(BlkTransactions.getVins(tx))
+                print('vouts')
+                print(BlkTransactions.getVouts(tx))
 
                 vins = BlkTransactions.getVins(tx)
+                vin['txid'] = vins['txid']
+                vin['vout'] = vins['vout']
+                vin['script_sig'] = vins['script_sig']
 
+
+
+                txs_to_update.append(vin)
 
             # self.db.getInfoOfTxid()
         else:
