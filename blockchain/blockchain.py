@@ -44,32 +44,40 @@ class DB():
 
         self.db.put(txid, res)
 
+    def showAll(self):
+        for key, value in self.db:
+            print(key)
+
+    def checkTxidExistance(self, txid): return True if self.getInfoOfTxid(txid) else False
+
     def getInfoOfTxid(self, txid):
         info_to_txid = self.db.get(txid)
-        print('info_to_txid')
-        print(info_to_txid)
-        utxo = {}
-        cur_offset = 0
 
-        utxo['height'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
-        cur_offset += self.VOUTS_STRUCT['height']
-        utxo['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
-        cur_offset += self.VOUTS_STRUCT['vouts_num']
-        utxo['spent'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
-        cur_offset += self.VOUTS_STRUCT['spent']
-        utxo['value'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
-        cur_offset += self.VOUTS_STRUCT['value']
-        utxo['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
-        cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
-        utxo['script_pub_key'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key']]
-        cur_offset += self.VOUTS_STRUCT['script_pub_key']
+        if not info_to_txid:
+            raise ValueError('[ERROR] No such TXID in chain!!!')
+        
+        else:
+            utxo = {}
+            cur_offset = 0
 
-        return utxo
+            utxo['height'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
+            cur_offset += self.VOUTS_STRUCT['height']
+            utxo['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
+            cur_offset += self.VOUTS_STRUCT['vouts_num']
+            utxo['spent'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
+            cur_offset += self.VOUTS_STRUCT['spent']
+            utxo['value'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
+            cur_offset += self.VOUTS_STRUCT['value']
+            
+            utxo['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
+            print(utxo['script_pub_key_size'])
+            cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
+            utxo['script_pub_key'] = info_to_txid[cur_offset:cur_offset + int.from_bytes(utxo['script_pub_key_size'], 'little')]
+
+            return utxo
 
     def spendOneUTXO(self, txid):
         pass
-
-
 
 class Block():
     SIZE = 4
@@ -640,6 +648,9 @@ class Blockchain:
             for tx in txs:
                 print(BlkTransactions.getVins(tx))
 
+                vins = BlkTransactions.getVins(tx)
+
+
             # self.db.getInfoOfTxid()
         else:
             print('[ERROR]: New Block was falsified')
@@ -694,8 +705,8 @@ class Blockchain:
                     
             return tx_data
         
-        except:
-            print('[THERE IS NO SUCH UTXO WITH THIS TXID]')
+        except Exception as e:
+            print(e)
 
     @staticmethod
     def appendToMempool(tx_bytes):
@@ -712,19 +723,30 @@ class Blockchain:
         if not txid or not vout_num:
             return None
 
-        txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'little')
+        txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
         vout_num = vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
 
-        self.db.getInfoOfTxid(txid)
-        
+        info_for_txid = self.db.getInfoOfTxid(txid)
+        script_pub_key = info_for_txid['script_pub_key'] 
+
         vin_data = txid 
         vin_data += vout_num
 
-        scriptSig = sk.sign(int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'little'))
+        message_to_sign = txid
+        scriptSig = sk.sign(message_to_sign)
+        
+        if not self.confirmSign(scriptSig, script_pub_key, message_to_sign):
+            raise ValueError('[ERROR] Signature failed!')
+
         vin_data += len(scriptSig).to_bytes(BlkTransactions.TXS_STRUCT['script_sig_size'], "little") #ScriptSig size
         vin_data += scriptSig #ScriptSig
 
         return vin_data
+
+    def confirmSign(self, scriptSig, scriptPubKey, message_to_sign):
+        pk = ecdsa.VerifyingKey.from_string(scriptPubKey, ecdsa.SECP256k1)
+
+        return pk.verify(scriptSig, message_to_sign)
 
     def __create_vout(self, value, address):
 

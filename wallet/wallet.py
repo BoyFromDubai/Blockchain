@@ -26,6 +26,7 @@ class Wallet:
         n = n.to_bytes(UTXOS_STRUCT['n'], 'little')
         
         self.utxos.append({txid.hex(): (n, value)})
+        print(txid)
 
         # with open('wallet/utxos.dat', 'ab') as f:
         #     f.write(txid)
