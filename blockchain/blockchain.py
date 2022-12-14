@@ -419,6 +419,9 @@ class BlkHeader():
         cur_offset = 0
         for key in BlkHeader.HEADER_STRUCT:
             cur_offset += BlkHeader.HEADER_STRUCT[key]
+
+        print('HEADER')
+        print(data[:cur_offset])
         
         return data[:cur_offset]
 

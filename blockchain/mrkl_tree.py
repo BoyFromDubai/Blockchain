@@ -33,8 +33,8 @@ class MerkleTree:
             for leaf in tmp_leafs:
                 str_tmp_leaf += str(leaf)
 
-            print("LEAAAAAFS")
-            print(tmp_leafs)
+            # print("LEAAAAAFS")
+            # print(tmp_leafs)
 
             tmp_arr.append(hashlib.sha256(pickle.dumps(str_tmp_leaf)).digest())
 
