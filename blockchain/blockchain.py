@@ -606,11 +606,14 @@ class Blockchain:
     def getNewBlockFromPeer(self, blk_data):
         
         supposed_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
+
+        header = BlkHeader.getBlockHeader(blk_data[Block.SIZE:])
         
-        txs = BlkTransactions.getBlockTxs(blk_data)
+        txs = BlkTransactions.getBlockTxs(blk_data[Block.SIZE + len(header):])
         
         actual_mrkl_root = MerkleTree(txs).root
 
+        print()
         print('TX_DATA')
         print(txs)
         print(supposed_mrkl_root)
