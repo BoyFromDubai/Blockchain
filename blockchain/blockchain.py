@@ -30,6 +30,8 @@ class DB():
 
     def __create_utxo_struct(self, tx_info):
         vouts = BlkTransactions.getVouts(tx_info)
+        print('vou--------ts')
+        print(vouts)
 
         res = Blockchain.getChainLen().to_bytes(DB.VOUTS_STRUCT['height'], 'little')
         res += len(vouts).to_bytes(DB.VOUTS_STRUCT['vouts_num'], 'little')
@@ -45,6 +47,8 @@ class DB():
     def showDB(self):
         arr = []
         for key, value in self.db:
+            print('VALUE')
+            print(value)
             arr.append((key.hex(), self.__parse_tx_utxos(value)))
 
         return arr
@@ -64,6 +68,8 @@ class DB():
 
             utxo['spent'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']], 'little')
             cur_offset += self.VOUTS_STRUCT['spent']
+            utxo['value'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['value']], 'little')
+            cur_offset += self.VOUTS_STRUCT['value']
             utxo['script_pub_key_size'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']], 'little')
             cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
             utxo['script_pub_key'] = tx_utxos_digest[cur_offset:cur_offset + utxo['script_pub_key_size']].hex()
@@ -71,7 +77,10 @@ class DB():
 
             utxos.append(utxo)
 
-        return utxos
+        print(utxos)
+        utxos_dict['vouts'] = utxos
+
+        return utxos_dict
 
     def __change_spent_field(self, tx_utxos_digest, vout):
         cur_offset = 0
