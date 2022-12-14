@@ -719,9 +719,8 @@ class Blockchain:
         if real_mrkl_root == got_mrkl_root:
             cur_len = Blockchain.getChainLen()
 
-            # TODO: allow creating file
-            # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
-            #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
+            with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
+                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
             
             for tx in txs:
                 print('vouts')
