@@ -13,7 +13,7 @@ import plyvel
 
 
 class DB():
-    VOUT_STRUCT = {
+    VOUTS_STRUCT = {
         'height': 4,
         'vouts_num': 1,
         'spent': 1, 
@@ -30,11 +30,11 @@ class DB():
 
     def createVoutsStruct(self, txid, tx_info, wallet):
         vouts = BlkTransactions.getVouts(tx_info)
-        res = Blockchain.getChainLen().to_bytes(DB.VOUT_STRUCT['height'], 'little')
-        res += len(vouts).to_bytes(DB.VOUT_STRUCT['vouts_num'], 'little')
+        res = Blockchain.getChainLen().to_bytes(DB.VOUTS_STRUCT['height'], 'little')
+        res += len(vouts).to_bytes(DB.VOUTS_STRUCT['vouts_num'], 'little')
         
         for i in range(len(vouts)):
-            res += (0).to_bytes(DB.VOUT_STRUCT['spent'], 'little')
+            res += (0).to_bytes(DB.VOUTS_STRUCT['spent'], 'little')
             res += vouts[i]['value']
             res += vouts[i]['script_pub_key_size']
             res += vouts[i]['script_pub_key']
@@ -43,6 +43,32 @@ class DB():
                 wallet.appendUTXO(txid, i, vouts[i]['value'])
 
         self.db.put(txid, res)
+
+    def getInfoOfTxid(self, txid):
+        info_to_txid = self.db.get(txid)
+        print('info_to_txid')
+        print(info_to_txid)
+        utxo = {}
+        cur_offset = 0
+
+        utxo['height'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
+        cur_offset += self.VOUTS_STRUCT['height']
+        utxo['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
+        cur_offset += self.VOUTS_STRUCT['vouts_num']
+        utxo['spent'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
+        cur_offset += self.VOUTS_STRUCT['spent']
+        utxo['value'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
+        cur_offset += self.VOUTS_STRUCT['value']
+        utxo['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
+        cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
+        utxo['script_pub_key'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key']]
+        cur_offset += self.VOUTS_STRUCT['script_pub_key']
+
+        return utxo
+
+    def spendOneUTXO(self, txid):
+        pass
+
 
 
 class Block():
@@ -610,11 +636,11 @@ class Blockchain:
             cur_len = Blockchain.getChainLen()
             # with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
             #     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
-
+            
             for tx in txs:
                 print(BlkTransactions.getVins(tx))
 
-            self.db
+            # self.db.getInfoOfTxid()
         else:
             print('[ERROR]: New Block was falsified')
    
@@ -650,22 +676,26 @@ class Blockchain:
         inputs_num = len(txid).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
         tx_data += inputs_num
         
-        for i in range(len(txid)):
-            tx_data += self.__create_vin(txid[i], int(vout_num[i]), sk)
+        try:
+            for i in range(len(txid)):
+                tx_data += self.__create_vin(txid[i], int(vout_num[i]), sk)
 
-        tx_data += len(addresses).to_bytes(1, "little") #outputs num
+            tx_data += len(addresses).to_bytes(1, "little") #outputs num
 
-        for i in range(len(addresses)):
-            tx_data += self.__create_vout(int(value[i]), addresses[i])
+            for i in range(len(addresses)):
+                tx_data += self.__create_vout(int(value[i]), addresses[i])
+            
+            if isTransaction:
+                self.appendToMempool(tx_data)
+
+            print('TX Appended')
+            print(BlkTransactions.getBlockTxs(tx_data))
+            print(tx_data)
+                    
+            return tx_data
         
-        if isTransaction:
-            self.appendToMempool(tx_data)
-
-        print('TX Appended')
-        print(BlkTransactions.getBlockTxs(tx_data))
-        print(tx_data)
-                
-        return tx_data
+        except:
+            print('[THERE IS NO SUCH UTXO WITH THIS TXID]')
 
     @staticmethod
     def appendToMempool(tx_bytes):
@@ -681,8 +711,14 @@ class Blockchain:
     def __create_vin(self, txid, vout_num, sk):
         if not txid or not vout_num:
             return None
-        vin_data = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'little')
-        vin_data += vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
+
+        txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'little')
+        vout_num = vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
+
+        self.db.getInfoOfTxid(txid)
+        
+        vin_data = txid 
+        vin_data += vout_num
 
         scriptSig = sk.sign(int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'little'))
         vin_data += len(scriptSig).to_bytes(BlkTransactions.TXS_STRUCT['script_sig_size'], "little") #ScriptSig size
