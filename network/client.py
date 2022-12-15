@@ -86,7 +86,7 @@ class Connection(threading.Thread):
 
         if int.from_bytes(msg, 'big') > chain_len:
             print('SFDFDFD')
-            print(len(Blockchain.hashNthBlockInDigest(chain_len)))
+            print(len(Block.hashNthBlockInDigest(chain_len)))
             # msg = chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big')
             # msg += Blockchain.hashNthBlockInDigest(chain_len)
             # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['last_block_id'])
