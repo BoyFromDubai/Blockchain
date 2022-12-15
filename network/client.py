@@ -22,6 +22,7 @@ class Connection(threading.Thread):
         self.MSG_FIELD_OFFSET = 25
 
         self.CHAIN_LEN_SIZE = 2 
+        self.HASH_OF_BLOCK_SIZE = 32 
 
         self.main_node = main_node
 
@@ -50,6 +51,8 @@ class Connection(threading.Thread):
 
         if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
             self.__answer_get_blocks_msg(msg)
+        elif request_msg_meaning == self.main_node.meaning_of_msg['last_block_id']:
+            self.__start_sending_blk_hashes(int.from_bytes(msg, 'big'))
         else:
             pass
 
@@ -64,14 +67,24 @@ class Connection(threading.Thread):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
                 data = f.read()[Block.SIZE:]
                 self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
-    
+
+    def __start_sending_blk_hashes(self, n):
+        self.sock.send(Block.hashNthBlockInDigest(n-1))
+        answer = self.sock.recv(1)
+        print('answer')
+        print(answer)
+        if int.from_bytes(answer, 'big'):
+            self.__start_sending_blk_hashes(n-1)
+
 
 
     def __get(self, info_msg_meaning, msg):
         
         if  info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
-        if  info_msg_meaning ==  self.main_node.meaning_of_msg['block']:
+        elif  info_msg_meaning ==  self.main_node.meaning_of_msg['last_block_id']:
+            self.__get_last_block_info_msg(msg)
+        elif  info_msg_meaning ==  self.main_node.meaning_of_msg['block']:
             self.__get_blocks_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
             self.__get_tx_msg(msg)
@@ -85,23 +98,30 @@ class Connection(threading.Thread):
         chain_len = self.blockchain.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
-            print('SFDFDFD')
-            print(len(Block.hashNthBlockInDigest(chain_len - 1)))
-            # msg = chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-            # msg += Blockchain.hashNthBlockInDigest(chain_len)
-            # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['last_block_id'])
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            self.__start_getting_blk_hashes()
 
     def __get_blocks_msg(self, msg):
-
         self.blockchain.getNewBlockFromPeer(msg)
 
+    def __start_getting_blk_hashes(self, n):
+        his_hash = self.sock.recv(self.HASH_OF_BLOCK_SIZE)
+        my_hash = Block.hashNthBlockInDigest(n-1)
+        print(f'asking for {n-1}')
+        if his_hash == my_hash:
+            self.sock.send((0).to_bytes(1, 'big'))
+            self.send(self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], n-1))
+        else:
+            self.sock.send((1).to_bytes(1, 'big'))
+            self.__start_getting_blk_hashes(n-1)
+
+    
     def __get_tx_msg(self, msg):
-        print('TX_MSG')
         try:
             self.blockchain.verifyTransaction(msg)
         except Exception as e:
             print(e)
+
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
