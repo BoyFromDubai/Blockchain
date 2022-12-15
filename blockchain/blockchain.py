@@ -798,23 +798,19 @@ class Blockchain:
         inputs_num = len(txid).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
         tx_data += inputs_num
         
-        try:
-            for i in range(len(txid)):
-                tx_data += self.__create_vin(txid[i], int(vout_num[i]))
+        for i in range(len(txid)):
+            tx_data += self.__create_vin(txid[i], int(vout_num[i]))
 
-            tx_data += len(addresses).to_bytes(1, "little") #outputs num
+        tx_data += len(addresses).to_bytes(1, "little") #outputs num
 
-            for i in range(len(addresses)):
-                tx_data += self.__create_vout(int(value[i]), addresses[i])
-            
-            if isTransaction:
-                self.appendToMempool(tx_data)
-                    
-            return tx_data
+        for i in range(len(addresses)):
+            tx_data += self.__create_vout(int(value[i]), addresses[i])
         
-        except Exception as e:
-            print(e)
-
+        if isTransaction:
+            self.appendToMempool(tx_data)
+                
+        return tx_data
+        
     @staticmethod
     def appendToMempool(tx_bytes):
         if not os.path.isdir('blockchain/mempool'): 

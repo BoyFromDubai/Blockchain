@@ -239,12 +239,15 @@ class TransactionWidget(QWidget):
                 except Exception as e:
                     raise e
 
-            tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
-                [address.text() for address in self.info_fields['addresses']],
-                [txid.text() for txid in self.info_fields['txids']],
-                [vout.text() for vout in self.info_fields['vouts']])
+            try:
+                tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
+                    [address.text() for address in self.info_fields['addresses']],
+                    [txid.text() for txid in self.info_fields['txids']],
+                    [vout.text() for vout in self.info_fields['vouts']])
 
-            self.user.node.newTxMessage(tx_data)
+                self.user.node.newTxMessage(tx_data)
+            except Exception as e:
+                raise e
 
         except Exception as e:
             msg = QMessageBox()
