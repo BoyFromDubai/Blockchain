@@ -667,7 +667,7 @@ class Blockchain:
             f.write(blk)
 
     def mineBlock(self, pk):
-        emission = self.addTransaction([math.ceil(random.random() * 100)], [pk], sk=None, isTransaction=False)
+        emission = self.addTransaction([math.ceil(random.random() * 100)], [pk], isTransaction=False)
         transactions = [emission]
         # mempool = self.__get_mempool()[1:]
         mempool = self.__get_mempool()
@@ -728,10 +728,16 @@ class Blockchain:
     def getBlockFiles():
         return sorted(os.listdir('blockchain/blocks'))
 
-    @staticmethod
-    def verifyTransaction(tx_data):
+    def verifyTransaction(self, tx_data):
         vins = BlkTransactions.getVins(tx_data)
 
+        for vin in vins:
+            txid = vin['txid']
+
+            tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
+            print(tx_vouts)
+            # if vout_num > len(tx_vouts) - 1:
+            #     raise ValueError('[ERROR] Not enough vouts in tx!!!')
 
         print('vins')
         print(vins)
@@ -786,7 +792,7 @@ class Blockchain:
             
         return True
 
-    def addTransaction(self, value, addresses, sk, txid = [], vout_num = [], isTransaction = True):
+    def addTransaction(self, value, addresses, txid = [], vout_num = [], isTransaction = True):
         version = (0).to_bytes(BlkTransactions.TXS_STRUCT['version'], "little")
         tx_data = version
         inputs_num = len(txid).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
@@ -794,7 +800,7 @@ class Blockchain:
         
         try:
             for i in range(len(txid)):
-                tx_data += self.__create_vin(txid[i], int(vout_num[i]), sk)
+                tx_data += self.__create_vin(txid[i], int(vout_num[i]))
 
             tx_data += len(addresses).to_bytes(1, "little") #outputs num
 
@@ -820,7 +826,7 @@ class Blockchain:
             
     def get_chain(self): return data.get_chain()
 
-    def __create_vin(self, txid, vout_num, sk):
+    def __create_vin(self, txid, vout_num):
         txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
 
         tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
@@ -841,7 +847,7 @@ class Blockchain:
                 vin_data += vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
 
                 message_to_sign = txid
-                scriptSig = sk.sign(message_to_sign)
+                scriptSig = self.wallet.sk.sign(message_to_sign)
                 
                 if not self.confirmSign(scriptSig, script_pub_key, message_to_sign):
                     raise ValueError('[ERROR] Signature failed!')

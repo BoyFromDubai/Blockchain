@@ -245,8 +245,6 @@ class TransactionWidget(QWidget):
                 [txid.text() for txid in self.info_fields['txids']],
                 [vout.text() for vout in self.info_fields['vouts']])
 
-
-            # Blockchain.verifyTransaction(tx_data)
             self.user.node.newTxMessage(tx_data)
 
         except Exception as e:
