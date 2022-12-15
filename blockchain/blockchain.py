@@ -94,6 +94,8 @@ class DB():
         res += vouts_num
         cur_offset += self.VOUTS_STRUCT['vouts_num']
 
+        delete_tx = True 
+
         for i in range(int.from_bytes(vouts_num, 'little')):
             spent = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
 
@@ -105,6 +107,9 @@ class DB():
                     print('CANT\' BE SPENT')
                     return False
             else:
+                if not int.from_bytes(spent, 'little'):
+                    delete_tx = False
+
                 res += spent
 
             cur_offset += self.VOUTS_STRUCT['spent']
@@ -114,7 +119,7 @@ class DB():
             res += tx_utxos_digest[cur_offset:cur_offset + int.from_bytes(pub_key_size, 'little')]
             cur_offset += int.from_bytes(pub_key_size, 'little')
 
-        return res
+        return res, delete_tx
 
 
     def updateDB(self, tx_info):
@@ -132,17 +137,16 @@ class DB():
 
     def __spend_utxo(self, txid, vout):
         tx_utxos = self.db.get(txid)
-        print('sfgsgffgdfgdfg')
-        print(tx_utxos)
-        self.db.delete(txid)
-        print(tx_utxos)
 
-        updated_tx = self.__change_spent_field(tx_utxos, vout)      
+        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout)      
 
         if not updated_tx:
             raise ValueError('[ERROR] This vout if already spend!!!')
         else:
-            self.db.put(txid, updated_tx)
+            self.db.delete(txid)
+
+            if not delete_tx:
+                self.db.put(txid, updated_tx)
 
 
 
