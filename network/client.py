@@ -99,7 +99,7 @@ class Connection(threading.Thread):
 
         if int.from_bytes(msg, 'big') > chain_len:
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
-            self.__start_getting_blk_hashes()
+            self.__start_getting_blk_hashes(chain_len)
 
     def __get_blocks_msg(self, msg):
         self.blockchain.getNewBlockFromPeer(msg)
