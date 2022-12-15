@@ -62,9 +62,7 @@ class Connection(threading.Thread):
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
-                print("WHAT I SEND?!")
                 data = f.read()[Block.SIZE:]
-                print(data)
                 self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
     
 

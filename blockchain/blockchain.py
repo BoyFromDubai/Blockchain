@@ -645,6 +645,7 @@ class Blockchain:
 
         self.wallet = wallet
         self.db = DB()
+        self.fees_for_current_block = 0
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
@@ -671,7 +672,9 @@ class Blockchain:
             f.write(blk)
 
     def mineBlock(self, pk):
-        emission = self.addTransaction([math.ceil(random.random() * 100)], [pk], isTransaction=False)
+        emission = self.addTransaction([(pk, math.ceil(random.random() * 1000))])
+        print('emission')
+        print(emission)
         transactions = [emission]
         # mempool = self.__get_mempool()[1:]
         mempool = self.__get_mempool()
@@ -715,6 +718,22 @@ class Blockchain:
             pass
 
     def appendVoutsToDb(self, tx):
+
+        # if len(vin_data):
+
+        #     coins_to_spend = sum(map(lambda value: int(value), [info_for_vout[1] for info_for_vout in vout_data]))
+        #     print('coins_to_spend')
+        #     print(coins_to_spend)
+        #     txids_in_bytes = [(int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big'), int(vout)) for txid, vout in vin_data]
+
+        #     available_coins = sum(list(map(lambda data: int.from_bytes(self.db.getInfoOfTxid(data[0])['vouts'][data[1]]['value'], 'little'), txids_in_bytes)))
+        #     print('available_coins')
+        #     print(available_coins)
+
+        #     if available_coins
+
+
+
         self.db.updateDB(tx)
 
         with open('wallet/txids.txt', 'w') as f:
@@ -734,7 +753,7 @@ class Blockchain:
 
     def verifyTransaction(self, tx_data):
         vins = BlkTransactions.getVins(tx_data)
-        print('Verifying started!')
+
         for vin in vins:
             txid = vin['txid']
 
@@ -742,16 +761,10 @@ class Blockchain:
             if not self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
                 raise Exception('[ERROR] Not valid transaction!!!')
 
-
-        print('TX IN THE MEMPOOL')
         Blockchain.appendToMempool(tx_data)     
 
     def getNewBlockFromPeer(self, blk_data):
-        print('BLOCK DATA')
-        print(blk_data)
-
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
-        print(txs)
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
@@ -793,21 +806,33 @@ class Blockchain:
             
         return True
 
-    def addTransaction(self, value, addresses, txid = [], vout_num = [], isTransaction = True):
+    # def addTransaction(self, values, addresses, txids = [], vout_num = [], isTransaction = True):
+    def addTransaction(self, vout_data, vin_data = []):
         version = (0).to_bytes(BlkTransactions.TXS_STRUCT['version'], "little")
         tx_data = version
-        inputs_num = len(txid).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
+        inputs_num = len(vin_data).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
         tx_data += inputs_num
-        
-        for i in range(len(txid)):
-            tx_data += self.__create_vin(txid[i], int(vout_num[i]))
 
-        tx_data += len(addresses).to_bytes(1, "little") #outputs num
+        if len(vin_data):
 
-        for i in range(len(addresses)):
-            tx_data += self.__create_vout(int(value[i]), addresses[i])
+            coins_to_spend = sum(map(lambda value: int(value), [info_for_vout[1] for info_for_vout in vout_data]))
+            txids_in_bytes = [(int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big'), int(vout)) for txid, vout in vin_data]
+            available_coins = sum(list(map(lambda data: int.from_bytes(self.db.getInfoOfTxid(data[0])['vouts'][data[1]]['value'], 'little'), txids_in_bytes)))
+
+            if available_coins < coins_to_spend:
+                raise ValueError('[ERROR] Not enough coins on these vins!!!')
+
+            
+        for i in range(len(vin_data)):
+            tx_data += self.__create_vin(vin_data[i][0], int(vin_data[i][1]))
+
+        tx_data += len(vout_data).to_bytes(1, "little") #outputs num
+
+        for i in range(len(vout_data)):
+            print(vout_data[i])
+            tx_data += self.__create_vout(vout_data[i][0], int(vout_data[i][1]))
         
-        if isTransaction:
+        if len(vin_data):
             self.appendToMempool(tx_data)
                 
         return tx_data
@@ -833,11 +858,11 @@ class Blockchain:
 
         else:
             vout = tx_vouts[vout_num]
-            print(vout)
 
             if int.from_bytes(vout['spent'], 'little'):
                 raise ValueError('[ERROR] Vout is already spent!!!')
             else:
+
                 script_pub_key = vout['script_pub_key'] 
                 
                 vin_data = txid 
@@ -855,11 +880,6 @@ class Blockchain:
                 return vin_data
 
     def confirmSign(self, scriptSig, scriptPubKey, message_to_sign):
-        print('CONF INFO')
-        print(scriptSig)
-        print(scriptPubKey)
-        print(message_to_sign)
-
         if len(scriptPubKey) < 32:
             return False
 
@@ -867,7 +887,7 @@ class Blockchain:
 
         return pk.verify(scriptSig, message_to_sign)
 
-    def __create_vout(self, value, address):
+    def __create_vout(self, address, value):
 
         vout_data = int(value).to_bytes(BlkTransactions.TXS_STRUCT['value'], "little")
 

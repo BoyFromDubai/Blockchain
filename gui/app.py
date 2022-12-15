@@ -240,11 +240,16 @@ class TransactionWidget(QWidget):
                     raise e
 
             try:
-                tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
-                    [address.text() for address in self.info_fields['addresses']],
-                    [txid.text() for txid in self.info_fields['txids']],
-                    [vout.text() for vout in self.info_fields['vouts']])
-
+                # tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
+                #     [address.text() for address in self.info_fields['addresses']],
+                #     [txid.text() for txid in self.info_fields['txids']],
+                #     [vout.text() for vout in self.info_fields['vouts']])
+                tx_data = self.user.blockchain.addTransaction(
+                    list(zip([address.text() for address in self.info_fields['addresses']],
+                    [sum.text() for sum in self.info_fields['sums']])),
+                    list(zip([txid.text() for txid in self.info_fields['txids']],
+                    [vout.text() for vout in self.info_fields['vouts']])),)
+                    
                 self.user.node.newTxMessage(tx_data)
             except Exception as e:
                 raise e
@@ -267,11 +272,14 @@ class TransactionWidget(QWidget):
         self.info_fields['addresses'].append(address)
         address.setPlaceholderText("Enter address")
         groupbox_layout.addWidget(address, 1)
-        sum = QLineEdit(self)
-        self.info_fields['sums'].append(sum)
-        sum.setPlaceholderText("Enter sum")
-        groupbox_layout.addWidget(sum, 1)
+        address.setText('155')
+        value = QLineEdit(self)
+        self.info_fields['sums'].append(value)
+        value.setPlaceholderText("Enter sum")
+        groupbox_layout.addWidget(value, 1)
         self.vout_box_layout.addWidget(groupbox, 1)
+        value.setText('12')
+
 
     def addVin(self):        
         groupbox = QGroupBox()
@@ -282,11 +290,13 @@ class TransactionWidget(QWidget):
         self.info_fields['txids'].append(txid)
         txid.setPlaceholderText("Enter txid")
         groupbox_layout.addWidget(txid)
+        
         vout = QLineEdit(self)
         self.info_fields['vouts'].append(vout)
         vout.setPlaceholderText("Enter vout")
         groupbox_layout.addWidget(vout)
         self.vin_box_layout.addWidget(groupbox, 1)
+        vout.setText('0')
 
 class Terminal(QTextEdit):
     def __init__(self):
@@ -322,10 +332,7 @@ class TerminalInput(Terminal):
                 mining_thread = threading.Thread(target=self.__mining_once)
                 mining_thread.start()
                 mining_thread.join()
-                self.callback_wallet()     
-
-           
-                # res = self.__mining_once()
+                self.callback_wallet()
 
         if command_arr[0] == 'abc':
             print(self.user.wallet.utxos)
