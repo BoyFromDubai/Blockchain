@@ -125,6 +125,9 @@ class DB():
         vins = BlkTransactions.getVins(tx_info)
         if len(vins):
             print('For exception!!!!!!!!!!!')
+            print('vouts')
+            print(BlkTransactions.getVouts(tx_info))
+            print("vins")
             print(vins)
         for vin in vins:
             txid = vin['txid']
@@ -497,7 +500,6 @@ class BlkTransactions():
         res = len(self.txs).to_bytes(self.TXS_STRUCT['tx_count'], byteorder='big')
         for tx in self.txs:
             res += tx
-
 
         return res
 
