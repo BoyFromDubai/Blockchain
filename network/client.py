@@ -122,7 +122,6 @@ class Connection(threading.Thread):
                     msg_type, msg_meaning, size = self.__parse_header(header)
 
                     print('GOT')
-                    print()
                     print('Header')
                     print(header)
                     print('------------')
@@ -136,6 +135,7 @@ class Connection(threading.Thread):
                             x = key
                     print(size)
                     print('------------')
+                    print()
 
                     read_size = 1024
 

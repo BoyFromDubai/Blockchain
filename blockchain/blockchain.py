@@ -30,8 +30,6 @@ class DB():
 
     def __create_utxo_struct(self, tx_info):
         vouts = BlkTransactions.getVouts(tx_info)
-        print('vou--------ts')
-        print(vouts)
 
         res = Blockchain.getChainLen().to_bytes(DB.VOUTS_STRUCT['height'], 'little')
         res += len(vouts).to_bytes(DB.VOUTS_STRUCT['vouts_num'], 'little')
@@ -47,8 +45,8 @@ class DB():
     def showDB(self):
         arr = []
         for key, value in self.db:
-            print('VALUE')
-            print(value)
+            # print('VALUE')
+            # print(value)
             arr.append((key.hex(), self.__parse_tx_utxos(value)))
 
         return arr
@@ -148,13 +146,9 @@ class DB():
             if not delete_tx:
                 self.db.put(txid, updated_tx)
 
-
-
     def showAll(self):
         for key, value in self.db:
             print(key)
-
-    def checkTxidExistance(self, txid): return True if self.getInfoOfTxid(txid) else False
 
     def getInfoOfTxid(self, txid):
         info_to_txid = self.db.get(txid)
@@ -163,24 +157,33 @@ class DB():
             raise ValueError('[ERROR] No such TXID in chain!!!')
         
         else:
-            utxo = {}
+            info_for_txid = {}
             cur_offset = 0
 
-            utxo['height'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
+            info_for_txid['height'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
             cur_offset += self.VOUTS_STRUCT['height']
-            utxo['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
+            info_for_txid['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']]
             cur_offset += self.VOUTS_STRUCT['vouts_num']
-            utxo['spent'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
-            cur_offset += self.VOUTS_STRUCT['spent']
-            utxo['value'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
-            cur_offset += self.VOUTS_STRUCT['value']
-            
-            utxo['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
-            print(utxo['script_pub_key_size'])
-            cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
-            utxo['script_pub_key'] = info_to_txid[cur_offset:cur_offset + int.from_bytes(utxo['script_pub_key_size'], 'little')]
 
-            return utxo
+            vouts = []
+            for _ in range(int.from_bytes(info_for_txid['vouts_num'], 'little')):
+                vout = {}
+
+                vout['spent'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
+                cur_offset += self.VOUTS_STRUCT['spent']
+                vout['value'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
+                cur_offset += self.VOUTS_STRUCT['value']
+                
+                vout['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']]
+                cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
+                vout['script_pub_key'] = info_to_txid[cur_offset:cur_offset + int.from_bytes(vout['script_pub_key_size'], 'little')]
+                cur_offset += int.from_bytes(vout['script_pub_key_size'], 'little')
+
+                vouts.append(vout)
+
+            info_for_txid['vouts'] = vouts
+
+            return info_for_txid
 
 class Block():
     SIZE = 4
@@ -689,11 +692,6 @@ class Blockchain:
             header = check_block.header.header
             
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
-                print('transactions')
-                print(transactions)
-                print('HEADER')
-                print(header)
-
                 check_proof = True
                 self.__append_block(block_data)
                 self.__clear_mempool()
@@ -734,6 +732,8 @@ class Blockchain:
     def verifyTransaction(tx_data):
         vins = BlkTransactions.getVins(tx_data)
 
+
+        print(vins)
         ## TODO: tx verification
 
         Blockchain.appendToMempool(tx_data)     
@@ -747,12 +747,6 @@ class Blockchain:
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
-
-        
-        print('ROOTS')
-        print(real_mrkl_root)
-        print(got_mrkl_root)
-
         if real_mrkl_root == got_mrkl_root:
             cur_len = Blockchain.getChainLen()
 
@@ -760,9 +754,6 @@ class Blockchain:
                 f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
             
             for tx in txs:
-                print('vouts')
-                print(BlkTransactions.getVouts(tx))
-
                 self.db.updateDB(tx)
 
         else:
@@ -811,10 +802,6 @@ class Blockchain:
             
             if isTransaction:
                 self.appendToMempool(tx_data)
-
-            print('TX Appended')
-            print(BlkTransactions.getBlockTxs(tx_data))
-            print(tx_data)
                     
             return tx_data
         
@@ -834,26 +821,39 @@ class Blockchain:
 
     def __create_vin(self, txid, vout_num, sk):
         txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
-        vout_num = vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
 
-        info_for_txid = self.db.getInfoOfTxid(txid)
-        script_pub_key = info_for_txid['script_pub_key'] 
+        tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
 
-        vin_data = txid 
-        vin_data += vout_num
+        if vout_num > len(tx_vouts) - 1:
+            raise ValueError('[ERROR] Not enough vouts in tx!!!')
 
-        message_to_sign = txid
-        scriptSig = sk.sign(message_to_sign)
-        
-        if not self.confirmSign(scriptSig, script_pub_key, message_to_sign):
-            raise ValueError('[ERROR] Signature failed!')
+        else:
+            vout = tx_vouts[vout_num]
+            print(vout)
 
-        vin_data += len(scriptSig).to_bytes(BlkTransactions.TXS_STRUCT['script_sig_size'], "little") #ScriptSig size
-        vin_data += scriptSig #ScriptSig
+            if int.from_bytes(vout['spent'], 'little'):
+                raise ValueError('[ERROR] Vout is already spent!!!')
+            else:
+                script_pub_key = vout['script_pub_key'] 
+                
+                vin_data = txid 
+                vin_data += vout_num.to_bytes(BlkTransactions.TXS_STRUCT['vout'], "little")
 
-        return vin_data
+                message_to_sign = txid
+                scriptSig = sk.sign(message_to_sign)
+                
+                if not self.confirmSign(scriptSig, script_pub_key, message_to_sign):
+                    raise ValueError('[ERROR] Signature failed!')
+
+                vin_data += len(scriptSig).to_bytes(BlkTransactions.TXS_STRUCT['script_sig_size'], "little") #ScriptSig size
+                vin_data += scriptSig #ScriptSig
+
+                return vin_data
 
     def confirmSign(self, scriptSig, scriptPubKey, message_to_sign):
+        if len(scriptPubKey) < 32:
+            return False
+
         pk = ecdsa.VerifyingKey.from_string(scriptPubKey, ecdsa.SECP256k1)
 
         return pk.verify(scriptSig, message_to_sign)

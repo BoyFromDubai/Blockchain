@@ -311,6 +311,9 @@ class TerminalInput(Terminal):
     def __execute_command(self, command):
         command_arr = command.split()
         res = ''
+
+        if not len(command_arr):
+            return False
         
         if command_arr[0] == 'mining':
             if command_arr[1] == '-s' or command_arr[1] == '--start':
@@ -328,7 +331,9 @@ class TerminalInput(Terminal):
             print(self.user.wallet.utxos)
 
         if command_arr[0] == 'showdb':
-            res = str(self.user.blockchain.db.showDB())
+            db = self.user.blockchain.db.showDB()
+            for i in range(len(db)):
+                res += str(db[i]) + '\n\n'
 
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
@@ -444,7 +449,6 @@ class TerminalInput(Terminal):
             
             self.__clear_terminal()
 
-            
             return
             
         super(Terminal, self).keyPressEvent(event)
