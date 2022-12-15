@@ -732,17 +732,20 @@ class Blockchain:
     def verifyTransaction(self, tx_data):
         vins = BlkTransactions.getVins(tx_data)
 
+        print('vins')
+        print(vins)
+
         for vin in vins:
+            print('tx_vouts')
+            print(tx_vouts)
             txid = vin['txid']
 
             tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
-            print('tx_vouts')
-            print(tx_vouts)
+            print(self.confirmSign(vin['script_sig'], tx_vouts[vin['vout']], txid))
+
             # if vout_num > len(tx_vouts) - 1:
             #     raise ValueError('[ERROR] Not enough vouts in tx!!!')
 
-        print('vins')
-        print(vins)
         ## TODO: tx verification
 
         Blockchain.appendToMempool(tx_data)     
