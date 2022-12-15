@@ -88,7 +88,6 @@ class Connection(threading.Thread):
             self.__get_blocks_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
             self.__get_tx_msg(msg)
-
         elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
             self.__kill_socket()
         else:
@@ -108,9 +107,10 @@ class Connection(threading.Thread):
         his_hash = self.sock.recv(self.HASH_OF_BLOCK_SIZE)
         my_hash = Block.hashNthBlockInDigest(n-1)
         print(f'asking for {n-1}')
+
         if his_hash == my_hash:
             self.sock.send((0).to_bytes(1, 'big'))
-            self.send(self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], n-1))
+            self.send(self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], (n).to_bytes(self.CHAIN_LEN_SIZE, 'big')))
         else:
             self.sock.send((1).to_bytes(1, 'big'))
             self.__start_getting_blk_hashes(n-1)
