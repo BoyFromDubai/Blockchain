@@ -69,9 +69,9 @@ class Connection(threading.Thread):
 
     def __get(self, info_msg_meaning, msg):
         
-        if info_msg_meaning == self.main_node.meaning_of_msg['version']:
+        if  info_msg_meaning == self.main_node.meaning_of_msg['version']:
             self.__get_version_msg(msg)
-        if info_msg_meaning == self.main_node.meaning_of_msg['block']:
+        if  info_msg_meaning ==  self.main_node.meaning_of_msg['block']:
             self.__get_blocks_msg(msg)
         elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
             self.__get_tx_msg(msg)
@@ -85,6 +85,10 @@ class Connection(threading.Thread):
         chain_len = self.blockchain.getChainLen()
 
         if int.from_bytes(msg, 'big') > chain_len:
+            print(len(Blockchain.hashNthBlockInDigest(chain_len)))
+            # msg = chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            # msg += Blockchain.hashNthBlockInDigest(chain_len)
+            # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['last_block_id'])
             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
 
     def __get_blocks_msg(self, msg):
@@ -208,6 +212,7 @@ class Node(threading.Thread):
             'get_blocks': b'\x00\x00\x00\x00\x00\x00\x00\x01',
             'block': b'\x00\x00\x00\x00\x00\x00\x00\x02',
             'tx': b'\x00\x00\x00\x00\x00\x00\x00\x03',
+            'last_block_id': b'\x00\x00\x00\x00\x00\x00\x00\x04',
 
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
