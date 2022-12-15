@@ -743,7 +743,7 @@ class Blockchain:
             print('tx_vouts')
             print(tx_vouts)
             print('conf_sig')
-            print(self.confirmSign(vin['script_sig'], tx_vouts[vin['vout']], txid))
+            print(self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')], txid))
 
             # if vout_num > len(tx_vouts) - 1:
             #     raise ValueError('[ERROR] Not enough vouts in tx!!!')
