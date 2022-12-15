@@ -110,7 +110,7 @@ class Connection(threading.Thread):
         print(f'asking for {n-1}')
         if his_hash == my_hash:
             self.sock.send((0).to_bytes(1, 'big'))
-            self.send(self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], n-1))
+            self.send(self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], n-1))
         else:
             self.sock.send((1).to_bytes(1, 'big'))
             self.__start_getting_blk_hashes(n-1)
