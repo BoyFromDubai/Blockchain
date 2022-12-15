@@ -863,15 +863,16 @@ class Blockchain:
                 return vin_data
 
     def confirmSign(self, scriptSig, scriptPubKey, message_to_sign):
+        print('CONF INFO')
+        print(scriptSig)
+        print(scriptPubKey)
+        print(message_to_sign)
+        
         if len(scriptPubKey) < 32:
             return False
 
         pk = ecdsa.VerifyingKey.from_string(scriptPubKey, ecdsa.SECP256k1)
 
-        print('CONF INFO')
-        print(scriptSig)
-        print(scriptPubKey)
-        print(message_to_sign)
         return pk.verify(scriptSig, message_to_sign)
 
     def __create_vout(self, value, address):
