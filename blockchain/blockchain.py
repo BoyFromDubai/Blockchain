@@ -734,7 +734,7 @@ class Blockchain:
 
     def verifyTransaction(self, tx_data):
         vins = BlkTransactions.getVins(tx_data)
-
+        print('Verifying started!')
         for vin in vins:
             txid = vin['txid']
 
