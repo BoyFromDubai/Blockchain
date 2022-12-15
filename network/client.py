@@ -95,8 +95,10 @@ class Connection(threading.Thread):
 
     def __get_tx_msg(self, msg):
         print('TX_MSG')
-        self.blockchain.verifyTransaction(msg)
-
+        try:
+            self.blockchain.verifyTransaction(msg)
+        except Exception as e:
+            print(e)
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
