@@ -528,7 +528,7 @@ class MainWindow(QMainWindow):
         self.tabWidget.addTab(self.wallet_widget, "Wallet")
         self.tabWidget.addTab(self.transaction_widget, "Create transaction")
 
-        self.setFixedSize(1300, 800)
+        self.setFixedSize(1300, 500)
 
 
         exitAction = QAction('&Exit', self)
