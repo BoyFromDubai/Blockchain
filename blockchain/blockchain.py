@@ -736,6 +736,7 @@ class Blockchain:
             txid = vin['txid']
 
             tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
+            print('tx_vouts')
             print(tx_vouts)
             # if vout_num > len(tx_vouts) - 1:
             #     raise ValueError('[ERROR] Not enough vouts in tx!!!')
