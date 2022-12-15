@@ -101,7 +101,11 @@ class Connection(threading.Thread):
             self.__start_getting_blk_hashes(chain_len)
 
     def __get_blocks_msg(self, msg):
-        self.blockchain.getNewBlockFromPeer(msg)
+        file_num = msg[:self.CHAIN_LEN_SIZE]
+        blk_data = msg[self.CHAIN_LEN_SIZE:]
+        print(file_num)
+        print(file_num)
+        self.blockchain.getNewBlockFromPeer(int.from_bytes(file_num, 'big'), blk_data)
 
     def __start_getting_blk_hashes(self, n):
         his_hash = self.sock.recv(self.HASH_OF_BLOCK_SIZE)
@@ -110,7 +114,9 @@ class Connection(threading.Thread):
 
         if his_hash == my_hash:
             self.sock.send((0).to_bytes(1, 'big'))
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], (n).to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            msg = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            msg += n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], msg)
         else:
             self.sock.send((1).to_bytes(1, 'big'))
             self.__start_getting_blk_hashes(n-1)

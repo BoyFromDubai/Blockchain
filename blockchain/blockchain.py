@@ -763,15 +763,14 @@ class Blockchain:
 
         Blockchain.appendToMempool(tx_data)     
 
-    def getNewBlockFromPeer(self, blk_data):
+    def getNewBlockFromPeer(self, file_num, blk_data):
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
         if real_mrkl_root == got_mrkl_root:
-            cur_len = Blockchain.getChainLen()
 
-            with open(f'blockchain/blocks/blk_{str(cur_len).zfill(4)}.dat', 'wb') as f:
+            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'ab') as f:
                 f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
             
             for tx in txs:
