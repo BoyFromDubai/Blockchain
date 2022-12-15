@@ -742,6 +742,8 @@ class Blockchain:
             if not self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout']['script_pub_key'], 'little')], txid):
                 raise Exception('[ERROR] Not valid transaction!!!')
 
+
+        print('TX IN THE MEMPOOL')
         Blockchain.appendToMempool(tx_data)     
 
     def getNewBlockFromPeer(self, blk_data):
