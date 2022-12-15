@@ -868,6 +868,10 @@ class Blockchain:
 
         pk = ecdsa.VerifyingKey.from_string(scriptPubKey, ecdsa.SECP256k1)
 
+        print('CONF INFO')
+        print(scriptSig)
+        print(scriptPubKey)
+        print(message_to_sign)
         return pk.verify(scriptSig, message_to_sign)
 
     def __create_vout(self, value, address):
