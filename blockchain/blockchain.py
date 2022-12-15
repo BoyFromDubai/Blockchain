@@ -123,12 +123,12 @@ class DB():
     def updateDB(self, tx_info):
         
         vins = BlkTransactions.getVins(tx_info)
-        if len(vins):
-            print('For exception!!!!!!!!!!!')
-            print('vouts')
-            print(BlkTransactions.getVouts(tx_info))
-            print("vins")
-            print(vins)
+        # if len(vins):
+        #     print('For exception!!!!!!!!!!!')
+        #     print('vouts')
+        #     print(BlkTransactions.getVouts(tx_info))
+        #     print("vins")
+        #     print(vins)
         for vin in vins:
             txid = vin['txid']
             vout = int.from_bytes(vin['vout'], 'little')

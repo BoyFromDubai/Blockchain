@@ -556,4 +556,7 @@ class MainWindow(QMainWindow):
 
         for i in range(0, len(db_files)):
             os.remove('chainstate/' + db_files[i])
+
+        with open('blockchain/mempool/mempool.dat', 'w'):
+            pass
         
