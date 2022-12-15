@@ -241,7 +241,6 @@ class TransactionWidget(QWidget):
 
             tx_data = self.user.blockchain.addTransaction([sum.text() for sum in self.info_fields['sums']],
                 [address.text() for address in self.info_fields['addresses']],
-                self.user.wallet.sk,
                 [txid.text() for txid in self.info_fields['txids']],
                 [vout.text() for vout in self.info_fields['vouts']])
 
