@@ -103,6 +103,7 @@ class Connection(threading.Thread):
     def __get_blocks_msg(self, msg):
         file_num = msg[:self.CHAIN_LEN_SIZE]
         blk_data = msg[self.CHAIN_LEN_SIZE:]
+        print('get_blk_msgs')
         print(file_num)
         print(file_num)
         self.blockchain.getNewBlockFromPeer(int.from_bytes(file_num, 'big'), blk_data)
