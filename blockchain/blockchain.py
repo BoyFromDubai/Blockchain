@@ -739,7 +739,7 @@ class Blockchain:
             txid = vin['txid']
 
             tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
-            if not self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout']['script_pub_key'], 'little')], txid):
+            if not self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
                 raise Exception('[ERROR] Not valid transaction!!!')
 
 
