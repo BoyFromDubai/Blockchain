@@ -736,11 +736,12 @@ class Blockchain:
         print(vins)
 
         for vin in vins:
-            print('tx_vouts')
-            print(tx_vouts)
             txid = vin['txid']
 
             tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
+            print('tx_vouts')
+            print(tx_vouts)
+            print('conf_sig')
             print(self.confirmSign(vin['script_sig'], tx_vouts[vin['vout']], txid))
 
             # if vout_num > len(tx_vouts) - 1:
