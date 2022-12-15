@@ -545,4 +545,15 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # self.user.network_client.closeListening()
         self.user.node.stop()
+
+
+        # tmp code to save some time for debug
+        blocks = sorted(os.listdir('blockchain/blocks'))
+        db_files = sorted(os.listdir('chainstate'))
+
+        for i in range(1, len(blocks)):
+            os.remove('blockchain/blocks/' + blocks[i])
+
+        for i in range(0, len(db_files)):
+            os.remove('chainstate/' + db_files[i])
         

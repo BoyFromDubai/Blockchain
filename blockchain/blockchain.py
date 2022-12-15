@@ -733,6 +733,7 @@ class Blockchain:
         vins = BlkTransactions.getVins(tx_data)
 
 
+        print('vins')
         print(vins)
         ## TODO: tx verification
 
