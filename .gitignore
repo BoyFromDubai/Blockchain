@@ -10,3 +10,4 @@ database/tables.sql
 .vscode/
 network/*.txt
 gui/*.txt
+tmp.py
