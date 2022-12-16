@@ -63,14 +63,11 @@ class Connection(threading.Thread):
     def __answer_get_blocks_msg(self, msg):
         blk_to_start_with = int.from_bytes(msg, 'big')
         blocks_files = self.blockchain.getBlockFiles()
-
         
         for i in range(blk_to_start_with, len(blocks_files)):
-            with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
-                data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-                # blk_data = msg[self.CHAIN_LEN_SIZE:]
-                data += f.read()[Block.SIZE:]
-                self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
+            data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            data += Block.getNthBlock(i)
+            self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
 
     def __start_sending_blk_hashes(self, n):
         self.sock.send(Block.hashNthBlockInDigest(n-1))
