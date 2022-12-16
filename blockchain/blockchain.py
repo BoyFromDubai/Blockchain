@@ -773,9 +773,9 @@ class Blockchain:
         got_mrkl_root = MerkleTree(txs).root
         # TODO: Add checking of prev hash and prev hash in new block
         print('LOOOK!!!')
-        print(Block.hashLastBlockInDigest())
+        print(Block.hashNthBlockInDigest(file_num))
         print(BlkHeader.getBlockPrevHash(blk_data))
-        if Block.hashLastBlockInDigest() == BlkHeader.getBlockPrevHash(blk_data):
+        if Block.hashNthBlockInDigest(file_num) == BlkHeader.getBlockPrevHash(blk_data):
             if real_mrkl_root == got_mrkl_root:
                 prev_blk_info = b''
                 cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
