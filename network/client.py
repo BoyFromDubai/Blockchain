@@ -63,7 +63,9 @@ class Connection(threading.Thread):
     def __answer_get_blocks_msg(self, msg):
         blk_to_start_with = int.from_bytes(msg, 'big')
         blocks_files = self.blockchain.getBlockFiles()
-        print('peer_cur_len')
+        print('blk_to_start_with')
+        print(blk_to_start_with)
+        print(len(blocks_files))
         
         for i in range(blk_to_start_with, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
@@ -118,9 +120,9 @@ class Connection(threading.Thread):
 
         if his_hash == my_hash:
             self.sock.send((0).to_bytes(1, 'big'))
-            true_len = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            blk_to_start_with = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
             # msg += n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], true_len)
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], blk_to_start_with)
         else:
             self.sock.send((1).to_bytes(1, 'big'))
             self.__start_getting_blk_hashes(n-1)
