@@ -61,10 +61,10 @@ class Connection(threading.Thread):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     
     def __answer_get_blocks_msg(self, msg):
-        print('peer_cur_len')
-        print(peer_cur_len)
         peer_cur_len = int.from_bytes(msg, 'big')
         blocks_files = self.blockchain.getBlockFiles()
+        print('peer_cur_len')
+        print(peer_cur_len)
         
         for i in range(peer_cur_len, len(blocks_files)):
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
@@ -110,7 +110,6 @@ class Connection(threading.Thread):
         blk_data = msg[self.CHAIN_LEN_SIZE:]
         print('get_blk_msgs')
         print(file_num)
-        print(file_num)
         self.blockchain.getNewBlockFromPeer(int.from_bytes(file_num, 'big'), blk_data)
 
     def __start_getting_blk_hashes(self, n):
@@ -120,9 +119,9 @@ class Connection(threading.Thread):
 
         if his_hash == my_hash:
             self.sock.send((0).to_bytes(1, 'big'))
-            msg = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            true_len = (n+1).to_bytes(self.CHAIN_LEN_SIZE, 'big')
             # msg += n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], msg)
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], true_len)
         else:
             self.sock.send((1).to_bytes(1, 'big'))
             self.__start_getting_blk_hashes(n-1)
