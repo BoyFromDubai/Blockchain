@@ -771,11 +771,13 @@ class Blockchain:
         # TODO: Add checking of prev hash and prev hash in new block
 
         if real_mrkl_root == got_mrkl_root:
+            # prev_blk_info = b''
+            
+            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'rb') as f:
+                prev_blk_info = f.read()
 
-            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'ab+') as f:
-                not_actual_info = f.read()
-                f.seek(0)
-                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + not_actual_info)
+            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'wb') as f:
+                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
             
             for tx in txs:
                 self.db.updateDB(tx)
