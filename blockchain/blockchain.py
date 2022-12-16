@@ -464,12 +464,12 @@ class BlkHeader():
         
         return BlkHeader.getBlockHeader(data)
         
-
     @staticmethod
-    def getNthBlockPrevHash(n):
-        header = BlkHeader.getNthBlockHeader(n)
+    def getBlockPrevHash(data):
+        header = BlkHeader.getBlockHeader(data)
         cur_offset = 0
         size = 0
+
         for key in BlkHeader.HEADER_STRUCT:
             if key == 'prev_blk_hash':
                 size = BlkHeader.HEADER_STRUCT[key]
@@ -478,6 +478,9 @@ class BlkHeader():
                 cur_offset += BlkHeader.HEADER_STRUCT[key]
         
         return header[cur_offset:cur_offset + size] 
+
+    @staticmethod
+    def getNthBlockPrevHash(n): return BlkHeader.getBlockPrevHash(Block.getNthBlock(n))
 
 class BlkTransactions():
     TXS_STRUCT = {
@@ -769,23 +772,30 @@ class Blockchain:
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
         # TODO: Add checking of prev hash and prev hash in new block
+        print('LOOOK!!!')
+        print(Block.hashLastBlockInDigest())
+        print(BlkHeader.getBlockPrevHash(blk_data))
+        if Block.hashLastBlockInDigest() == BlkHeader.getBlockPrevHash(blk_data):
+            if real_mrkl_root == got_mrkl_root:
+                prev_blk_info = b''
+                cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
 
-        if real_mrkl_root == got_mrkl_root:
-            prev_blk_info = b''
-            cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
+                if os.path.exists(cur_blk_file_name):
+                    with open(cur_blk_file_name, 'rb') as f:
+                        prev_blk_info = f.read()
 
-            if os.path.exists(cur_blk_file_name):
-                with open(cur_blk_file_name, 'rb') as f:
-                    prev_blk_info = f.read()
+                with open(cur_blk_file_name, 'wb') as f:
+                    f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
+                
+                for tx in txs:
+                    self.db.updateDB(tx)
 
-            with open(cur_blk_file_name, 'wb') as f:
-                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
-            
-            for tx in txs:
-                self.db.updateDB(tx)
-
+            else:
+                print('[ERROR]: New Block was falsified')
         else:
             print('[ERROR]: New Block was falsified')
+
+            
    
 
     def verifyChain(self):
