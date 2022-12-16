@@ -767,11 +767,14 @@ class Blockchain:
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
+        # TODO: Add checking of prev hash and prev hash in new block
 
         if real_mrkl_root == got_mrkl_root:
 
-            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'ab') as f:
-                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data)
+            with open(f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat', 'ab+') as f:
+                not_actual_info = f.read()
+                f.seek(0)
+                f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + not_actual_info)
             
             for tx in txs:
                 self.db.updateDB(tx)

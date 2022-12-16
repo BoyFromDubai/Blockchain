@@ -63,16 +63,11 @@ class Connection(threading.Thread):
     def __answer_get_blocks_msg(self, msg):
         blk_to_start_with = int.from_bytes(msg, 'big')
         blocks_files = self.blockchain.getBlockFiles()
-        print('msg')
-        print(msg)
-        print('blk_to_start_with')
-        print(blk_to_start_with)
-        print(len(blocks_files))
+
         
         for i in range(blk_to_start_with, len(blocks_files)):
-            print('blk_file ', i)
             with open(f'blockchain/blocks/{blocks_files[i]}', 'rb') as f:
-                data = msg[:self.CHAIN_LEN_SIZE]
+                data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
                 # blk_data = msg[self.CHAIN_LEN_SIZE:]
                 data += f.read()[Block.SIZE:]
                 self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
