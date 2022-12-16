@@ -207,7 +207,8 @@ class Block():
     @staticmethod
     def getNthBlock(n):
         with open(f'blockchain/blocks/blk_{str(n).zfill(Block.NUMS_IN_NAME)}.dat', 'rb') as f:
-            return f.read()[Block.SIZE:]
+            blk_size = int.from_bytes(f.read(Block.SIZE), 'little')
+            return f.read(blk_size)
 
     @staticmethod
     def hashNthBlockInDigest(n):
@@ -848,8 +849,6 @@ class Blockchain:
             f.write(len(tx_bytes).to_bytes(Blockchain.MEMPOOL_TX_SIZE_INFO, 'little'))
             f.write(tx_bytes)
             
-    def get_chain(self): return data.get_chain()
-
     def __create_vin(self, txid, vout_num):
         txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
 
