@@ -14,12 +14,12 @@ import plyvel
 
 class DB():
     VOUTS_STRUCT = {
-        'height': 4,
-        'vouts_num': 1,
-        'spent': 1, 
-        'value': 8, 
-        'script_pub_key_size': 8,
-        'script_pub_key': None, 
+        'height':               4,
+        'vouts_num':            1,
+        'spent':                1, 
+        'value':                8, 
+        'script_pub_key_size':  8,
+        'script_pub_key':       None, 
     }
 
     def __init__(self):
@@ -39,6 +39,9 @@ class DB():
             res += vouts[i]['value']
             res += vouts[i]['script_pub_key_size']
             res += vouts[i]['script_pub_key']
+
+        print('IN DB')
+        print(res)
 
         return res
     
@@ -81,11 +84,7 @@ class DB():
         return utxos_dict
 
     def __change_spent_field(self, tx_utxos_digest, vout):
-        cur_offset = 0
-
-        print('SPENDING STARTED!!!')
-        print(vout)
-        
+        cur_offset = 0        
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
         vouts_num = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['vouts_num']] 
@@ -96,21 +95,22 @@ class DB():
 
         for i in range(int.from_bytes(vouts_num, 'little')):
             spent = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
+            cur_offset += self.VOUTS_STRUCT['spent']
 
             if i == vout:
                 if not int.from_bytes(spent, 'little'):
                     print('SPENT SUCCESSFULLY')
                     res += (1).to_bytes(self.VOUTS_STRUCT['spent'], 'little') 
                 else:
-                    print('CANT\' BE SPENT')
-                    return False
+                    print('VOUT IS ALREADY SPENT')
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
 
                 res += spent
 
-            cur_offset += self.VOUTS_STRUCT['spent']
+            res += tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['value']] 
+            cur_offset += self.VOUTS_STRUCT['value']            
             pub_key_size = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']] 
             res += pub_key_size
             cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
@@ -121,25 +121,49 @@ class DB():
 
 
     def updateDB(self, tx_info):
-        
         vins = BlkTransactions.getVins(tx_info)
-        # if len(vins):
-        #     print('For exception!!!!!!!!!!!')
-        #     print('vouts')
-        #     print(BlkTransactions.getVouts(tx_info))
-        #     print("vins")
-        #     print(vins)
+        vouts_to_spend = []
+
         for vin in vins:
             txid = vin['txid']
             vout = int.from_bytes(vin['vout'], 'little')
-            self.__spend_utxo(txid, vout)
+            vouts_to_spend.append((txid, self.__spend_utxo(txid, vout)))
 
         tx_utxos = self.__create_utxo_struct(tx_info)
+        txid = hashlib.sha256(tx_info).digest()
         
-        self.db.put(hashlib.sha256(tx_info).digest(), tx_utxos)
+        self.db.put(txid, tx_utxos)
+
+        return vouts_to_spend
+
+    def __get_vout(self, utxos_info, n):
+        vouts_num_offset = self.__get_property_offset('vouts_num')
+        vouts_num = int.from_bytes(utxos_info[vouts_num_offset:vouts_num_offset + self.VOUTS_STRUCT['vouts_num']], 'little')
+        vouts_info = utxos_info[vouts_num_offset + self.VOUTS_STRUCT['vouts_num']:]
+        
+        cur_offset = 0
+        for i in range(vouts_num):
+            res = b''
+            cur_offset += self.VOUTS_STRUCT['spent']
+            res += vouts_info[cur_offset:cur_offset + self.VOUTS_STRUCT['value']]
+            cur_offset += self.VOUTS_STRUCT['value']
+            script_pub_key_size = vouts_info[cur_offset:cur_offset + self.VOUTS_STRUCT['script_pub_key_size']] 
+            res += script_pub_key_size
+            cur_offset += self.VOUTS_STRUCT['script_pub_key_size']
+            res += vouts_info[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
+            cur_offset += int.from_bytes(script_pub_key_size, 'little')
+
+            if i == n:
+                return res
+            
 
     def __spend_utxo(self, txid, vout):
         tx_utxos = self.db.get(txid)
+
+        vout_to_spend = self.__get_vout(tx_utxos, vout)
+        print('vout_to_spend')
+        print(vout_to_spend)
+
 
         updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout)      
 
@@ -151,13 +175,26 @@ class DB():
             if not delete_tx:
                 self.db.put(txid, updated_tx)
 
+        return vout_to_spend
+
     def showAll(self):
         for key, value in self.db:
             print(key)
 
+    def __get_property_offset(self, property_name):
+        cur_offset = 0
+
+        for key, value in self.VOUTS_STRUCT.items():
+            if key == property_name:
+                return cur_offset
+            else:
+                cur_offset += value
+
+        return False
+
     def getInfoOfTxid(self, txid):
         info_to_txid = self.db.get(txid)
-
+        
         if not info_to_txid:
             raise ValueError('[ERROR] No such TXID in chain!!!')
         
@@ -643,6 +680,17 @@ class Blockchain:
     
     MEMPOOL_TX_SIZE_INFO = 2
 
+    UNDO_DATA_STRUCTURE = {
+        'size':                 1,
+        'txid_len':             32,
+        'txid':                 None,
+        # 'height':               DB.VOUTS_STRUCT['height'],
+        # 'vouts_num':            DB.VOUTS_STRUCT['vouts_num'],
+        'value':                DB.VOUTS_STRUCT['value'],
+        'script_pub_key_size':  DB.VOUTS_STRUCT['script_pub_key_size'],
+        'script_pub_key':       DB.VOUTS_STRUCT['script_pub_key'],
+    }
+
     def __init__(self, wallet):
         if not self.getChainLen():
             self.__append_block(self.__create_block(1, hashlib.sha256(pickle.dumps(17)).digest(), 1)) #TODO: change prev_hash
@@ -677,25 +725,15 @@ class Blockchain:
 
     def mineBlock(self, pk):
         emission = self.addTransaction([(pk, math.ceil(random.random() * 1000))])
-        print('emission')
-        print(emission)
-        transactions = [emission]
-        # mempool = self.__get_mempool()[1:]
-        mempool = self.__get_mempool()
-
-        for tx in mempool: 
-            transactions.append(tx)
-
         nonce = 1
         check_proof = False
         num_of_zeros = 1
         difficulty = ''.zfill(num_of_zeros)
-            
         prev_block_hash = Block.hashLastBlockInDigest()
 
-        while (not(check_proof)):
-
-            check_block = self.__create_block(nonce, prev_block_hash, num_of_zeros, transactions)
+        while not check_proof:
+            transactions = self.__get_mempool()
+            transactions.insert(0, emission)
 
             check_block = Block(nonce, prev_block_hash, num_of_zeros, transactions)
             block_data = check_block.createBlock()
@@ -720,6 +758,19 @@ class Blockchain:
     def __clear_mempool(self):
         with open('blockchain/mempool/mempool.dat', 'wb'): 
             pass
+    
+    # TODO: Extra files added and value of transaction is not correct
+    def __save_utxo_to_undo(self, info_to_restore):
+        if len(info_to_restore):
+            print(info_to_restore)
+            for txid, vout in info_to_restore:
+                with open(f"blockchain/blocks/rev_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'ab') as f:
+                    txid_info = len(txid).to_bytes(self.UNDO_DATA_STRUCTURE['txid_len'], 'little') + txid
+                    res = txid_info + vout
+                    f.write(len(res).to_bytes(self.UNDO_DATA_STRUCTURE['size'], 'little') + res)
+        else:
+            with open(f"blockchain/blocks/rev_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'ab') as f:
+                pass
 
     def appendVoutsToDb(self, tx):
 
@@ -738,7 +789,8 @@ class Blockchain:
 
 
 
-        self.db.updateDB(tx)
+        vouts_to_restore = self.db.updateDB(tx)
+        self.__save_utxo_to_undo(vouts_to_restore)
 
         with open('wallet/txids.txt', 'w') as f:
             f.write(hashlib.sha256(tx).hexdigest())
@@ -746,7 +798,8 @@ class Blockchain:
     @staticmethod
     def getChainLen():
         if os.path.exists('blockchain/blocks'):
-            return len(os.listdir('blockchain/blocks')) 
+            files_in_dir_len = len(os.listdir('blockchain/blocks'))
+            return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
         else:
             os.mkdir('blockchain/blocks')
             return 0
@@ -771,10 +824,7 @@ class Blockchain:
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
-        # TODO: Add checking of prev hash and prev hash in new block
-        print('LOOOK!!!')
-        print(Block.hashNthBlockInDigest(file_num - 1))
-        print(BlkHeader.getBlockPrevHash(blk_data))
+
         if Block.hashNthBlockInDigest(file_num - 1) == BlkHeader.getBlockPrevHash(blk_data):
             if real_mrkl_root == got_mrkl_root:
                 prev_blk_info = b''
@@ -788,15 +838,13 @@ class Blockchain:
                     f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
                 
                 for tx in txs:
-                    self.db.updateDB(tx)
+                    txid, utxos_info = self.db.updateDB(tx)
+                    self.__save_utxo_to_undo(txid, utxos_info)
 
             else:
                 print('[ERROR]: New Block was falsified')
         else:
             print('[ERROR]: New Block was falsified')
-
-            
-   
 
     def verifyChain(self):
         block_files = self.getBlockFiles()
