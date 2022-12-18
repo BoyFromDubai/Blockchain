@@ -304,9 +304,8 @@ class Node(threading.Thread):
 
                     connection, client_address = self.sock.accept()
 
-                    # print(connection)
-                    conn_ip = client_address[0] # backward compatibilty
-                    conn_port = client_address[1] # backward compatibilty
+                    conn_ip = client_address[0]
+                    conn_port = client_address[1]
                     print(conn_ip)
                     # print('LEN', len(self.connections))
                     connection = Connection(self, connection, conn_ip, conn_port, self.blockchain, self.debug_print)
@@ -316,8 +315,6 @@ class Node(threading.Thread):
                 else:
                     print('MAX CONNECTIONS REACHED!')
 
-                # for conn in self.connections:
-                    # Basic information exchange (not secure) of the id's of the nodes!
             except socket.timeout:
                 continue
 
@@ -335,10 +332,20 @@ class Node(threading.Thread):
 
     def getPeers(self): return self.connections
 
+    def __str__(self) -> str:
+        return f'''
+        HOST INFO
+        host_ip: {self.ip}
+        host_port: {self.port}
+        connections: {self.connections}
+        connections: {self.connections}
+        '''
+
     def __repr__(self):
         return f'''
         HOST INFO
         host_ip: {self.ip}
         host_port: {self.port}
         connections: {self.connections}
-        connections: {self.connections}'''
+        connections: {self.connections}
+        '''

@@ -356,7 +356,7 @@ class TerminalInput(Terminal):
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
                 nodes = self.user.node.getPeers()
                 res = ''
-                for node in nodes: res += node
+                for node in nodes: res += str(node)
                 print(res)
 
         if command_arr[0] == 'history':
