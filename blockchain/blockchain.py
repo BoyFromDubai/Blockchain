@@ -679,6 +679,7 @@ class BlkTransactions():
 class Blockchain:
     
     MEMPOOL_TX_SIZE_INFO = 2
+    NUMBER_OF_VOUTS_PER_VOUT = 2
 
     UNDO_DATA_STRUCTURE = {
         'size':                 4,
@@ -921,11 +922,16 @@ class Blockchain:
         for i in range(len(vin_data)):
             tx_data += self.__create_vin(vin_data[i][0], int(vin_data[i][1]))
 
-        tx_data += len(vout_data).to_bytes(1, "little") #outputs num
+        tx_data += len(vout_data * self.NUMBER_OF_VOUTS_PER_VOUT).to_bytes(1, "little") #outputs num
 
         for i in range(len(vout_data)):
             print(vout_data[i])
-            tx_data += self.__create_vout(vout_data[i][0], int(vout_data[i][1]))
+            value = int(vout_data[i][1])
+
+            for j in range(self.NUMBER_OF_VOUTS_PER_VOUT):
+                tmp = self.NUMBER_OF_VOUTS_PER_VOUT
+                divided_value = value // tmp + value % tmp if j == tmp - 1 else value // tmp
+                tx_data += self.__create_vout(vout_data[i][0], divided_value)
         
         if len(vin_data):
             self.appendToMempool(tx_data)
