@@ -796,7 +796,7 @@ class Blockchain:
         print('tx_to_store')
         print(tx)
         vouts_to_restore = self.db.updateDB(tx)
-        self.__save_utxo_to_undo(vouts_to_restore)
+        # self.__save_utxo_to_undo(vouts_to_restore)
 
         with open('wallet/txids.txt', 'w') as f:
             f.write(hashlib.sha256(tx).hexdigest())
@@ -804,8 +804,9 @@ class Blockchain:
     @staticmethod
     def getChainLen():
         if os.path.exists('blockchain/blocks'):
-            files_in_dir_len = len(os.listdir('blockchain/blocks'))
-            return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
+            # files_in_dir_len = len(os.listdir('blockchain/blocks'))
+            # return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
+            return len(os.listdir('blockchain/blocks'))
         else:
             os.mkdir('blockchain/blocks')
             return 0
