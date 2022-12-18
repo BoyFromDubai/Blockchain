@@ -239,9 +239,7 @@ class Block():
 
     def createBlock(self):
         res = self.header.createHeader() + self.txs.createTxs()
-        size = len(res).to_bytes(self.SIZE, byteorder='little')
-
-        return size + res
+        return res
 
     @staticmethod
     def getNthBlock(n):
@@ -748,7 +746,7 @@ class Blockchain:
                 for tx in transactions:
                     self.appendVoutsToDb(tx)
 
-                self.__append_block(block_data)
+                self.__append_block(len(block_data).to_bytes(Block.SIZE, byteorder='little') + block_data)
                 self.__clear_mempool()
 
                 return block_data[Block.SIZE:]
