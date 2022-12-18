@@ -40,17 +40,19 @@ class DB():
             res += vouts[i]['script_pub_key_size']
             res += vouts[i]['script_pub_key']
 
-        print('IN DB')
-        print(res)
-
         return res
     
     def showDB(self):
         arr = []
         for key, value in self.db:
-            # print('VALUE')
-            # print(value)
             arr.append((key.hex(), self.__parse_tx_utxos(value)))
+
+        return arr
+
+    def showDBDigest(self):
+        arr = []
+        for key, value in self.db:
+            arr.append((key, self.__parse_tx_utxos(value)))
 
         return arr
 
@@ -78,7 +80,6 @@ class DB():
 
             utxos.append(utxo)
 
-        print(utxos)
         utxos_dict['vouts'] = utxos
 
         return utxos_dict
@@ -129,8 +130,8 @@ class DB():
             vout = int.from_bytes(vin['vout'], 'little')
             vouts_to_spend.append((txid, self.__spend_utxo(txid, vout)))
 
-        tx_utxos = self.__create_utxo_struct(tx_info)
         txid = hashlib.sha256(tx_info).digest()
+        tx_utxos = self.__create_utxo_struct(tx_info)
         
         self.db.put(txid, tx_utxos)
 
@@ -161,9 +162,10 @@ class DB():
         tx_utxos = self.db.get(txid)
 
         vout_to_spend = self.__get_vout(tx_utxos, vout)
-        print('vout_to_spend')
+        print('What in DB')
+        print(tx_utxos)
+        print('What to undo later')
         print(vout_to_spend)
-
 
         updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout)      
 
@@ -681,11 +683,11 @@ class Blockchain:
     MEMPOOL_TX_SIZE_INFO = 2
 
     UNDO_DATA_STRUCTURE = {
-        'size':                 1,
-        'txid_len':             32,
+        'size':                 4,
+        'txid_len':             2,
         'txid':                 None,
-        # 'height':               DB.VOUTS_STRUCT['height'],
-        # 'vouts_num':            DB.VOUTS_STRUCT['vouts_num'],
+        'height':               DB.VOUTS_STRUCT['height'],
+        'vouts_num':            DB.VOUTS_STRUCT['vouts_num'],
         'value':                DB.VOUTS_STRUCT['value'],
         'script_pub_key_size':  DB.VOUTS_STRUCT['script_pub_key_size'],
         'script_pub_key':       DB.VOUTS_STRUCT['script_pub_key'],
@@ -742,11 +744,12 @@ class Blockchain:
             
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
                 check_proof = True
-                self.__append_block(block_data)
-                self.__clear_mempool()
 
                 for tx in transactions:
                     self.appendVoutsToDb(tx)
+
+                self.__append_block(block_data)
+                self.__clear_mempool()
 
                 return block_data[Block.SIZE:]
 
@@ -762,12 +765,14 @@ class Blockchain:
     # TODO: Extra files added and value of transaction is not correct
     def __save_utxo_to_undo(self, info_to_restore):
         if len(info_to_restore):
+            print('info_to_restore')
             print(info_to_restore)
             for txid, vout in info_to_restore:
                 with open(f"blockchain/blocks/rev_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'ab') as f:
                     txid_info = len(txid).to_bytes(self.UNDO_DATA_STRUCTURE['txid_len'], 'little') + txid
                     res = txid_info + vout
                     f.write(len(res).to_bytes(self.UNDO_DATA_STRUCTURE['size'], 'little') + res)
+                # self.__restore_vouts(2)
         else:
             with open(f"blockchain/blocks/rev_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'ab') as f:
                 pass
@@ -787,8 +792,9 @@ class Blockchain:
 
         #     if available_coins
 
-
-
+        print()
+        print('tx_to_store')
+        print(tx)
         vouts_to_restore = self.db.updateDB(tx)
         self.__save_utxo_to_undo(vouts_to_restore)
 
@@ -818,7 +824,32 @@ class Blockchain:
             if not self.confirmSign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
                 raise Exception('[ERROR] Not valid transaction!!!')
 
-        Blockchain.appendToMempool(tx_data)     
+        Blockchain.appendToMempool(tx_data)
+
+    def __restore_vouts(self, file_num):
+        cur_blk_file_name = f"blockchain/blocks/rev_{str(file_num).zfill(Block.NUMS_IN_NAME)}.dat"
+        if os.path.exists(cur_blk_file_name):
+            with open(cur_blk_file_name, 'rb') as f:
+                restore_info = f.read()
+                f.seek(0)
+                while f.tell() < len(restore_info):
+                    size = f.read(self.UNDO_DATA_STRUCTURE['size'])
+                    txid_len = f.read(self.UNDO_DATA_STRUCTURE['txid_len'])
+                    txid = f.read(int.from_bytes(txid_len, 'little'))
+
+                    res = f.read(self.UNDO_DATA_STRUCTURE['height'], 'little')
+                    vouts_num = f.read(self.UNDO_DATA_STRUCTURE['vouts_num'])
+                    res += vouts_num
+                    
+                    for _ in range(int.from_bytes(vouts_num, 'little')):
+                        
+                        value = f.read(self.UNDO_DATA_STRUCTURE['value'])
+                        script_pub_key_size = f.read(self.UNDO_DATA_STRUCTURE['script_pub_key_size'])
+                        script_pub_key = f.read(int.from_bytes(script_pub_key_size, 'little'))
+                    print(1555)
+                    print(self.db.getInfoOfTxid(txid))
+
+            # TODO: left some code
 
     def getNewBlockFromPeer(self, file_num, blk_data):
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
