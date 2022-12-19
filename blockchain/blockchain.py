@@ -735,9 +735,11 @@ class Blockchain:
 
         return transactions
     
-    def __append_block(self, blk):
+    def __append_block(self, block_info):
+        res = len(block_info).to_bytes(Block.SIZE, 'little')
+        res += block_info
         with open(f"blockchain/blocks/blk_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'wb') as f:
-            f.write(blk)
+            f.write(res)
 
     def mineBlock(self, pk):
         emission = self.addTransaction([(pk, math.ceil(random.random() * 1000))])
@@ -762,17 +764,18 @@ class Blockchain:
                 for tx in transactions:
                     self.appendVoutsToDb(tx)
 
-                self.__append_block(len(block_data).to_bytes(Block.SIZE, byteorder='little') + block_data)
+                self.__append_block(block_data)
                 self.__clear_mempool()
 
                 self.db.deleteTxids()
 
                 print('mined block')
-                print(block_data[Block.SIZE:])
+                print(block_data)
+                print(Block.parseBlock(block_data))
                 print('TX INFO')
-                print(block_data[Block.SIZE:][len(BlkHeader.getBlockHeader(block_data[Block.SIZE:])):])
+                print(block_data[len(BlkHeader.getBlockHeader(block_data[Block.SIZE:])):])
 
-                return block_data[Block.SIZE:]
+                return block_data
 
             else:
                 nonce += 1
