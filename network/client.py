@@ -66,6 +66,8 @@ class Connection(threading.Thread):
         
         for i in range(blk_to_start_with, chain_len):
             data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            print('ith block')
+            print(i.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
             data += Block.getNthBlock(i)
             self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
 
