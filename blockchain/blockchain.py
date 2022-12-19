@@ -22,12 +22,14 @@ class DB():
         'script_pub_key':       None, 
     }
 
+    TXID_LEN = 32
+    TTL_OF_SPENT_TX = 5
+
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
 
         if not os.path.exists('blockchain/txids_to_delete'):
             os.mkdir('blockchain/txids_to_delete')
-
 
     def __del__(self):
         self.db.close()
@@ -164,19 +166,15 @@ class DB():
 
     def __spend_utxo(self, txid, vout):
         tx_utxos = self.db.get(txid)
-
         vout_to_spend = self.__get_vout(tx_utxos, vout)
-        print('What in DB')
-        print(tx_utxos)
-        print('What to undo later')
-        print(vout_to_spend)
-
         updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout)      
 
         if not updated_tx:
             raise ValueError('[ERROR] This vout if already spend!!!')
         else:
-            self.db.delete(txid)
+            with open(f'blockchain/txids_to_delete/txids_for_blk_{str(Blockchain.getChainLen() - 1).zfill(Block.NUMS_IN_NAME)}.dat', 'ab') as f:
+                f.write(txid)
+            # self.db.delete(txid)
 
             if not delete_tx:
                 self.db.put(txid, updated_tx)
