@@ -769,6 +769,8 @@ class Blockchain:
 
                 print('mined block')
                 print(block_data[Block.SIZE:])
+                print('TX INFO')
+                print(block_data[Block.SIZE:][len(BlkHeader.getBlockHeader(block_data[Block.SIZE:])):])
 
                 return block_data[Block.SIZE:]
 
