@@ -264,7 +264,8 @@ class Node(threading.Thread):
 
     def disconnectnode(self, ip):
         for conn in self.connections:
-            conn.stop()
+            if conn.ip == ip:
+                conn.stop()
 
 
     def connectWithNode(self, ip, port):

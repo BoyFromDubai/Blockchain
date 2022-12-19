@@ -354,7 +354,7 @@ class TerminalInput(Terminal):
                     print(e)
 
             elif command_arr[1] == '-d' or command_arr[1] == '--disconnnect':
-                self.user.node.disconnectnode
+                self.user.node.disconnectnode(command_arr[2])
             elif command_arr[1] == '-l' or command_arr[1] == '--list':
                 nodes = self.user.node.getPeers()
                 res = ''
