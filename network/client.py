@@ -104,6 +104,7 @@ class Connection(threading.Thread):
             self.__start_getting_blk_hashes(chain_len)
 
     def __get_blocks_msg(self, msg):
+        print(msg)
         file_num = msg[:self.CHAIN_LEN_SIZE]
         blk_data = msg[self.CHAIN_LEN_SIZE:]
         print('get_blk_msgs')
