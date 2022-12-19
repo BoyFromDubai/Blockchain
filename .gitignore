@@ -12,3 +12,4 @@ network/*.txt
 gui/*.txt
 tmp.py
 /txids_to_delete
+/tmp_db
