@@ -154,11 +154,7 @@ class DB():
                     self.db.delete(txid_to_delete)
 
     def updateDB(self, tx_info):
-        print('tx_info')
-        print(tx_info)
         vins = BlkTransactions.getVins(tx_info)
-        print('vins')
-        print(vins)
         vouts_to_spend = []
         txid_in_cur_block = hashlib.sha256(tx_info).digest()
 
@@ -783,12 +779,6 @@ class Blockchain:
                 self.__clear_mempool()
 
                 self.db.deleteTxids()
-
-                print('mined block')
-                print(block_data)
-                # print(Block.parseBlock(9))
-                print('TX INFO')
-                print(block_data[len(BlkHeader.getBlockHeader(block_data[Block.SIZE:])):])
 
                 return block_data
 
