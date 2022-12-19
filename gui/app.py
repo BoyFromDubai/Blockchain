@@ -558,15 +558,19 @@ class MainWindow(QMainWindow):
 
 
         # tmp code to save some time for debug
-        blocks = sorted(os.listdir('blockchain/blocks'))
-        db_files = sorted(os.listdir('chainstate'))
+        # blocks = sorted(os.listdir('blockchain/blocks'))
+        # db_files = sorted(os.listdir('chainstate'))
+        # txids_to_delete = sorted(os.listdir('blockchain/txids_to_delete'))
 
-        for i in range(1, len(blocks)):
-            os.remove('blockchain/blocks/' + blocks[i])
+        # for i in range(1, len(blocks)):
+        #     os.remove('blockchain/blocks/' + blocks[i])
 
-        for i in range(0, len(db_files)):
-            os.remove('chainstate/' + db_files[i])
+        # for i in range(0, len(db_files)):
+        #     os.remove('chainstate/' + db_files[i])
 
-        with open('blockchain/mempool/mempool.dat', 'w'):
-            pass
+        # for i in range(0, len(txids_to_delete)):
+        #     os.remove('blockchain/txids_to_delete/' + txids_to_delete[i])
+
+        # with open('blockchain/mempool/mempool.dat', 'w'):
+        #     pass
         

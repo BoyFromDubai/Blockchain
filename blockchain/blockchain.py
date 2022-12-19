@@ -16,7 +16,7 @@ class DB():
     VOUTS_STRUCT = {
         'height':               4,
         'vouts_num':            1,
-        'spent':                1, 
+        'spent':                32, 
         'value':                8, 
         'script_pub_key_size':  8,
         'script_pub_key':       None, 
@@ -75,7 +75,7 @@ class DB():
         for _ in range(utxos_dict['vouts_num']):
             utxo = {}
 
-            utxo['spent'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']], 'little')
+            utxo['spent'] = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']].hex()
             cur_offset += self.VOUTS_STRUCT['spent']
             utxo['value'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['value']], 'little')
             cur_offset += self.VOUTS_STRUCT['value']
@@ -90,7 +90,7 @@ class DB():
 
         return utxos_dict
 
-    def __change_spent_field(self, tx_utxos_digest, vout):
+    def __change_spent_field(self, tx_utxos_digest, vout, new_txid, txid_in_vin):
         cur_offset = 0        
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
@@ -107,7 +107,7 @@ class DB():
             if i == vout:
                 if not int.from_bytes(spent, 'little'):
                     print('SPENT SUCCESSFULLY')
-                    res += (1).to_bytes(self.VOUTS_STRUCT['spent'], 'little') 
+                    res += new_txid 
                 else:
                     print('VOUT IS ALREADY SPENT')
             else:
@@ -126,20 +126,35 @@ class DB():
 
         return res, delete_tx
 
+    def deleteTxids(self):
+        blk_txids_to_delete = Blockchain.getChainLen() - self.TTL_OF_SPENT_TX
+        path = f'blockchain/txids_to_delete/txids_for_blk_{str(blk_txids_to_delete).zfill(Block.NUMS_IN_NAME)}.dat'
+        print(path)
+        
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                bytes_to_read = len(f.read())
+                f.seek(0)
+                
+                print('TO DELETE')
+                while f.tell() < bytes_to_read:
+                    txid_to_delete = f.read(self.TXID_LEN)
+                    print(txid_to_delete.hex())
+                    self.db.delete(txid_to_delete)
 
     def updateDB(self, tx_info):
         vins = BlkTransactions.getVins(tx_info)
         vouts_to_spend = []
+        txid_in_cur_block = hashlib.sha256(tx_info).digest()
 
         for vin in vins:
-            txid = vin['txid']
+            txid_in_vin = vin['txid']
             vout = int.from_bytes(vin['vout'], 'little')
-            vouts_to_spend.append((txid, self.__spend_utxo(txid, vout)))
+            vouts_to_spend.append((txid_in_vin, self.__spend_utxo(txid_in_vin, vout, txid_in_cur_block)))
 
-        txid = hashlib.sha256(tx_info).digest()
         tx_utxos = self.__create_utxo_struct(tx_info)
         
-        self.db.put(txid, tx_utxos)
+        self.db.put(txid_in_cur_block, tx_utxos)
 
         return vouts_to_spend
 
@@ -162,22 +177,21 @@ class DB():
 
             if i == n:
                 return res
-            
 
-    def __spend_utxo(self, txid, vout):
-        tx_utxos = self.db.get(txid)
+    def __spend_utxo(self, txid_in_vin, vout, new_txid):
+        tx_utxos = self.db.get(txid_in_vin)
         vout_to_spend = self.__get_vout(tx_utxos, vout)
-        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout)      
+        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout, new_txid, txid_in_vin)      
 
         if not updated_tx:
             raise ValueError('[ERROR] This vout if already spend!!!')
         else:
-            with open(f'blockchain/txids_to_delete/txids_for_blk_{str(Blockchain.getChainLen() - 1).zfill(Block.NUMS_IN_NAME)}.dat', 'ab') as f:
-                f.write(txid)
-            # self.db.delete(txid)
+            self.db.delete(txid_in_vin)
+            self.db.put(txid_in_vin, updated_tx)
 
-            if not delete_tx:
-                self.db.put(txid, updated_tx)
+            if delete_tx:
+                with open(f'blockchain/txids_to_delete/txids_for_blk_{str(Blockchain.getChainLen() - 1).zfill(Block.NUMS_IN_NAME)}.dat', 'ab') as f:
+                    f.write(txid_in_vin)
 
         return vout_to_spend
 
@@ -750,6 +764,8 @@ class Blockchain:
 
                 self.__append_block(len(block_data).to_bytes(Block.SIZE, byteorder='little') + block_data)
                 self.__clear_mempool()
+
+                self.db.deleteTxids()
 
                 return block_data[Block.SIZE:]
 
