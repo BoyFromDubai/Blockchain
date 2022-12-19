@@ -767,6 +767,9 @@ class Blockchain:
 
                 self.db.deleteTxids()
 
+                print('mined block')
+                print(block_data[Block.SIZE:])
+
                 return block_data[Block.SIZE:]
 
             else:
