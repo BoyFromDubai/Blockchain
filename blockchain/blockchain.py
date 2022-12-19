@@ -875,7 +875,7 @@ class Blockchain:
         print('blk_data got')
         print(blk_data)
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
-        print(txs)
+        print(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
         print(real_mrkl_root)
