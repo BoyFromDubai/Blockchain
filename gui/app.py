@@ -10,7 +10,6 @@ import ecdsa
 import hashlib
 import threading
 import socket
-import time
 
 from blockchain.blockchain import Blockchain
 from wallet.wallet import Wallet

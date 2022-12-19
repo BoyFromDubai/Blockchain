@@ -25,6 +25,10 @@ class DB():
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
 
+        if not os.path.exists('blockchain/txids_to_delete'):
+            os.mkdir('blockchain/txids_to_delete')
+
+
     def __del__(self):
         self.db.close()
 
