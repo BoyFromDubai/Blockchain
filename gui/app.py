@@ -345,6 +345,11 @@ class TerminalInput(Terminal):
             # for i in range(len(db)):
             #     res += str(db[i]) + '\n\n'
 
+        if command_arr[0] == 'showtmp':
+            db = self.user.blockchain.db.showTmpDB()
+            for i in range(len(db)):
+                res += str(db[i]) + '\n\n'
+
         if command_arr[0] == 'network':
             if command_arr[1] == '-c' or command_arr[1] == '--connnect':
                 try:

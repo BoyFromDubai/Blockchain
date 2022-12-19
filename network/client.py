@@ -45,8 +45,6 @@ class Connection(threading.Thread):
 
         return msg
     
-
-
     def __answer(self, request_msg_meaning, msg):
 
         if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
@@ -78,8 +76,6 @@ class Connection(threading.Thread):
         print(answer)
         if int.from_bytes(answer, 'big'):
             self.__start_sending_blk_hashes(n-1)
-
-
 
     def __get(self, info_msg_meaning, msg):
         
@@ -263,13 +259,14 @@ class Node(threading.Thread):
                 break
 
     def disconnectnode(self, ip):
-        for conn in self.connections:
-            if conn.ip == ip:
-                conn.stop()
-
+        for i in range(len(self.connections)):
+            if self.connections[i].ip == ip:
+                self.connections[i].stop()
+                del self.connections[i]
 
     def connectWithNode(self, ip, port):
         try:
+            print(self.connections)
             for node in self.connections:
                 if node.ip == ip:
                     raise ConnectionRefusedError('This host is already connected')

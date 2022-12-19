@@ -23,10 +23,12 @@ class DB():
     }
 
     TXID_LEN = 32
+    VOUT_SIZE = 4
     TTL_OF_SPENT_TX = 5
 
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
+        self.tmp_db = plyvel.DB('tmp_db/', create_if_missing=True)
 
         if not os.path.exists('blockchain/txids_to_delete'):
             os.mkdir('blockchain/txids_to_delete')
@@ -59,6 +61,13 @@ class DB():
         arr = []
         for key, value in self.db:
             arr.append((key, self.__parse_tx_utxos(value)))
+
+        return arr
+
+    def showTmpDB(self):
+        arr = []
+        for key, value in self.tmp_db:
+            arr.append((key.hex(), self.__parse_tx_utxos(value)))
 
         return arr
 
@@ -98,18 +107,20 @@ class DB():
         res += vouts_num
         cur_offset += self.VOUTS_STRUCT['vouts_num']
 
-        delete_tx = True 
+        delete_tx = True
 
         for i in range(int.from_bytes(vouts_num, 'little')):
             spent = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['spent']]
             cur_offset += self.VOUTS_STRUCT['spent']
-
+            
             if i == vout:
                 if not int.from_bytes(spent, 'little'):
                     print('SPENT SUCCESSFULLY')
                     res += new_txid 
                 else:
                     print('VOUT IS ALREADY SPENT')
+                    if spent == new_txid:
+                        print('NORMAL SPENT')
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
@@ -143,7 +154,11 @@ class DB():
                     self.db.delete(txid_to_delete)
 
     def updateDB(self, tx_info):
+        print('tx_info')
+        print(tx_info)
         vins = BlkTransactions.getVins(tx_info)
+        print('vins')
+        print(vins)
         vouts_to_spend = []
         txid_in_cur_block = hashlib.sha256(tx_info).digest()
 
