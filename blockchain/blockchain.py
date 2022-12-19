@@ -117,10 +117,10 @@ class DB():
                 if not int.from_bytes(spent, 'little'):
                     print('SPENT SUCCESSFULLY')
                     res += new_txid 
+                elif spent == new_txid:
+                    print('NORMAL SPENT')
                 else:
-                    print('VOUT IS ALREADY SPENT')
-                    if spent == new_txid:
-                        print('NORMAL SPENT')
+                    print('DOUBLE SPENDING DETECTED!!!')
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
@@ -999,6 +999,10 @@ class Blockchain:
 
                 message_to_sign = txid
                 scriptSig = self.wallet.sk.sign(message_to_sign)
+                print('message_to_sign')
+                print(message_to_sign)
+                print('scriptSig')
+                print(scriptSig)
                 
                 if not self.confirmSign(scriptSig, script_pub_key, message_to_sign):
                     raise ValueError('[ERROR] Signature failed!')
@@ -1013,6 +1017,8 @@ class Blockchain:
             return False
 
         pk = ecdsa.VerifyingKey.from_string(scriptPubKey, ecdsa.SECP256k1)
+        print('pk')
+        print(pk)
 
         return pk.verify(scriptSig, message_to_sign)
 
