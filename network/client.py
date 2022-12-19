@@ -4,6 +4,7 @@ import os
 from blockchain.blockchain import *
 
 class Connection(threading.Thread):
+    CHAIN_LEN_SIZE = 2 
     def __init__(self, main_node, sock, ip, port, blockchain, debug_print):
         super(Connection, self).__init__()
         self.ip = ip
@@ -21,7 +22,6 @@ class Connection(threading.Thread):
         self.SIZE_FIELD_OFFSET = 9
         self.MSG_FIELD_OFFSET = 25
 
-        self.CHAIN_LEN_SIZE = 2 
         self.HASH_OF_BLOCK_SIZE = 32 
 
         self.main_node = main_node
@@ -296,6 +296,7 @@ class Node(threading.Thread):
         self.STOP_FLAG.set()
 
     def newBlockMessage(self, blk_info):
+        msg = Blockchain.getChainLen().to_bytes(Connection.CHAIN_LEN_SIZE, 'big') + blk_info
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], blk_info)
 
     def newTxMessage(self, tx_data):

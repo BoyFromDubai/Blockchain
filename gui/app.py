@@ -393,7 +393,7 @@ class TerminalInput(Terminal):
         # mining_thread.start()
 
         # self.callback_wallet()     
-
+        
         self.user.node.newBlockMessage(blk_info)   
 
         return blk_info
