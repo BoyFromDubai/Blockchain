@@ -262,6 +262,11 @@ class Node(threading.Thread):
                 del self.connections[i]
                 break
 
+    def disconnectnode(self, ip):
+        for conn in self.connections:
+            conn.stop()
+
+
     def connectWithNode(self, ip, port):
         try:
             for node in self.connections:
