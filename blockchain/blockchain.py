@@ -895,12 +895,12 @@ class Blockchain:
                     with open(cur_blk_file_name, 'rb') as f:
                         prev_blk_info = f.read()
 
-                with open(cur_blk_file_name, 'wb') as f:
-                    f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
                 
                 for tx in txs:
                     utxos_info = self.db.updateDB(tx)
                     # self.__save_utxo_to_undo(txid, utxos_info)
+                with open(cur_blk_file_name, 'wb') as f:
+                    f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
 
             else:
                 print('[ERROR]: New Block was falsified')
