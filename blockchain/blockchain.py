@@ -869,9 +869,13 @@ class Blockchain:
             # TODO: left some code
 
     def getNewBlockFromPeer(self, file_num, blk_data):
+        print('blk_data got')
+        print(blk_data)
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
         real_mrkl_root = BlkHeader.getBlockMrklRoot(blk_data)
         got_mrkl_root = MerkleTree(txs).root
+        print(real_mrkl_root)
+        print(got_mrkl_root)
 
         if Block.hashNthBlockInDigest(file_num - 1) == BlkHeader.getBlockPrevHash(blk_data):
             if real_mrkl_root == got_mrkl_root:

@@ -296,8 +296,8 @@ class Node(threading.Thread):
         self.STOP_FLAG.set()
 
     def newBlockMessage(self, blk_info):
-        msg = Blockchain.getChainLen().to_bytes(Connection.CHAIN_LEN_SIZE, 'big') + blk_info
-        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], blk_info)
+        msg = (Blockchain.getChainLen() - 1).to_bytes(Connection.CHAIN_LEN_SIZE, 'big') + blk_info
+        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], msg)
 
     def newTxMessage(self, tx_data):
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['tx'], tx_data)
