@@ -24,11 +24,10 @@ class DB():
 
     TXID_LEN = 32
     VOUT_SIZE = 4
-    TTL_OF_SPENT_TX = 5
+    TTL_OF_SPENT_TX = 6
 
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
-        self.tmp_db = plyvel.DB('tmp_db/', create_if_missing=True)
 
         if not os.path.exists('blockchain/txids_to_delete'):
             os.mkdir('blockchain/txids_to_delete')
@@ -99,7 +98,7 @@ class DB():
 
         return utxos_dict
 
-    def __change_spent_field(self, tx_utxos_digest, vout, new_txid, txid_in_vin):
+    def __change_spent_field(self, tx_utxos_digest, vout, new_txid):
         cur_offset = 0        
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
@@ -118,7 +117,8 @@ class DB():
                     print('SPENT SUCCESSFULLY')
                     res += new_txid 
                 elif spent == new_txid:
-                    print('NORMAL SPENT')
+                    print('TX ALREADY EXISTS')
+                    res += new_txid 
                 else:
                     print('DOUBLE SPENDING DETECTED!!!')
             else:
@@ -192,7 +192,7 @@ class DB():
     def __spend_utxo(self, txid_in_vin, vout, new_txid):
         tx_utxos = self.db.get(txid_in_vin)
         vout_to_spend = self.__get_vout(tx_utxos, vout)
-        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout, new_txid, txid_in_vin)      
+        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout, new_txid)      
 
         if not updated_tx:
             raise ValueError('[ERROR] This vout if already spend!!!')

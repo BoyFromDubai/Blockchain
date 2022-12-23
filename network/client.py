@@ -259,10 +259,13 @@ class Node(threading.Thread):
                 break
 
     def disconnectnode(self, ip):
+        print(self.connections)
         for i in range(len(self.connections)):
+            print(i)
             if self.connections[i].ip == ip:
                 self.connections[i].stop()
                 del self.connections[i]
+                break
 
     def connectWithNode(self, ip, port):
         try:

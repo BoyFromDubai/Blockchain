@@ -532,17 +532,17 @@ class MainWindow(QMainWindow):
 
         self.wallet_widget = WalletWidget(self.user, self) 
         self.terminal_widget = TerminalWidget(self.user, self.wallet_widget.reloadPage, self) 
-        self.main_widget = MainWidget(self)
+        # self.main_widget = MainWidget(self)
         self.transaction_widget = TransactionWidget(self.user, self) 
-        self.overview_widget = OverviewWidget(self) 
+        # self.overview_widget = OverviewWidget(self) 
 
         self.tabWidget = QtWidgets.QTabWidget()
         self.setCentralWidget(self.tabWidget)
 
         self.tab_v1 = QtWidgets.QWidget()
         self.tabWidget.addTab(self.terminal_widget, "Terminal")
-        self.tabWidget.addTab(self.overview_widget, "Overview")
-        self.tabWidget.addTab(self.main_widget, "Explore")
+        # self.tabWidget.addTab(self.overview_widget, "Overview")
+        # self.tabWidget.addTab(self.main_widget, "Explore")
         self.tabWidget.addTab(self.wallet_widget, "Wallet")
         self.tabWidget.addTab(self.transaction_widget, "Create transaction")
 
