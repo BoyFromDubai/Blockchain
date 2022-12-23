@@ -121,6 +121,7 @@ class DB():
                     print('NORMAL SPENT')
                 else:
                     print('DOUBLE SPENDING DETECTED!!!')
+                    raise ValueError('DOUBLE SPENDING DETECTED!!!')
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
@@ -725,6 +726,10 @@ class Blockchain:
         self.wallet = wallet
         self.db = DB()
         self.fees_for_current_block = 0
+        self.__create_tmp()
+
+    def __create_tmp(self):
+        os.mkdir('blockchain/tmp_blocks')
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
@@ -891,26 +896,31 @@ class Blockchain:
         print(real_mrkl_root)
         print(got_mrkl_root)
 
-        if Block.hashNthBlockInDigest(file_num - 1) == BlkHeader.getBlockPrevHash(blk_data):
-            if real_mrkl_root == got_mrkl_root:
-                prev_blk_info = b''
-                cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
+        try:
+            if Block.hashNthBlockInDigest(file_num - 1) == BlkHeader.getBlockPrevHash(blk_data):
+                if real_mrkl_root == got_mrkl_root:
+                    for tx in txs:
+                        utxos_info = self.db.updateDB(tx)
+                        # self.__save_utxo_to_undo(txid, utxos_info)
 
-                if os.path.exists(cur_blk_file_name):
-                    with open(cur_blk_file_name, 'rb') as f:
-                        prev_blk_info = f.read()
-
-                
-                for tx in txs:
-                    utxos_info = self.db.updateDB(tx)
-                    # self.__save_utxo_to_undo(txid, utxos_info)
-                with open(cur_blk_file_name, 'wb') as f:
-                    f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
-
+                    self.__save_blk_to_tmp(blk_data, file_num)
+                else:
+                    raise Exception('[ERROR]: New Block was falsified')
             else:
-                print('[ERROR]: New Block was falsified')
-        else:
-            print('[ERROR]: New Block was falsified')
+                raise Exception('[ERROR]: New Block was falsified')
+        except Exception as e:
+            print(e)
+        
+    def __save_blk_to_tmp(self, blk_data, file_num):
+        cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
+        prev_blk_info = b''
+
+        if os.path.exists(cur_blk_file_name):
+            with open(cur_blk_file_name, 'rb') as f:
+                prev_blk_info = f.read()
+
+        with open(cur_blk_file_name, 'wb') as f:
+            f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
 
     def verifyChain(self):
         block_files = self.getBlockFiles()
