@@ -910,6 +910,7 @@ class Blockchain:
                 raise Exception('[ERROR]: New Block was falsified')
         except Exception as e:
             print(e)
+            self.__clear_tmp_blks()
         
     def __save_blk_to_tmp(self, blk_data, file_num):
         cur_blk_file_name = f'blockchain/blocks/blk_{str(file_num).zfill(4)}.dat' 
@@ -921,6 +922,13 @@ class Blockchain:
 
         with open(cur_blk_file_name, 'wb') as f:
             f.write(len(blk_data).to_bytes(Block.SIZE, 'little') + blk_data + prev_blk_info)
+
+    def __clear_tmp_blks(self):
+        path = 'blockchain/blocks'
+        tmp_blocks = os.listdir(path)
+
+        for blk_name in range(len(tmp_blocks)):
+            os.remove(path + '/' + blk_name)
 
     def verifyChain(self):
         block_files = self.getBlockFiles()
