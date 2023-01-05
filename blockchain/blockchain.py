@@ -729,7 +729,9 @@ class Blockchain:
         self.__create_tmp()
 
     def __create_tmp(self):
-        os.mkdir('blockchain/tmp_blocks')
+        path = 'blockchain/tmp_blocks'
+        if not os.path.exists(path):
+            os.mkdir(path)
 
     def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
 
