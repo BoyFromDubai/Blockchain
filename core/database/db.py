@@ -15,14 +15,14 @@ class DB():
 
     TXID_LEN = 32
     VOUT_SIZE = 4
-    TTL_OF_SPENT_TX = 5
+    TTL_OF_SPENT_TX = 6
 
     def __init__(self):
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
         self.tmp_db = plyvel.DB('tmp_db/', create_if_missing=True)
 
-        if not os.path.exists('blockchain/txids_to_delete'):
-            os.mkdir('blockchain/txids_to_delete')
+        # if not os.path.exists('blockchain/txids_to_delete'):
+        #     os.mkdir('blockchain/txids_to_delete')
 
     def __del__(self):
         self.db.close()
@@ -89,7 +89,7 @@ class DB():
 
         return utxos_dict
 
-    def __change_spent_field(self, tx_utxos_digest, vout, new_txid, txid_in_vin):
+    def __change_spent_field(self, tx_utxos_digest, vout, new_txid):
         cur_offset = 0        
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
@@ -173,9 +173,9 @@ class DB():
             self.db.delete(txid_in_vin)
             self.db.put(txid_in_vin, updated_tx)
 
-            if delete_tx:
-                with open(f'blockchain/txids_to_delete/txids_for_blk_{str(cur_height).zfill(NUM_OF_NUMBERS_IN_BLK_FILE)}.dat', 'ab') as f:
-                    f.write(txid_in_vin)
+            # if delete_tx:
+            #     with open(f'blockchain/txids_to_delete/txids_for_blk_{str(cur_height).zfill(NUM_OF_NUMBERS_IN_BLK_FILE)}.dat', 'ab') as f:
+            #         f.write(txid_in_vin)
 
         return vout_to_spend
 

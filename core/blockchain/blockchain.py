@@ -2,6 +2,7 @@ from core.blockchain.constants import *
 from core.miner.miner import Miner 
 from core.wallet.wallet import Wallet
 from core.database.db import DB
+from core.network.client import *
 from core.blockchain.transactions.vin import Vin
 from core.blockchain.transactions.vout import Vout
 
@@ -13,9 +14,10 @@ class Blockchain():
     MEMPOOL_TX_SIZE_INFO = 2
 
     def __init__(self) -> None:
-        self.miner = Miner(self)
-        self.wallet = Wallet()
         self.db = DB()
+        self.miner = Miner(self, self.db)
+        self.wallet = Wallet()
+        self.peer = Node()
 
         if not self.get_chain_len():
              self.__append_block(b'\xa9\xd1\xc5\xb6GjY\x9b\x9a\xd2\xa2\x1djw\xba\x94\x13_q\xc0\x8a0x@\xe0\xe1\xcf\xbb\xfe\x0b\xba\xad\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -43,7 +45,8 @@ class Blockchain():
         return transactions
 
     def mine_block(self):
-        blk_data = self.miner.mine_block(self.wallet.pk)
+        blk_data = self.miner.mine_block(self.wallet.pk.to_string().hex())
+        print(blk_data)
         txs = self.parse_block_txs(blk_data)
         
         for tx in txs:
@@ -52,6 +55,13 @@ class Blockchain():
             cur_txid = hashlib.sha256(tx).digest()
             
             self.db.add_tx_to_db(self.get_chain_len(), cur_txid, vins, vouts)
+
+    def append_vouts_to_db(self, tx_data):
+        vouts_to_restore = self.db.updateDB(tx_data)
+
+        # with open('wallet/txids.txt', 'w') as f:
+        #     f.write(hashlib.sha256(tx_data).hexdigest())
+
 
     def create_transaction(self, vout_data, vin_data = []):
         version = (0).to_bytes(BLOCK_STRUCT['version'], "little")
@@ -243,7 +253,8 @@ class Blockchain():
 
     @staticmethod
     def parse_block_txs(data):
-        data = data[Blockchain.get_block_header(data):]
+        print(data)
+        data = data[len(Blockchain.get_block_header(data)):]
 
         tx_count = int.from_bytes(data[:BLOCK_STRUCT['tx_count']], 'little')
         cur_offset = BLOCK_STRUCT['tx_count']
