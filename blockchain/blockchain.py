@@ -35,7 +35,7 @@ class DB():
     def __del__(self):
         self.db.close()
 
-    def __create_utxo_struct(self, tx_info):
+    def __create_utxo_struct(self, tx_info: bytes):
         vouts = BlkTransactions.getVouts(tx_info)
 
         res = Blockchain.getChainLen().to_bytes(DB.VOUTS_STRUCT['height'], 'little')
@@ -70,7 +70,7 @@ class DB():
 
         return arr
 
-    def __parse_tx_utxos(self, tx_utxos_digest):
+    def __parse_tx_utxos(self, tx_utxos_digest: bytes):
         cur_offset = 0
         utxos_dict = {}
         utxos_dict['hight'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']], 'little')
@@ -98,7 +98,7 @@ class DB():
 
         return utxos_dict
 
-    def __change_spent_field(self, tx_utxos_digest, vout, new_txid):
+    def __change_spent_field(self, tx_utxos_digest: bytes, vout: int, new_txid: bytes):
         cur_offset = 0        
         res = tx_utxos_digest[cur_offset:cur_offset + self.VOUTS_STRUCT['height']]
         cur_offset += self.VOUTS_STRUCT['height']
@@ -153,7 +153,7 @@ class DB():
                     print(txid_to_delete.hex())
                     self.db.delete(txid_to_delete)
 
-    def updateDB(self, tx_info):
+    def updateDB(self, tx_info: bytes):
         vins = BlkTransactions.getVins(tx_info)
         vouts_to_spend = []
         txid_in_cur_block = hashlib.sha256(tx_info).digest()
@@ -169,7 +169,7 @@ class DB():
 
         return vouts_to_spend
 
-    def __get_vout(self, utxos_info, n):
+    def __get_vout(self, utxos_info: bytes, n: int):
         vouts_num_offset = self.__get_property_offset('vouts_num')
         vouts_num = int.from_bytes(utxos_info[vouts_num_offset:vouts_num_offset + self.VOUTS_STRUCT['vouts_num']], 'little')
         vouts_info = utxos_info[vouts_num_offset + self.VOUTS_STRUCT['vouts_num']:]
@@ -189,7 +189,7 @@ class DB():
             if i == n:
                 return res
 
-    def __spend_utxo(self, txid_in_vin, vout, new_txid):
+    def __spend_utxo(self, txid_in_vin: bytes, vout: int, new_txid: bytes):
         tx_utxos = self.db.get(txid_in_vin)
         vout_to_spend = self.__get_vout(tx_utxos, vout)
         updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout, new_txid)      
@@ -210,7 +210,7 @@ class DB():
         for key, value in self.db:
             print(key)
 
-    def __get_property_offset(self, property_name):
+    def __get_property_offset(self, property_name: str):
         cur_offset = 0
 
         for key, value in self.VOUTS_STRUCT.items():
@@ -221,7 +221,7 @@ class DB():
 
         return False
 
-    def getInfoOfTxid(self, txid):
+    def getInfoOfTxid(self, txid: bytes):
         info_to_txid = self.db.get(txid)
         
         if not info_to_txid:
@@ -260,7 +260,7 @@ class Block():
     SIZE = 4
     NUMS_IN_NAME = 4
 
-    def __init__(self, nonce, prev_hash, difficulty, txs = []) -> None:
+    def __init__(self, nonce: int, prev_hash: bytes, difficulty: int, txs: list = []) -> None:
         self.header = BlkHeader(nonce, prev_hash, difficulty, txs)
         self.txs = BlkTransactions(txs)
 
@@ -269,17 +269,17 @@ class Block():
         return res
 
     @staticmethod
-    def getNthBlock(n):
+    def getNthBlock(n: int):
         with open(f'blockchain/blocks/blk_{str(n).zfill(Block.NUMS_IN_NAME)}.dat', 'rb') as f:
             blk_size = int.from_bytes(f.read(Block.SIZE), 'little')
             return f.read(blk_size)
 
     @staticmethod
-    def hashNthBlockInDigest(n):
+    def hashNthBlockInDigest(n: int):
         return hashlib.sha256(BlkHeader.getNthBlockHeader(n)).digest()
 
     @staticmethod
-    def hashNthBlockInHexdigest(n):
+    def hashNthBlockInHexdigest(n: int):
         return hashlib.sha256(BlkHeader.getNthBlockHeader(n)).hexdigest()
 
     @staticmethod
@@ -291,7 +291,7 @@ class Block():
         return hashlib.sha256(BlkHeader.getNthBlockHeader(Blockchain.getChainLen() - 1)).hexdigest()
 
     @staticmethod
-    def parseBlock(n):
+    def parseBlock(n: int):
         block = Block.getNthBlock(n)
         header_struct = BlkHeader.HEADER_STRUCT
         txs_struct = BlkTransactions.TXS_STRUCT
@@ -379,7 +379,7 @@ class Block():
 
 
     @staticmethod
-    def parseBlockDigest(n):
+    def parseBlockDigest(n: int):
         block = Block.getNthBlock(n)
         header_struct = BlkHeader.HEADER_STRUCT
         txs_struct = BlkTransactions.TXS_STRUCT
@@ -476,7 +476,7 @@ class BlkHeader():
         'nonce': 4, # header info               little
     }
 
-    def __init__(self, nonce, prev_hash, difficulty, txs):
+    def __init__(self, nonce: int, prev_hash: bytes, difficulty: int, txs: list):
         self.nonce = nonce
         self.prev_hash = prev_hash
         self.difficulty = difficulty
@@ -502,7 +502,7 @@ class BlkHeader():
         return res
 
     @staticmethod
-    def getBlockMrklRoot(data):
+    def getBlockMrklRoot(data: bytes):
         header = BlkHeader.getBlockHeader(data)
         cur_offset = 0
         size = 0
@@ -515,7 +515,7 @@ class BlkHeader():
         return header[cur_offset:cur_offset + size] 
     
     @staticmethod
-    def getBlockHeader(data):
+    def getBlockHeader(data: bytes):
         cur_offset = 0
         for key in BlkHeader.HEADER_STRUCT:
             cur_offset += BlkHeader.HEADER_STRUCT[key]
@@ -523,13 +523,13 @@ class BlkHeader():
         return data[:cur_offset]
 
     @staticmethod
-    def getNthBlockHeader(n): 
+    def getNthBlockHeader(n: int): 
         data = Block.getNthBlock(n)
         
         return BlkHeader.getBlockHeader(data)
         
     @staticmethod
-    def getBlockPrevHash(data):
+    def getBlockPrevHash(data: bytes):
         header = BlkHeader.getBlockHeader(data)
         cur_offset = 0
         size = 0
@@ -544,7 +544,7 @@ class BlkHeader():
         return header[cur_offset:cur_offset + size] 
 
     @staticmethod
-    def getNthBlockPrevHash(n): return BlkHeader.getBlockPrevHash(Block.getNthBlock(n))
+    def getNthBlockPrevHash(n: int): return BlkHeader.getBlockPrevHash(Block.getNthBlock(n))
 
 class BlkTransactions():
     TXS_STRUCT = {
@@ -561,7 +561,7 @@ class BlkTransactions():
         'script_pub_key':       None,   #tx info        
     }
 
-    def __init__(self, txs = []) -> None:
+    def __init__(self, txs: list = []) -> None:
         self.txs = txs
 
     def createTxs(self):
@@ -572,7 +572,7 @@ class BlkTransactions():
         return res
 
     @staticmethod
-    def getVins(tx_data):
+    def getVins(tx_data: bytes):
         vins = []
 
         cur_offset = BlkTransactions.TXS_STRUCT['version']
@@ -596,7 +596,7 @@ class BlkTransactions():
         return vins
 
     @staticmethod
-    def getVoutOffset(tx_data):
+    def getVoutOffset(tx_data: bytes):
         cur_offset = BlkTransactions.TXS_STRUCT['version']
         vins_num = int.from_bytes(tx_data[cur_offset:cur_offset + BlkTransactions.TXS_STRUCT['input_count']], 'little')
         cur_offset += BlkTransactions.TXS_STRUCT['input_count']
@@ -611,7 +611,7 @@ class BlkTransactions():
         return cur_offset
 
     @staticmethod
-    def getVouts(tx_data):
+    def getVouts(tx_data: bytes):
         vouts_offset = BlkTransactions.getVoutOffset(tx_data)
 
         vouts_info = tx_data[vouts_offset:]
@@ -638,7 +638,7 @@ class BlkTransactions():
         return vouts
 
     @staticmethod
-    def getNthBlockTxs(n):
+    def getNthBlockTxs(n: int):
         block = Block.getNthBlock(n)
         header = BlkHeader.getNthBlockHeader(n)
 
@@ -647,7 +647,7 @@ class BlkTransactions():
         return BlkTransactions.getBlockTxs(txs_data)
 
     @staticmethod
-    def getBlockTxs(data):
+    def getBlockTxs(data: bytes):
 
         tx_count = int.from_bytes(data[:BlkTransactions.TXS_STRUCT['tx_count']], 'little')
         cur_offset = BlkTransactions.TXS_STRUCT['tx_count']
@@ -726,7 +726,7 @@ class Blockchain:
         self.db = DB()
         self.fees_for_current_block = 0
 
-    def __create_block(self, nonce, prev_hash, difficulty, transactions = []):
+    def __create_block(self, nonce: int, prev_hash: bytes, difficulty: int, transactions: list = []):
 
         block = Block(nonce, prev_hash, difficulty, transactions)
         
@@ -746,13 +746,13 @@ class Blockchain:
 
         return transactions
     
-    def __append_block(self, block_info):
+    def __append_block(self, block_info: bytes):
         res = len(block_info).to_bytes(Block.SIZE, 'little')
         res += block_info
         with open(f"blockchain/blocks/blk_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'wb') as f:
             f.write(res)
 
-    def mineBlock(self, pk):
+    def mineBlock(self, pk: ecdsa.VerifyingKey):
         emission = self.addTransaction([(pk, math.ceil(random.random() * 1000))])
         nonce = 1
         check_proof = False
@@ -806,7 +806,7 @@ class Blockchain:
             with open(f"blockchain/blocks/rev_{str(self.getChainLen()).zfill(Block.NUMS_IN_NAME)}.dat", 'ab') as f:
                 pass
 
-    def appendVoutsToDb(self, tx):
+    def appendVoutsToDb(self, tx: bytes):
 
         # if len(vin_data):
 
@@ -844,7 +844,7 @@ class Blockchain:
     def getBlockFiles():
         return sorted(os.listdir('blockchain/blocks'))
 
-    def verifyTransaction(self, tx_data):
+    def verifyTransaction(self, tx_data: bytes):
         vins = BlkTransactions.getVins(tx_data)
 
         for vin in vins:
@@ -856,7 +856,7 @@ class Blockchain:
 
         Blockchain.appendToMempool(tx_data)
 
-    def __restore_vouts(self, file_num):
+    def __restore_vouts(self, file_num: int):
         cur_blk_file_name = f"blockchain/blocks/rev_{str(file_num).zfill(Block.NUMS_IN_NAME)}.dat"
         if os.path.exists(cur_blk_file_name):
             with open(cur_blk_file_name, 'rb') as f:
@@ -881,7 +881,7 @@ class Blockchain:
 
             # TODO: left some code
 
-    def getNewBlockFromPeer(self, file_num, blk_data):
+    def getNewBlockFromPeer(self, file_num: int, blk_data: bytes):
         print('blk_data got')
         print(blk_data)
         txs = BlkTransactions.getBlockTxs(blk_data[len(BlkHeader.getBlockHeader(blk_data)):])
@@ -938,7 +938,10 @@ class Blockchain:
         return True
 
     # def addTransaction(self, values, addresses, txids = [], vout_num = [], isTransaction = True):
-    def addTransaction(self, vout_data, vin_data = []):
+    def addTransaction(self, vout_data: list[tuple], vin_data: list[tuple] = []):
+        print('dsf')
+        print(vout_data)
+        print(vin_data)
         version = (0).to_bytes(BlkTransactions.TXS_STRUCT['version'], "little")
         tx_data = version
         inputs_num = len(vin_data).to_bytes(BlkTransactions.TXS_STRUCT['input_count'], "little")
@@ -969,7 +972,7 @@ class Blockchain:
         return tx_data
         
     @staticmethod
-    def appendToMempool(tx_bytes):
+    def appendToMempool(tx_bytes: bytes):
         if not os.path.isdir('blockchain/mempool'): 
             os.mkdir('blockchain/mempool')
         
@@ -977,7 +980,7 @@ class Blockchain:
             f.write(len(tx_bytes).to_bytes(Blockchain.MEMPOOL_TX_SIZE_INFO, 'little'))
             f.write(tx_bytes)
             
-    def __create_vin(self, txid, vout_num):
+    def __create_vin(self, txid: bytes, vout_num: int):
         txid = int(txid, 16).to_bytes(BlkTransactions.TXS_STRUCT['txid'], 'big')
 
         tx_vouts = self.db.getInfoOfTxid(txid)['vouts']
@@ -1012,7 +1015,7 @@ class Blockchain:
 
                 return vin_data
 
-    def confirmSign(self, scriptSig, scriptPubKey, message_to_sign):
+    def confirmSign(self, scriptSig, scriptPubKey: ecdsa.VerifyingKey, message_to_sign: bytes):
         if len(scriptPubKey) < 32:
             return False
 
@@ -1022,7 +1025,7 @@ class Blockchain:
 
         return pk.verify(scriptSig, message_to_sign)
 
-    def __create_vout(self, address, value):
+    def __create_vout(self, address: str, value: str):
 
         vout_data = int(value).to_bytes(BlkTransactions.TXS_STRUCT['value'], "little")
 
