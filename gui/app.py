@@ -11,7 +11,8 @@ import hashlib
 import threading
 import socket
 
-from blockchain.blockchain import Blockchain
+# from blockchain.blockchain import Blockchain
+from core.blockchain.blockchain import Blockchain
 from wallet.wallet import Wallet
 from network.client import Node
 
@@ -39,7 +40,11 @@ class User():
     def __init__(self):
         self.username = 'ccoin_client'
         self.wallet = Wallet()
-        self.blockchain = Blockchain(self.wallet)
+        # self.blockchain = Blockchain(self.wallet)
+        
+        self.blockchain = Blockchain()
+
+        #    
         self.node = Node(self.__get_local_ip(), 9999, self.blockchain, True,)
         self.node.start()
 
@@ -396,7 +401,8 @@ class TerminalInput(Terminal):
             self.user.blockchain.mineBlock(self.user.wallet.sk.get_verifying_key().to_string().hex())
 
     def __mining_once(self):
-        blk_info = self.user.blockchain.mineBlock(self.user.wallet.sk.get_verifying_key().to_string().hex())  
+        # blk_info = self.user.blockchain.mine_block(self.user.wallet.sk.get_verifying_key().to_string().hex())  
+        blk_info = self.user.blockchain.mine_block()  
         # mining_thread = threading.Thread(target=self.blockchain.mineBlock, args=(self.user.wallet.sk.get_verifying_key().to_string().hex()))
         # mining_thread.start()
 

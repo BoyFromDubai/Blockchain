@@ -466,8 +466,6 @@ class Block():
         
         return block_info
 
-
-
 class BlkHeader():
     HEADER_STRUCT = {
         'prev_blk_hash': 32, # header info      little
@@ -549,16 +547,16 @@ class BlkHeader():
 
 class BlkTransactions():
     TXS_STRUCT = {
-        'tx_count':             1,      #                        little
-        'version':              4,      #tx info                  little
-        'input_count':          1,      #tx info              little
-        'txid':                 32,     #tx info                    little
-        'vout':                 4,      #tx info                     little
-        'script_sig_size':      8,      #tx info          little
-        'script_sig':           None,   #tx info              
-        'output_count':         1,      #tx info             little
-        'value':                8,      #tx info                    little
-        'script_pub_key_size':  8,      #tx info      little
+        'tx_count':             1,      #             
+        'version':              4,      #tx info      
+        'input_count':          1,      #tx info      
+        'txid':                 32,     #tx info      
+        'vout':                 4,      #tx info      
+        'script_sig_size':      8,      #tx info      
+        'script_sig':           None,   #tx info      
+        'output_count':         1,      #tx info      
+        'value':                8,      #tx info      
+        'script_pub_key_size':  8,      #tx info      
         'script_pub_key':       None,   #tx info        
     }
 
@@ -705,9 +703,7 @@ class BlkTransactions():
         return txs
 
 class Blockchain:
-    
     MEMPOOL_TX_SIZE_INFO = 2
-
     UNDO_DATA_STRUCTURE = {
         'size':                 4,
         'txid_len':             2,
@@ -936,24 +932,25 @@ class Blockchain:
         block_files = self.getBlockFiles()
         prev_blk_hash = Block.hashNthBlockInDigest(0)
         
-        if len(block_files) > 1:
-            for i in range(1, len(block_files)):
-                cur_blk_prev_hash = BlkHeader.getNthBlockPrevHash(i)
+        if len(block_files) < 1:
+            return False
 
-                if prev_blk_hash != cur_blk_prev_hash:
-                    return False
-                else:
-                    prev_blk_hash = Block.hashNthBlockInDigest(i)
+        for i in range(1, len(block_files)):
+            cur_blk_prev_hash = BlkHeader.getNthBlockPrevHash(i)
 
-                block_txs = BlkTransactions.getNthBlockTxs(i)
+            if prev_blk_hash != cur_blk_prev_hash:
+                return False
 
-                for tx in block_txs:
-                    vouts = BlkTransactions.getVouts(tx)
+            prev_blk_hash = Block.hashNthBlockInDigest(i)
 
-                    for i in range(len(vouts)):
+            block_txs = BlkTransactions.getNthBlockTxs(i)
 
-                        if vouts[i]['script_pub_key'].hex() == self.wallet.sk.get_verifying_key().to_string().hex():
-                            self.wallet.appendUTXO(hashlib.sha256(tx).digest(), i, vouts[i]['value'])
+            for tx in block_txs:
+                vouts = BlkTransactions.getVouts(tx)
+
+                for i in range(len(vouts)):
+                    if vouts[i]['script_pub_key'].hex() == self.wallet.sk.get_verifying_key().to_string().hex():
+                        self.wallet.appendUTXO(hashlib.sha256(tx).digest(), i, vouts[i]['value'])
             
         return True
 
