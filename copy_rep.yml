@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  vars:
+    project_path: "/home/{{ ansible_user }}/Blockchain"
+  tasks:
+    - name: Clone github repo
+      git:
+        repo: "{{ github_path }}"
+        dest: "{{ project_path }}"
+        version: refactoring
+        force: true
+    
+    # - name: Install build-essential
+    #   apt: 
+    #     name: build-essential
+    
+    - name: Install pip3
+      apt: 
+        name: python3-pip
+        update_cache: yes
+        # state: present 
+
+    - name: Install virtualenv package
+      ansible.builtin.pip:
+        name: virtualenv
+
+    - name: Install requirements
+      pip:
+        requirements: "{{ project_path }}/requirements.txt"
+        virtualenv: "{{ project_path }}/env"
+        virtualenv_command: virtualenv
