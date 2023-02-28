@@ -7,3 +7,4 @@ mempool/
 .vscode/
 network/*.txt
 tmp.py
+.vagrant/
