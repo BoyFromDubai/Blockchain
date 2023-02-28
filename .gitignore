@@ -6,5 +6,4 @@
 /env
 .vscode/
 network/*.txt
-tmp.py
 .vagrant/
