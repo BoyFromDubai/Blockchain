@@ -1,0 +1,9 @@
+chainstate/
+**/__pycache__
+wallet/
+blocks/
+mempool/
+/env
+.vscode/
+network/*.txt
+tmp.py
