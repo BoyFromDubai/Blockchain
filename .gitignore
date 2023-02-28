@@ -1,7 +1,7 @@
-chainstate/
+/chainstate/
 **/__pycache__
-wallet/
-blocks/
+/wallet/
+/blocks/
 /mempool/
 /env
 .vscode/
