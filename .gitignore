@@ -2,7 +2,7 @@ chainstate/
 **/__pycache__
 wallet/
 blocks/
-mempool/
+/mempool/
 /env
 .vscode/
 network/*.txt
