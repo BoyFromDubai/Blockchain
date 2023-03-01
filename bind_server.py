@@ -61,6 +61,7 @@ class Connection(threading.Thread):
 
     def run(self):
         while not self.STOP_FLAG.is_set():
+            print(12)
             try:
                 buff = self.sock.recv(constants.BUF_SIZE)
                 
