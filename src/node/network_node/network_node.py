@@ -268,7 +268,7 @@ class NetworkNode(threading.Thread):
         self.serv_sock.connect((ip, port))
 
     def __get_peers(self):
-        print(CCoinPackage(pkg_type='ask_for_peers').package_data())
+        print('Package Data:', CCoinPackage(pkg_type='ask_for_peers').package_data())
         self.serv_sock.send(CCoinPackage(pkg_type='ask_for_peers').package_data())
 
     def set_bind_server(self, ip, port):
