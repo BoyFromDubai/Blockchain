@@ -168,9 +168,16 @@ class Server():
         self.sock.settimeout(1.0)
         self.sock.listen(1)
 
+    def __stop_server(self):
+        self.sock.settimeout(None)   
+        self.sock.close()
+
+        return 'Server was stopped by an administrator!'
+
+
     def run(self) -> None:
-        try:
-            while True:
+        while True:
+            try:
                 connection, client_address = self.sock.accept()
                 conn_ip = client_address[0]
                 conn_port = client_address[1]
@@ -180,10 +187,12 @@ class Server():
                 connection.start()
                 self.connections.append(connection)
 
+            except socket.timeout:
+                continue
 
-
-        except (KeyboardInterrupt, EOFError):
-            print('Server was stopped by an administrator!')
+            except (KeyboardInterrupt, EOFError):
+                self.__stop_server()
+                break
 
 if __name__ == '__main__':
     server = Server()
