@@ -213,6 +213,8 @@ class Connection(threading.Thread):
         ----------------------------'''
 
 class NetworkNode(threading.Thread):
+    NETWORK_CONF_DIR = '.conf'
+
     def __init__(self, blockchain):
         super(NetworkNode, self).__init__()
 
@@ -221,6 +223,8 @@ class NetworkNode(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__init_server()
+
+        self.__init_bind_server()
 
         self.blockchain = blockchain
 
@@ -243,6 +247,27 @@ class NetworkNode(threading.Thread):
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
 
+    def __init_bind_server(self):
+        if not os.path.exists(NetworkNode.NETWORK_CONF_DIR):
+            os.mkdir(NetworkNode.NETWORK_CONF_DIR)
+        
+        try:
+            with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
+                server_ip, server_port = f.read().split(':')
+                self.__get_peers(server_ip, server_port)
+        except:
+            pass
+
+    def __get_peers(self, ip, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((ip, port))
+
+    def set_bind_server(self, ip, port):
+        with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
+            f.write(f'{ip}:{port}')
+
+        return 'Server was succesfully initialized!'
+
     def __get_local_ip(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -257,8 +282,6 @@ class NetworkNode(threading.Thread):
                 return '127.0.0.1'
         finally:
             sock.close()
-
-
 
     def __init_server(self):
         self.sock.bind((self.ip, self.port))

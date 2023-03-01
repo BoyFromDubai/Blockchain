@@ -7,6 +7,7 @@ class Node:
         self.blockchain = blockchain
         self.wallet = Wallet(blockchain)
         self.miner = Miner(blockchain, self.wallet.pk.to_string().hex())
+        self.network_node = NetworkNode(blockchain)
 
         self.res_values = res_values
 
@@ -20,6 +21,11 @@ class Node:
             return blk_data
 
         return wrapper
+    
+    def set_bind_server(self, ip, port):
+        return self.network_node.set_bind_server(ip, port)
+
+    def get_ip(self): return self.network_node.ip
     
     @__update_utxos
     def mine_block(self): 

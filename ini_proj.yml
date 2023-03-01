@@ -7,6 +7,7 @@
   
   tasks:
     - name: Cloning github repo
+      become_user: "{{ ansible_user }}"
       git:
         repo: "{{ github_path }}"
         dest: "{{ project_path }}"
