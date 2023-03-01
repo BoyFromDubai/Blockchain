@@ -18,8 +18,6 @@ class Connection(threading.Thread):
         self.HASH_OF_BLOCK_SIZE = 32 
 
         self.main_node = main_node
-
-        self.__send_version_msg()
         # self.__answer_get_blocks_msg()
 
     def send(self, type, meaning, data):
