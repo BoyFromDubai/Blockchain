@@ -85,7 +85,8 @@ class Connection(threading.Thread):
                         
                         buff += data
                     
-                    print(CCoinPackage(got_bytes=buff))
+                    print(buff)
+                    print(CCoinPackage(got_bytes=buff).unpackage_data())
                     print()
                     # buff += chunk
 
