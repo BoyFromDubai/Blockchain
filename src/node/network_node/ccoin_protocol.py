@@ -4,10 +4,10 @@ from hashlib import sha256
 class CCoinPackage:
     def __init__(self, got_bytes : bytes = b'', pkg_type : str = '', data : bytes = b'') -> None:
         self.__bytes = got_bytes
-        
-        actual_data = self.__check_got_msg()
-        if not actual_data:
-            raise Exception('Broken package!')
+        if got_bytes:
+            actual_data = self.__check_got_msg()
+            if not actual_data:
+                raise Exception('Broken package!')
         
         self.__type = pkg_type
         self.__data = data
