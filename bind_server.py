@@ -8,15 +8,10 @@ class Connection(threading.Thread):
         self.ip = ip
         self.port = port
         self.sock = sock
-        self.sock.settimeout(1.0)
+        self.sock_timeout = 1.0
+        self.sock.settimeout(self.sock_timeout)
         self.STOP_FLAG = threading.Event()
 
-        self.TYPE_FIELD_OFFSET = 0
-        self.MEANING_OF_MSG_OFFSET = 1
-        self.SIZE_FIELD_OFFSET = 9
-        self.MSG_FIELD_OFFSET = 25
-
-        self.HASH_OF_BLOCK_SIZE = 32 
 
         self.main_node = main_node
         # self.__answer_get_blocks_msg()
@@ -81,23 +76,16 @@ class Connection(threading.Thread):
                     message_ended = False
                     
                     while not message_ended:
-                        data = self.sock.recv(constants.BUF_SIZE)
+                        self.sock.settimeout(self.sock_timeout)
                         
-                        if not data:
+                        try:
+                            data = self.sock.recv(constants.BUF_SIZE)
+                        except socket.timeout:
                             message_ended = True
                         
                         buff += data
-
-                    # if msg_type == self.main_node.types['request']:
-
-                    #     self.__answer(msg_meaning, buff)
                     
-                    # else:
-
-                    #     self.__get(msg_meaning, buff)
-
-                    # print(f'MESSAGE from {self.ip} of meaning {x}')
-                    print(buff)
+                    print(CCoinPackage(got_bytes=buff))
                     print()
                     # buff += chunk
 

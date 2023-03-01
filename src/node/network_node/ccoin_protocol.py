@@ -4,7 +4,11 @@ from hashlib import sha256
 class CCoinPackage:
     def __init__(self, got_bytes : bytes = b'', pkg_type : str = '', data : bytes = b'') -> None:
         self.__bytes = got_bytes
-
+        
+        actual_data = self.__check_got_msg()
+        if not actual_data:
+            raise Exception('Broken package!')
+        
         self.__type = pkg_type
         self.__data = data
 
@@ -18,11 +22,33 @@ class CCoinPackage:
             if item == pkg_type:
                 res['type'] = key
 
+        data_len = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE]
+
+        res['data'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + data_len]
+
+        print(res)
+        
+    def __check_got_msg(self):
+        if self.__bytes:
+            pkg = self.__bytes[:HASH_OFFSET] + self.__bytes[HASH_OFFSET + HASH_SIZE:]
+            got_hash_of_pkg = self.__bytes[HASH_OFFSET:HASH_OFFSET + HASH_SIZE]
+            actual_hash_of_pkg = self.__hash_package(pkg)
+
+            print(self.__bytes)
+            print(actual_hash_of_pkg)
+            print(got_hash_of_pkg)
+
+            if got_hash_of_pkg != actual_hash_of_pkg:
+                return False
+            else:
+                return True
+
     def package_data(self):
         res = b''
         res += PKG_TYPE_VARS[self.__type]
         res += int.to_bytes(len(self.__data), DATA_LEN_SIZE, 'big')
         res += self.__data
+        print('Hashed: ', self.__hash_package(res))
         res = res[:HASH_OFFSET] + self.__hash_package(res) + res[HASH_OFFSET:]
 
         return res
