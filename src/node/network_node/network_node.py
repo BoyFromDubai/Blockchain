@@ -254,13 +254,14 @@ class NetworkNode(threading.Thread):
         try:
             with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
                 server_ip, server_port = f.read().split(':')
-                self.__get_peers(server_ip, server_port)
-        except:
-            pass
+                self.__get_peers(server_ip, int(server_port))
+        except Exception as e:
+            print(e)
 
     def __get_peers(self, ip, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((ip, port))
+        sock.send(b'12')
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:

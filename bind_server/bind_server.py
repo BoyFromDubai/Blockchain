@@ -2,16 +2,13 @@ import socket
 import threading
 
 class Connection(threading.Thread):
-    def __init__(self, main_node, sock, ip, port, debug_print):
+    def __init__(self, main_node, sock, ip, port):
         super(Connection, self).__init__()
         self.ip = ip
         self.port = port
         self.sock = sock
         self.sock.settimeout(1.0)
         self.STOP_FLAG = threading.Event()
-
-
-        self.debug_print = debug_print
 
         self.TYPE_FIELD_OFFSET = 0
         self.MEANING_OF_MSG_OFFSET = 1
@@ -136,6 +133,8 @@ class Connection(threading.Thread):
 
 
 class Server():
+    PEERS_FILE_PATH = 'peers.txt'
+
     def __init__(self):
         self.ip = self.__get_local_ip()
         self.port = 5000
@@ -173,18 +172,25 @@ class Server():
         self.sock.close()
 
         return 'Server was stopped by an administrator!'
+    
+
+    def __append_connection(self, connection, ip, port):
+        connection = Connection(self, connection, ip, port)
+        connection.start()
+        self.connections.append(connection)
+
+        with open(Server.PEERS_FILE_PATH, 'w+') as f:
+            f.write(ip)
 
     def run(self) -> None:
         while True:
             try:
                 connection, client_address = self.sock.accept()
-                conn_ip = client_address[0]
-                conn_port = client_address[1]
-                print(conn_ip)
+                
+                print(f'{client_address[0]} connected')
+                self.__append_connection(connection, client_address[0], client_address[1])
                 # print('LEN', len(self.connections))
-                connection = Connection(self, connection, conn_ip, conn_port)
-                connection.start()
-                self.connections.append(connection)
+
 
             except socket.timeout:
                 print('Timeout')
