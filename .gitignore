@@ -3,7 +3,7 @@
 /wallet/
 /blocks/
 /mempool/
-/env
+/venv
 .vscode/
 network/*.txt
 .vagrant/

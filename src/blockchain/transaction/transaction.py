@@ -1,5 +1,6 @@
 from ..blockchain import BLOCK_STRUCT
 import math
+from typing import List
 
 class Vin:
     def __init__(self, blockchain, secret_key, txid: bytes, vout_num: int) -> None:
@@ -59,12 +60,12 @@ class Vout:
 
 class Transaction:
     
-    def __init__(self, vout_data: list[tuple], vin_data: list[tuple] = [], blockchain = None, secret_key = None) -> None:
+    def __init__(self, vout_data: List[tuple], vin_data: List[tuple] = [], blockchain = None, secret_key = None) -> None:
         self.blockchain = blockchain
         self.secret_key = secret_key
         self.tx_data = self.__create_tx(vout_data, vin_data)
 
-    def __create_tx(self, vout_data: list[tuple], vin_data: list[tuple]):
+    def __create_tx(self, vout_data: List[tuple], vin_data: List[tuple]):
         tx_data = (0).to_bytes(BLOCK_STRUCT['version'], "little") #version
         tx_data += len(vin_data).to_bytes(BLOCK_STRUCT['input_count'], "little") #input_count
 

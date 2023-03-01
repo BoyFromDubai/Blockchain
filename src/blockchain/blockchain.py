@@ -4,6 +4,7 @@ from .chainstate_db import ChainStateDB
 from .transaction import Transaction
 
 import ecdsa
+from typing import List
 import hashlib
 import os
 
@@ -441,7 +442,7 @@ class Blockchain:
             
         return True
 
-    def add_transaction(self, vout_data: list[tuple], vin_data: list[tuple] = [], secret_key = None):
+    def add_transaction(self, vout_data: List[tuple], vin_data: List[tuple] = [], secret_key = None):
 
         if len(vin_data):
             coins_to_spend = sum(map(lambda value : int(value), [info_for_vout[1] for info_for_vout in vout_data]))
