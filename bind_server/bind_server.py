@@ -187,6 +187,7 @@ class Server():
                 self.connections.append(connection)
 
             except socket.timeout:
+                print('Timeout')
                 continue
 
             except (KeyboardInterrupt, EOFError):
@@ -195,9 +196,10 @@ class Server():
 
     def __repr__(self) -> str:
         return f'''
-        Server listening on {self.ip}:{self.port}'''
+        Server listening on {self.ip}:{self.port}
+        '''
 
 if __name__ == '__main__':
     server = Server()
-    server.run()
     print(server)
+    server.run()
