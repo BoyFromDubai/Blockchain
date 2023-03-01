@@ -1,6 +1,6 @@
 import socket
 import threading
-from src.node.network_node import CCoinPackage
+from src.node.network_node import CCoinPackage, constants
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port):
@@ -62,49 +62,38 @@ class Connection(threading.Thread):
     def run(self):
         while not self.STOP_FLAG.is_set():
             try:
-                buff = b''
-                header = self.sock.recv(self.MSG_FIELD_OFFSET)
+                buff = self.sock.recv(constants.BUF_SIZE)
                 
-                if header != b'':
-                    msg_type, msg_meaning, size = self.__parse_header(header)
+                if buff != b'':
+                    # msg_type, msg_meaning, size = self.__parse_header(header)
 
-                    print('GOT')
-                    print('Header')
-                    print(header)
-                    print('------------')
-                    for key, item in self.main_node.types.items():
-                        if item == msg_type:
-                            print(key)
-
-                    for key, item in self.main_node.meaning_of_msg.items():
-                        if item == msg_meaning:
-                            print(key)
-                            x = key
-                    print(size)
-                    print('------------')
-                    print()
-
-                    read_size = 1024
-
-                    if read_size > size:
-                        buff += self.sock.recv(size)
+                    # if read_size > size:
+                    #     buff += self.sock.recv(size)
                     
-                    else:
-                        for i in range(0, size, read_size):
-                            if size - i > read_size:
-                                buff += self.sock.recv(read_size)
-                            else:
-                                buff += self.sock.recv(size - i)
+                    # else:
+                    #     for i in range(0, size, read_size):
+                    #         if size - i > read_size:
+                    #             buff += self.sock.recv(read_size)
+                    #         else:
+                    #             buff += self.sock.recv(size - i)
 
-                    if msg_type == self.main_node.types['request']:
+                    while True:
+                        data = self.sock.recv(constants.BUF_SIZE)
+                        
+                        if not data:
+                            break
+                        
+                        buff += data
 
-                        self.__answer(msg_meaning, buff)
+                    # if msg_type == self.main_node.types['request']:
+
+                    #     self.__answer(msg_meaning, buff)
                     
-                    else:
+                    # else:
 
-                        self.__get(msg_meaning, buff)
+                    #     self.__get(msg_meaning, buff)
 
-                    print(f'MESSAGE from {self.ip} of meaning {x}')
+                    # print(f'MESSAGE from {self.ip} of meaning {x}')
                     print(buff)
                     print()
                     # buff += chunk

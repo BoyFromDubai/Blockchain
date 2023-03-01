@@ -258,6 +258,7 @@ class NetworkNode(threading.Thread):
         try:
             with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
                 server_ip, server_port = f.read().split(':')
+                self._connect_with_bind_serv(server_ip, int(server_port))
                 self.__get_peers(server_ip, int(server_port))
         except Exception as e:
             print(e)
@@ -266,7 +267,7 @@ class NetworkNode(threading.Thread):
         self.serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serv_sock.connect((ip, port))
 
-    def __get_peers(self, ip, port):
+    def __get_peers(self):
         print(CCoinPackage(pkg_type='ask_for_peers').package_data())
         self.serv_sock.send(CCoinPackage(pkg_type='ask_for_peers').package_data())
 
