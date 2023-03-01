@@ -33,8 +33,10 @@ class CCoinPackage:
             pkg = self.__bytes[:HASH_OFFSET] + self.__bytes[HASH_OFFSET + HASH_SIZE:]
             got_hash_of_pkg = self.__bytes[HASH_OFFSET:HASH_OFFSET + HASH_SIZE]
             actual_hash_of_pkg = self.__hash_package(pkg)
-
+            
+            print()
             print(self.__bytes)
+            print(pkg)
             print(actual_hash_of_pkg)
             print(got_hash_of_pkg)
 
@@ -48,7 +50,8 @@ class CCoinPackage:
         res += PKG_TYPE_VARS[self.__type]
         res += int.to_bytes(len(self.__data), DATA_LEN_SIZE, 'big')
         res += self.__data
-        print('Hashed: ', self.__hash_package(res))
+        print('Hash: ', self.__hash_package(res))
+        print('Hashed: ', res)
         res = res[:HASH_OFFSET] + self.__hash_package(res) + res[HASH_OFFSET:]
 
         return res
