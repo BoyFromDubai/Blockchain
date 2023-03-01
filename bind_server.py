@@ -177,8 +177,6 @@ class Server():
                 
                 print(f'{client_address[0]} connected')
                 self.__append_connection(connection, client_address[0], client_address[1])
-                print('LEN', len(self.connections))
-
 
             except socket.timeout:
                 continue

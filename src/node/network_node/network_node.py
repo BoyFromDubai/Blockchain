@@ -259,7 +259,7 @@ class NetworkNode(threading.Thread):
             with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
                 server_ip, server_port = f.read().split(':')
                 self._connect_with_bind_serv(server_ip, int(server_port))
-                self.__get_peers(server_ip, int(server_port))
+                self.__get_peers()
         except Exception as e:
             print(e)
 
@@ -274,7 +274,8 @@ class NetworkNode(threading.Thread):
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
             f.write(f'{ip}:{port}')
-            self.__get_peers(int(ip), int(port))
+            self.__init_bind_server()
+            self.__get_peers()
 
         return 'Server was succesfully initialized!'
 
