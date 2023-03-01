@@ -81,6 +81,7 @@ class Connection(threading.Thread):
 
                     while True:
                         data = self.sock.recv(constants.BUF_SIZE)
+                        print(data)
                         
                         if not data:
                             break
