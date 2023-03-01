@@ -68,6 +68,7 @@ class Connection(threading.Thread):
                 if buff != b'':
                     # msg_type, msg_meaning, size = self.__parse_header(header)
 
+                    # print(buff)
                     # if read_size > size:
                     #     buff += self.sock.recv(size)
                     
