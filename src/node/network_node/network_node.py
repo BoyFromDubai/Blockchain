@@ -1,3 +1,5 @@
+from .ccoin_protocol import CCoinPackage
+
 import socket
 import threading
 import os
@@ -244,6 +246,8 @@ class NetworkNode(threading.Thread):
             'tx': b'\x00\x00\x00\x00\x00\x00\x00\x03',
             'last_block_id': b'\x00\x00\x00\x00\x00\x00\x00\x04',
 
+            'peers': b'\x00\x00\x00\x00\x00\x00\x00\x05',
+
             'stop_socket': b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
         }
 
@@ -258,10 +262,13 @@ class NetworkNode(threading.Thread):
         except Exception as e:
             print(e)
 
+    def _connect_with_bind_serv(self, ip, port):
+        self.serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serv_sock.connect((ip, port))
+
     def __get_peers(self, ip, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((ip, port))
-        sock.send(b'12')
+        print(CCoinPackage(pkg_type='ask_for_peers').package_data())
+        self.serv_sock.send(CCoinPackage(pkg_type='ask_for_peers').package_data())
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:

@@ -1,5 +1,6 @@
 import socket
 import threading
+from src.node.network_node import CCoinPackage
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port):
@@ -187,11 +188,10 @@ class Server():
                 
                 print(f'{client_address[0]} connected')
                 self.__append_connection(connection, client_address[0], client_address[1])
-                # print('LEN', len(self.connections))
+                print('LEN', len(self.connections))
 
 
             except socket.timeout:
-                print('Timeout')
                 continue
 
             except (KeyboardInterrupt, EOFError):
