@@ -78,13 +78,13 @@ class Connection(threading.Thread):
                     #             buff += self.sock.recv(read_size)
                     #         else:
                     #             buff += self.sock.recv(size - i)
-
-                    while True:
+                    message_ended = False
+                    
+                    while not message_ended:
                         data = self.sock.recv(constants.BUF_SIZE)
-                        print(data)
                         
                         if not data:
-                            break
+                            message_ended = True
                         
                         buff += data
 
