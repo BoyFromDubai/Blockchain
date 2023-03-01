@@ -224,7 +224,7 @@ class NetworkNode(threading.Thread):
         self.port = 9999
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.__init_server()
+        self.__init_node()
 
         self.__init_bind_server()
 
@@ -268,8 +268,7 @@ class NetworkNode(threading.Thread):
         self.serv_sock.connect((ip, port))
 
     def __get_peers(self):
-        print('Package Data:', CCoinPackage(pkg_type='ask_for_peers').package_data())
-        self.serv_sock.send(CCoinPackage(pkg_type='ask_for_peers').package_data())
+        self.serv_sock.send(CCoinPackage(pkg_type='ask_for_peers', data=b'1').package_data())
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
@@ -294,7 +293,7 @@ class NetworkNode(threading.Thread):
         finally:
             sock.close()
 
-    def __init_server(self):
+    def __init_node(self):
         self.sock.bind((self.ip, self.port))
         self.sock.settimeout(1.0)
         self.sock.listen(1)

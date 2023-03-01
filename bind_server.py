@@ -61,18 +61,6 @@ class Connection(threading.Thread):
                 print(buff)
                 
                 if buff != b'':
-                    # msg_type, msg_meaning, size = self.__parse_header(header)
-
-                    # print(buff)
-                    # if read_size > size:
-                    #     buff += self.sock.recv(size)
-                    
-                    # else:
-                    #     for i in range(0, size, read_size):
-                    #         if size - i > read_size:
-                    #             buff += self.sock.recv(read_size)
-                    #         else:
-                    #             buff += self.sock.recv(size - i)
                     message_ended = False
                     
                     while not message_ended:
@@ -83,9 +71,11 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
                         
+                        
                         buff += data
+                        print(len(buff))
+                        print(buff)
                     
-                    print(buff)
                     print(CCoinPackage(got_bytes=buff).unpackage_data())
                     print()
                     # buff += chunk
