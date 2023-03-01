@@ -174,7 +174,6 @@ class Server():
 
         return 'Server was stopped by an administrator!'
 
-
     def run(self) -> None:
         while True:
             try:
@@ -193,6 +192,10 @@ class Server():
             except (KeyboardInterrupt, EOFError):
                 self.__stop_server()
                 break
+
+    def __repr__(self) -> str:
+        return f'''
+        Server listening on {self.ip}:{self.port}'''
 
 if __name__ == '__main__':
     server = Server()

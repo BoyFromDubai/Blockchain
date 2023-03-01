@@ -265,6 +265,7 @@ class NetworkNode(threading.Thread):
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
             f.write(f'{ip}:{port}')
+            self.__get_peers(ip, port)
 
         return 'Server was succesfully initialized!'
 
