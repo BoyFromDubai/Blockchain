@@ -68,11 +68,11 @@ class Connection(threading.Thread):
                         
                         try:
                             data = self.sock.recv(constants.BUF_SIZE)
+                            buff += data
                         except socket.timeout:
                             message_ended = True
                         
                         
-                        buff += data
                         print(len(buff))
                         print(buff)
                     
