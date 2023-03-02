@@ -15,11 +15,10 @@ class CCoinPackage:
     def unpackage_data(self):
         res = {}
 
-        data_copy = self.__data
+        data_copy = self.__bytes
         pkg_type = data_copy[:PKG_TYPE_SIZE]
         
         for key, item in PKG_TYPE_VARS.items():
-            print(pkg_type)
             if item == pkg_type:
                 res['type'] = key
 
@@ -30,18 +29,11 @@ class CCoinPackage:
         return res
         
     def __check_got_msg(self):
-        print()
-        print(self.__bytes)
         if self.__bytes:
             pkg = self.__bytes[:HASH_OFFSET] + self.__bytes[HASH_OFFSET + HASH_SIZE:]
             got_hash_of_pkg = self.__bytes[HASH_OFFSET:HASH_OFFSET + HASH_SIZE]
             actual_hash_of_pkg = self.__hash_package(pkg)
             
-            print(self.__bytes)
-            print(pkg)
-            print(actual_hash_of_pkg)
-            print(got_hash_of_pkg)
-
             if got_hash_of_pkg != actual_hash_of_pkg:
                 return False
             else:

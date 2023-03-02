@@ -13,47 +13,16 @@ class Connection(threading.Thread):
         self.sock.settimeout(self.sock_timeout)
         self.STOP_FLAG = threading.Event()
 
-
         self.main_node = main_node
         # self.__answer_get_blocks_msg()
-
-    def send(self, type, meaning, data):
-        packet = self.__create_packet(type, meaning, data)
-        print('SEND')
-        print(packet)
-        print()
-        self.sock.send(packet)
-
-    def __create_packet(self, type, meaning, data):
-        msg = b''
-        msg += type
-        msg += meaning
-        msg += len(data).to_bytes(self.MSG_FIELD_OFFSET-self.SIZE_FIELD_OFFSET, 'big')
-        msg += data
-
-        return msg
-    
-    def __answer(self, request_msg_meaning, msg):
-
-        if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
-            self.__answer_get_blocks_msg(msg)
-        elif request_msg_meaning == self.main_node.meaning_of_msg['last_block_id']:
-            self.__start_sending_blk_hashes(int.from_bytes(msg, 'big'))
-        else:
-            pass
 
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
-    def __kill_socket(self):
-        self.main_node.close_connection(self)
-    
-    def __parse_header(self, header):
-        msg_type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
-        msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
-        size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
-
-        return (msg_type, msg_meaning, size)
+    def __handle_data(self, data: dict):
+        print(data)
+        if data['type'] == 'ask_for_peers':
+            pass
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -61,7 +30,6 @@ class Connection(threading.Thread):
                 buff = self.sock.recv(constants.BUF_SIZE)
                 
                 if buff != b'':
-                    print(buff)
                     message_ended = False
                     
                     while not message_ended:
@@ -73,9 +41,8 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
                                             
-                    print(CCoinPackage(got_bytes=buff).unpackage_data())
-                    print()
-                    # buff += chunk
+                    package = CCoinPackage(got_bytes=buff)
+                    self.__handle_data(package.unpackage_data())
 
             except socket.timeout:
                 continue
