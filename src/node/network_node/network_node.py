@@ -2,6 +2,7 @@ from .ccoin_protocol import CCoinPackage
 from .constants import *
 
 import socket
+from typing import List
 import threading
 import os
 
@@ -224,7 +225,7 @@ import os
 class Connection(threading.Thread):
     def __init__(self, ip : str, port : int, sock = None):
         super(Connection, self).__init__()
-        self._ip = ip
+        self.ip = ip
         self._port = port
 
         if sock:
@@ -232,7 +233,7 @@ class Connection(threading.Thread):
         else:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._sock.connect((self._ip, self._port))
+            self._sock.connect((self.ip, self._port))
         
         self.__sock_timeout = 1.0
 
@@ -240,7 +241,7 @@ class Connection(threading.Thread):
 
         self.stop_flag = threading.Event()
 
-    def is_alive(self): return self.stop_flag.is_set()
+    def is_alive(self): return not self.stop_flag.is_set()
 
     def _send_pkg(self, pkg_type, data = b''):
         pkg = CCoinPackage(pkg_type=pkg_type, data=data)
@@ -269,7 +270,12 @@ class Connection(threading.Thread):
                         
                         try:
                             chunk = self._sock.recv(BUF_SIZE)
-                            buff += chunk
+                            print('Chunk: ', chunk)
+                            
+                            if not chunk:
+                                message_ended = True
+                            else:
+                                buff += chunk
 
                         except socket.timeout:
                             message_ended = True
@@ -282,6 +288,7 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
 
+        print("STOPPED")
         self.__stop_socket()
 
     def stop(self):
@@ -297,18 +304,27 @@ class PeerConnection(Connection):
         return 
 
 class ServConnection(Connection):
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, init_peers : function):
         super().__init__(ip, port)
+        self.init_peers = init_peers
 
     def _handle_package(self, data):
         pkg = CCoinPackage(got_bytes=data)
-        print('Got: ', data)
-        print(pkg.unpackage_data())
+        print('Got: ', pkg.unpackage_data())
+        pkg_dict = pkg.unpackage_data()
+
+        if pkg_dict['type'] == 'peers_ack':
+            self.init_peers(pkg_dict['data'].decode().split('\n'))
+        # elif pkg_dict['type'] == '':
+
+
+        elif pkg_dict['type'] == 'send_stop_signal':
+            self.stop_flag.set()
 
         return
 
-    def ask_for_peers(self):
-        self._send_pkg('ask_for_peers', b'')
+    def peers_request(self):
+        self._send_pkg('peers_request', b'')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'
@@ -329,7 +345,7 @@ class NetworkNode(threading.Thread):
 
         self.blockchain = blockchain
 
-        self.connections = []
+        self.peers = []
         self.MAX_CONNECTIONS = 8
 
         self.STOP_FLAG = threading.Event()
@@ -348,10 +364,14 @@ class NetworkNode(threading.Thread):
         #     print(e)
 
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
-                server_ip, server_port = f.read().split(':')
-                self.serv_conn = ServConnection(server_ip, int(server_port))
-                self.serv_conn.start()
-                self.serv_conn.ask_for_peers()
+            server_ip, server_port = f.read().split(':')
+            self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
+            self.serv_conn.start()
+            self.serv_conn.peers_request()
+
+    def init_peers(self, ips : List[str]):
+        print(ips)
+
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
@@ -377,34 +397,34 @@ class NetworkNode(threading.Thread):
             sock.close()
 
     def close_connection(self, conn):
-        for i in range(len(self.connections)):
-            if self.connections[i] == conn:
-                del self.connections[i]
+        for i in range(len(self.peers)):
+            if self.peers[i] == conn:
+                del self.peers[i]
                 break
 
     def disconnect_node(self, ip):
-        print(self.connections)
-        for i in range(len(self.connections)):
+        print(self.peers)
+        for i in range(len(self.peers)):
             print(i)
-            if self.connections[i].ip == ip:
-                self.connections[i].stop()
-                del self.connections[i]
+            if self.peers[i].ip == ip:
+                self.peers[i].stop()
+                del self.peers[i]
                 break
 
     def connect_with_node(self, ip, port):
         try:
-            print(self.connections)
-            for node in self.connections:
+            print(self.peers)
+            for node in self.peers:
                 if node.ip == ip:
                     raise ConnectionRefusedError('This host is already connected')
 
-            if len(self.connections) < self.MAX_CONNECTIONS:
+            if len(self.peers) < self.MAX_CONNECTIONS:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(2.0)
                 sock.connect((ip, port))
                 connection = PeerConnection()
                 connection.start()
-                self.connections.append(connection)
+                self.peers.append(connection)
 
                 return connection
             else:
@@ -418,7 +438,7 @@ class NetworkNode(threading.Thread):
             raise e
 
     def __send_msg_to_peers(self, type, meaning, data):
-        for sock in self.connections:
+        for sock in self.peers:
             sending_thread = threading.Thread(target=sock.send, args=(type, meaning, data))
             sending_thread.start()
 
@@ -436,23 +456,31 @@ class NetworkNode(threading.Thread):
 
         while not self.STOP_FLAG.is_set():
             try:
-                if len(self.connections) < self.MAX_CONNECTIONS:
+                if len(self.peers) < self.MAX_CONNECTIONS:
 
                     connection, client_address = self.sock.accept()
 
                     conn_ip = client_address[0]
                     conn_port = client_address[1]
                     print(conn_ip)
-                    # print('LEN', len(self.connections))
+                    # print('LEN', len(self.peers))
                     connection = PeerConnection(self, connection, conn_ip, conn_port, self.blockchain, self.debug_print)
                     connection.start()
-                    self.connections.append(connection)
+                    self.peers.append(connection)
 
                 else:
                     print('MAX CONNECTIONS REACHED!')
 
             except socket.timeout:
-                continue
+                disconnected_peers = []
+                
+                for peer in self.peers:
+                    print(peer.is_alive())
+                    if not peer.is_alive():
+                        disconnected_peers.append(peer)
+
+                for peer in disconnected_peers:
+                    self.peers.remove(peer)
 
             except Exception as e:
                 raise e
@@ -462,10 +490,10 @@ class NetworkNode(threading.Thread):
         self.__close_sock()
 
     def __close_sock(self):
-        for node in self.connections:
+        for node in self.peers:
             node.stop()
         
-        for node in self.connections:
+        for node in self.peers:
             node.join()
 
         print(555)
@@ -475,15 +503,15 @@ class NetworkNode(threading.Thread):
         self.sock.close()
 
 
-    def getPeers(self): return self.connections
+    def getPeers(self): return self.peers
 
     def __str__(self) -> str:
         return f'''
         HOST INFO
         host_ip: {self.ip}
         host_port: {self.port}
-        connections: {self.connections}
-        connections: {self.connections}
+        connections: {self.peers}
+        connections: {self.peers}
         '''
 
     def __repr__(self):
@@ -491,6 +519,6 @@ class NetworkNode(threading.Thread):
         HOST INFO
         host_ip: {self.ip}
         host_port: {self.port}
-        connections: {self.connections}
-        connections: {self.connections}
+        connections: {self.peers}
+        connections: {self.peers}
         '''

@@ -10,101 +10,31 @@ class PeerConnection(Connection):
     def _handle_package(self, data):
         pkg = CCoinPackage(got_bytes=data)
         print('Got: ', data)
-        print(pkg.unpackage_data())
+        pkg_dict = pkg.unpackage_data()
+        if pkg_dict['type'] == 'peers_request':
+            self.__send_active_peers('peers_ack')
+        # elif pkg_dict['type'] == '':
+
+
+        elif pkg_dict['type'] == 'send_stop_signal':
+            self.stop_flag.set()
 
         return
 
-    def ask_for_peers(self):
-        self._send_pkg('ask_for_peers', b'')
-
-
-# class Connection(threading.Thread):
-#     def __init__(self, main_node, sock, ip, port):
-#         super(Connection, self).__init__()
-#         self.ip = ip
-#         self.port = port
-#         self.sock = sock
-#         self.sock_timeout = 1.0
-#         self.sock.settimeout(self.sock_timeout)
-#         self.STOP_FLAG = threading.Event()
-
-#         self.main_node = main_node
-#         # self.__answer_get_blocks_msg()
-
-#     def __stop_peer_socket(self):
-#         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
-
-#     def __send_pkg(self, pkg_type, data):
-#         pkg = CCoinPackage(pkg_type = pkg_type, data = data)
-#         print("Sent: ", pkg.package_data())
-#         self.sock.send(pkg.package_data())
-
-#     def __send_active_peers(self, pkg_type):
-#         with open(Server.PEERS_FILE_PATH, 'r') as f:
-#             ips = f.read().splitlines()
-#             ips.remove(self.ip)
-#             res = b''
+    def __send_active_peers(self, pkg_type):
+        with open(Server.PEERS_FILE_PATH, 'r') as f:
+            ips = f.read().splitlines()
+            ips.remove(self.ip)
+            res = b''
             
-#             for ip in ips:
-#                 res += (ip + '\n').encode()
+            for ip in ips:
+                res += (ip + '\n').encode()
 
-#             self.__send_pkg(pkg_type, res)        
-        
+            self._send_pkg(pkg_type, res)        
 
-#     def __handle_data(self, data: dict):
-#         print('Got: ', data)
-#         if data['type'] == 'ask_for_peers':
-#             self.__send_active_peers('send_peers')
 
-#     def run(self):
-#         while not self.STOP_FLAG.is_set():
-#             try:
-#                 buff = self.sock.recv(constants.BUF_SIZE)
-                
-#                 if buff != b'':
-#                     message_ended = False
-#                     chunk = b'tmp'
-
-#                     while not message_ended and chunk:
-#                         self.sock.settimeout(self.sock_timeout)
-                        
-#                         try:
-#                             chunk = self.sock.recv(constants.BUF_SIZE)
-                            
-#                             if not chunk:
-#                                 message_ended
-#                             else:
-#                                 buff += chunk
-
-#                         except socket.timeout:
-#                             message_ended = True
-
-#                     print(buff)
-                                            
-#                     package = CCoinPackage(got_bytes=buff)
-#                     self.__handle_data(package.unpackage_data())
-
-#             except socket.timeout:
-#                 continue
-
-#             except socket.error as e:
-#                 raise e
-
-#         self.__stop_peer_socket()        
-#         self.sock.settimeout(None)
-#         self.sock.close()
-
-#     def stop(self):
-#         self.STOP_FLAG.set()
-
-#     def __repr__(self):
-#         return f'''
-#         ----------------------------
-#         NODE INFO
-#         {self.ip}:{self.port}
-#         ----------------------------
-#         '''
-
+    def peers_request(self):
+        self._send_pkg('peers_request', b'')
 
 class Server():
     PEERS_FILE_PATH = 'peers.txt'
@@ -114,14 +44,13 @@ class Server():
             with open(self.PEERS_FILE_PATH, 'w'):
                 pass
 
-        self.ip = self.__get_local_ip()
-        self.port = 5000
-        self.clients_port = 9999
+        self.__ip = self.__get_local_ip()
+        self.__port = 5000
 
-        self.sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+        self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.peers = []
+        self.__peers = []
 
         self.__init_server()
     
@@ -141,20 +70,20 @@ class Server():
             sock.close()
 
     def __init_server(self):
-        self.sock.bind((self.ip, self.port))
-        self.sock.settimeout(1.0)
-        self.sock.listen(1)
+        self.__sock.bind((self.__ip, self.__port))
+        self.__sock.settimeout(1.0)
+        self.__sock.listen(1)
 
     def __stop_server(self):
-        self.sock.settimeout(None)   
-        self.sock.close()
+        self.__sock.settimeout(None)   
+        self.__sock.close()
 
         return 'Server was stopped by an administrator!'
     
-    def __append_connection(self, connection, ip, port):
-        connection = PeerConnection(self, connection, ip, port)
-        connection.start()
-        self.chunk.append(connection)
+    def __append_connection(self, sock, ip, port):
+        peer = PeerConnection(ip, port, sock)
+        peer.start()
+        self.__peers.append(peer)
 
         with open(Server.PEERS_FILE_PATH, 'r+') as f:
             # ips = f.readlines()
@@ -165,16 +94,40 @@ class Server():
             else:
                 f.write(ip + '\n')
 
+    def __remove_disconnected_node_from_file(self, ip):
+        with open(self.PEERS_FILE_PATH, "r") as f:
+            lines = f.read().splitlines()
+        with open(self.PEERS_FILE_PATH, "w") as f:
+            for line in lines:
+                if line != ip:
+                    f.write(line + '\n')
+
+    def __clear_disconnected_peers(self):
+        disconnected_peers = []
+        
+        for peer in self.__peers:
+            if not peer.is_alive():
+                disconnected_peers.append(peer)
+                self.__remove_disconnected_node_from_file(peer.ip)
+
+
+        for peer in disconnected_peers:
+            self.__peers.remove(peer)
+
+
+    def __listen_for_connection(self):
+        sock, client_address = self.__sock.accept()
+        
+        print(f'{client_address[0]} connected')
+        self.__append_connection(sock, client_address[0], client_address[1])
+
     def run(self) -> None:
         while True:
             try:
-                connection, client_address = self.sock.accept()
-                
-                print(f'{client_address[0]} connected')
-                self.__append_connection(connection, client_address[0], client_address[1])
+                self.__listen_for_connection()
 
             except socket.timeout:
-                continue
+                self.__clear_disconnected_peers()
 
             except (KeyboardInterrupt, EOFError):
                 self.__stop_server()
@@ -182,7 +135,7 @@ class Server():
 
     def __repr__(self) -> str:
         return f'''
-        Server listening on {self.ip}:{self.port}
+        Server listening on {self.__ip}:{self.__port}
         '''
 
 if __name__ == '__main__':
