@@ -352,11 +352,8 @@ class NetworkNode(threading.Thread):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
                 server_ip, server_port = f.read().split(':')
                 self.serv_conn = ServConnection(server_ip, int(server_port))
+                self.serv_conn.start()
                 self.serv_conn.ask_for_peers()
-
-    def _connect_with_bind_serv(self, ip, port):
-        serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serv_sock.connect((ip, port))
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
