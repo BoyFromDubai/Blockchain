@@ -21,6 +21,7 @@ class Connection(threading.Thread):
 
     def __send_pkg(self, pkg_type, data):
         pkg = CCoinPackage(pkg_type = pkg_type, data = data)
+        print("Sent: ", pkg.package_data())
         self.sock.send(pkg.package_data())
 
     def __send_active_peers(self, pkg_type):

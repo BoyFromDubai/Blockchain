@@ -234,7 +234,9 @@ class Connection(threading.Thread):
             self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._sock.connect((self._ip, self._port))
         
-        self._sock.settimeout(1.0)
+        self.__sock_timeout = 1.0
+
+        self._sock.settimeout(self.__sock_timeout)
 
         self.stop_flag = threading.Event()
 
@@ -258,7 +260,7 @@ class Connection(threading.Thread):
                     message_ended = False
                     
                     while not message_ended:
-                        self._sock.settimeout(self.sock_timeout)
+                        self._sock.settimeout(self.__sock_timeout)
                         
                         try:
                             chunk = self._sock.recv(BUF_SIZE)
@@ -266,9 +268,6 @@ class Connection(threading.Thread):
 
                         except socket.timeout:
                             message_ended = True
-
-                    print('got')
-                    print(buff)
 
                     self._handle_package(buff)
                     
@@ -299,7 +298,8 @@ class ServConnection(Connection):
         super().__init__(ip, port)
 
     def _handle_package(self, data):
-        print(data)
+        pkg = CCoinPackage(got_bytes=data)
+        print(pkg.unpackage_data())
 
         return
     
