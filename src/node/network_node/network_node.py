@@ -242,9 +242,14 @@ class Connection(threading.Thread):
 
     def is_alive(self): return self.stop_flag.is_set()
 
+    def _send_data(self, pkg_type, data = b''):
+        pkg = CCoinPackage(pkg_type=pkg_type, data=data)
+
+        print('Sent: ', pkg.package_data())
+        self._sock.send(pkg.package_data())
+
     def __stop_socket(self):
-        stop_pkg = CCoinPackage(pkg_type='send_stop_signal')
-        self._sock.send(stop_pkg.package_data())
+        self._send_data(pkg_type='send_stop_signal')
         self._sock.settimeout(None)
         self._sock.close()
 
@@ -277,11 +282,10 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
 
-        self.__stop_socket()        
-        self._sock.settimeout(None)
-        self._sock.close()
+        self.__stop_socket()
 
     def stop(self):
+        print(99)
         self.stop_flag.set()
 
 class PeerConnection(Connection):
@@ -299,18 +303,13 @@ class ServConnection(Connection):
 
     def _handle_package(self, data):
         pkg = CCoinPackage(got_bytes=data)
+        print(data)
         print(pkg.unpackage_data())
 
         return
-    
-    def __send_data(self, pkg_type, data):
-        pkg = CCoinPackage(pkg_type=pkg_type, data=data)
-
-        print('Sent: ', pkg.package_data())
-        self._sock.send(pkg.package_data())
 
     def ask_for_peers(self):
-        self.__send_data('ask_for_peers', b'')
+        self._send_data('ask_for_peers', b'')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'
@@ -470,7 +469,7 @@ class NetworkNode(threading.Thread):
         for node in self.connections:
             node.join()
 
-        print(6)
+        print(555)
         self.serv_conn.stop()
 
         self.sock.settimeout(None)   

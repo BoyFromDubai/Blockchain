@@ -1,7 +1,7 @@
 import socket
 import threading
 from src.node.network_node import CCoinPackage, constants
-import re
+import os
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port):
@@ -57,6 +57,8 @@ class Connection(threading.Thread):
                             buff += data
                         except socket.timeout:
                             message_ended = True
+
+                    print(buff)
                                             
                     package = CCoinPackage(got_bytes=buff)
                     self.__handle_data(package.unpackage_data())
@@ -87,6 +89,10 @@ class Server():
     PEERS_FILE_PATH = 'peers.txt'
 
     def __init__(self):
+        if not os.path.exists(self.PEERS_FILE_PATH):
+            with open(self.PEERS_FILE_PATH, 'w'):
+                pass
+
         self.ip = self.__get_local_ip()
         self.port = 5000
         self.clients_port = 9999
