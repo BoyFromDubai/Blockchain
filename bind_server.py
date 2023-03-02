@@ -37,7 +37,7 @@ class Connection(threading.Thread):
         
 
     def __handle_data(self, data: dict):
-        print(data)
+        print('Got: ', data)
         if data['type'] == 'ask_for_peers':
             self.__send_active_peers('send_peers')
 

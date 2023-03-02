@@ -303,7 +303,7 @@ class ServConnection(Connection):
 
     def _handle_package(self, data):
         pkg = CCoinPackage(got_bytes=data)
-        print(data)
+        print('Got: ', data)
         print(pkg.unpackage_data())
 
         return
