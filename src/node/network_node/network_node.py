@@ -2,7 +2,7 @@ from .ccoin_protocol import CCoinPackage
 from .constants import *
 
 import socket
-from typing import List
+from typing import List, Callable
 import threading
 import os
 
@@ -304,7 +304,7 @@ class PeerConnection(Connection):
         return 
 
 class ServConnection(Connection):
-    def __init__(self, ip, port, init_peers : function):
+    def __init__(self, ip, port, init_peers : Callable):
         super().__init__(ip, port)
         self.init_peers = init_peers
 
