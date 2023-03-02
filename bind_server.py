@@ -1,88 +1,109 @@
 import socket
 import threading
-from src.node.network_node import CCoinPackage, constants
+from src.node.network_node import CCoinPackage, constants, Connection
 import os
 
-class Connection(threading.Thread):
-    def __init__(self, main_node, sock, ip, port):
-        super(Connection, self).__init__()
-        self.ip = ip
-        self.port = port
-        self.sock = sock
-        self.sock_timeout = 1.0
-        self.sock.settimeout(self.sock_timeout)
-        self.STOP_FLAG = threading.Event()
+class PeerConnection(Connection):
+    def __init__(self, ip, port, sock):
+        super().__init__(ip, port, sock)
 
-        self.main_node = main_node
-        # self.__answer_get_blocks_msg()
+    def _handle_package(self, data):
+        pkg = CCoinPackage(got_bytes=data)
+        print('Got: ', data)
+        print(pkg.unpackage_data())
 
-    def __stop_peer_socket(self):
-        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
+        return
 
-    def __send_pkg(self, pkg_type, data):
-        pkg = CCoinPackage(pkg_type = pkg_type, data = data)
-        print("Sent: ", pkg.package_data())
-        self.sock.send(pkg.package_data())
+    def ask_for_peers(self):
+        self._send_pkg('ask_for_peers', b'')
 
-    def __send_active_peers(self, pkg_type):
-        with open(Server.PEERS_FILE_PATH, 'r') as f:
-            ips = f.read().splitlines()
-            ips.remove(self.ip)
-            res = b''
+
+# class Connection(threading.Thread):
+#     def __init__(self, main_node, sock, ip, port):
+#         super(Connection, self).__init__()
+#         self.ip = ip
+#         self.port = port
+#         self.sock = sock
+#         self.sock_timeout = 1.0
+#         self.sock.settimeout(self.sock_timeout)
+#         self.STOP_FLAG = threading.Event()
+
+#         self.main_node = main_node
+#         # self.__answer_get_blocks_msg()
+
+#     def __stop_peer_socket(self):
+#         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
+
+#     def __send_pkg(self, pkg_type, data):
+#         pkg = CCoinPackage(pkg_type = pkg_type, data = data)
+#         print("Sent: ", pkg.package_data())
+#         self.sock.send(pkg.package_data())
+
+#     def __send_active_peers(self, pkg_type):
+#         with open(Server.PEERS_FILE_PATH, 'r') as f:
+#             ips = f.read().splitlines()
+#             ips.remove(self.ip)
+#             res = b''
             
-            for ip in ips:
-                res += (ip + '\n').encode()
+#             for ip in ips:
+#                 res += (ip + '\n').encode()
 
-            self.__send_pkg(pkg_type, res)        
+#             self.__send_pkg(pkg_type, res)        
         
 
-    def __handle_data(self, data: dict):
-        print('Got: ', data)
-        if data['type'] == 'ask_for_peers':
-            self.__send_active_peers('send_peers')
+#     def __handle_data(self, data: dict):
+#         print('Got: ', data)
+#         if data['type'] == 'ask_for_peers':
+#             self.__send_active_peers('send_peers')
 
-    def run(self):
-        while not self.STOP_FLAG.is_set():
-            try:
-                buff = self.sock.recv(constants.BUF_SIZE)
+#     def run(self):
+#         while not self.STOP_FLAG.is_set():
+#             try:
+#                 buff = self.sock.recv(constants.BUF_SIZE)
                 
-                if buff != b'':
-                    message_ended = False
-                    
-                    while not message_ended:
-                        self.sock.settimeout(self.sock_timeout)
+#                 if buff != b'':
+#                     message_ended = False
+#                     chunk = b'tmp'
+
+#                     while not message_ended and chunk:
+#                         self.sock.settimeout(self.sock_timeout)
                         
-                        try:
-                            data = self.sock.recv(constants.BUF_SIZE)
-                            buff += data
-                        except socket.timeout:
-                            message_ended = True
+#                         try:
+#                             chunk = self.sock.recv(constants.BUF_SIZE)
+                            
+#                             if not chunk:
+#                                 message_ended
+#                             else:
+#                                 buff += chunk
 
-                    print(buff)
+#                         except socket.timeout:
+#                             message_ended = True
+
+#                     print(buff)
                                             
-                    package = CCoinPackage(got_bytes=buff)
-                    self.__handle_data(package.unpackage_data())
+#                     package = CCoinPackage(got_bytes=buff)
+#                     self.__handle_data(package.unpackage_data())
 
-            except socket.timeout:
-                continue
+#             except socket.timeout:
+#                 continue
 
-            except socket.error as e:
-                raise e
+#             except socket.error as e:
+#                 raise e
 
-        self.__stop_peer_socket()        
-        self.sock.settimeout(None)
-        self.sock.close()
+#         self.__stop_peer_socket()        
+#         self.sock.settimeout(None)
+#         self.sock.close()
 
-    def stop(self):
-        self.STOP_FLAG.set()
+#     def stop(self):
+#         self.STOP_FLAG.set()
 
-    def __repr__(self):
-        return f'''
-        ----------------------------
-        NODE INFO
-        {self.ip}:{self.port}
-        ----------------------------
-        '''
+#     def __repr__(self):
+#         return f'''
+#         ----------------------------
+#         NODE INFO
+#         {self.ip}:{self.port}
+#         ----------------------------
+#         '''
 
 
 class Server():
@@ -100,7 +121,7 @@ class Server():
         self.sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.connections = []
+        self.peers = []
 
         self.__init_server()
     
@@ -130,11 +151,10 @@ class Server():
 
         return 'Server was stopped by an administrator!'
     
-
     def __append_connection(self, connection, ip, port):
-        connection = Connection(self, connection, ip, port)
+        connection = PeerConnection(self, connection, ip, port)
         connection.start()
-        self.connections.append(connection)
+        self.chunk.append(connection)
 
         with open(Server.PEERS_FILE_PATH, 'r+') as f:
             # ips = f.readlines()
