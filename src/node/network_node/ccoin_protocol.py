@@ -1,5 +1,5 @@
 from .constants import *
-from hashlib import sha256
+from hashlib import md5
 
 class CCoinPackage:
     def __init__(self, got_bytes : bytes = b'', pkg_type : str = '', data : bytes = b'') -> None:
@@ -59,7 +59,8 @@ class CCoinPackage:
         # print('Hashed: ', res)
         res = res[:HASH_OFFSET] + self.__hash_package(res) + res[HASH_OFFSET:]
         print(res)
+        print(len(self.__hash_package(res)))
 
         return res
 
-    def __hash_package(self, data): return sha256(data).digest()
+    def __hash_package(self, data): return md5(data).digest()

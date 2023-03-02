@@ -14,7 +14,7 @@ PKG_TYPE_VARS = {
     'send_stop_socket':      b'\x00\x00\xFF\xFF',
 }
 HASH_OFFSET = 4
-HASH_SIZE = 32
+HASH_SIZE = 16
 
 DATA_LEN_SIZE = 16
 
