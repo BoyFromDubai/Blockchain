@@ -51,15 +51,10 @@ class CCoinPackage:
         res += PKG_TYPE_VARS[self.__type]
         res += int.to_bytes(len(self.__data), DATA_LEN_SIZE, 'big')
         
-        print()
-        print(res)
         res += self.__data
-        print(res)
         # print('Hash: ', self.__hash_package(res))
         # print('Hashed: ', res)
         res = res[:HASH_OFFSET] + self.__hash_package(res) + res[HASH_OFFSET:]
-        print(res)
-        print(len(self.__hash_package(res)))
 
         return res
 

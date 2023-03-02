@@ -1,6 +1,7 @@
 import socket
 import threading
 from src.node.network_node import CCoinPackage, constants
+import re
 
 class Connection(threading.Thread):
     def __init__(self, main_node, sock, ip, port):
@@ -58,9 +59,9 @@ class Connection(threading.Thread):
         while not self.STOP_FLAG.is_set():
             try:
                 buff = self.sock.recv(constants.BUF_SIZE)
-                print(buff)
                 
                 if buff != b'':
+                    print(buff)
                     message_ended = False
                     
                     while not message_ended:
@@ -149,7 +150,10 @@ class Server():
         connection.start()
         self.connections.append(connection)
 
-        with open(Server.PEERS_FILE_PATH, 'w+') as f:
+        with open(Server.PEERS_FILE_PATH, 'r+') as f:
+            ips = f.readlines()
+            if ip in ips:
+                print(ips)
             f.write(ip)
 
     def run(self) -> None:

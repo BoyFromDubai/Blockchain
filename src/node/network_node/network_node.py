@@ -1,4 +1,5 @@
 from .ccoin_protocol import CCoinPackage
+from .constants import *
 
 import socket
 import threading
@@ -131,8 +132,12 @@ class Connection(threading.Thread):
         except Exception as e:
             print(e)
 
-    def __stop_peer_socket(self):
-        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
+    def __stop_socket(self):
+        stop_pkg = CCoinPackage(pkg_type='send_stop_signal')
+        self.sock.send(stop_pkg.package_data())
+        # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')        
+        self.sock.settimeout(None)
+        self.sock.close()
 
     def __kill_socket(self):
         self.main_node.close_connection(self)
@@ -200,9 +205,7 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
 
-        self.__stop_peer_socket()        
-        self.sock.settimeout(None)
-        self.sock.close()
+        self.__stop_socket()        
 
     def stop(self):
         self.STOP_FLAG.set()
