@@ -8,3 +8,4 @@
 network/*.txt
 .vagrant/
 .conf/
+peers.txt
