@@ -246,7 +246,7 @@ class Connection(threading.Thread):
         self._sock.settimeout(None)
         self._sock.close()
 
-    def parse_package(self, data):
+    def _handle_package(self, data):
         pass
 
     def run(self):
@@ -267,7 +267,7 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
 
-                    self.parse_package(buff)
+                    self._handle_package(buff)
                     
             except socket.timeout:
                 continue
@@ -286,7 +286,7 @@ class PeerConnection(Connection):
     def __init__(self, ip, port, sock = None):
         super(Connection).__init__(ip, port, sock)
 
-    def parse_package(self, data):
+    def _handle_package(self, data):
         print(data)
 
         return 
@@ -295,7 +295,7 @@ class ServConnection(Connection):
     def __init__(self, ip, port):
         super().__init__(ip, port)
 
-    def parse_package(self, data):
+    def _handle_package(self, data):
         print(data)
 
         return

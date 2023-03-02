@@ -19,10 +19,20 @@ class Connection(threading.Thread):
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
+    def __send_active_peers(self):
+        with open(Server.PEERS_FILE_PATH, 'r') as f:
+            ips = f.readlines()
+            del ips[ips.index(self.ip)]
+            print(ips)
+            for ip in ips:
+                pass
+            
+        
+
     def __handle_data(self, data: dict):
         print(data)
         if data['type'] == 'ask_for_peers':
-            pass
+            self.__send_active_peers()
 
     def run(self):
         while not self.STOP_FLAG.is_set():
