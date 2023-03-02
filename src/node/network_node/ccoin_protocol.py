@@ -19,6 +19,7 @@ class CCoinPackage:
         pkg_type = data_copy[:PKG_TYPE_SIZE]
         
         for key, item in PKG_TYPE_VARS.items():
+            print(pkg_type)
             if item == pkg_type:
                 res['type'] = key
 
@@ -26,7 +27,7 @@ class CCoinPackage:
 
         res['data'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
 
-        print(res)
+        return res
         
     def __check_got_msg(self):
         print()

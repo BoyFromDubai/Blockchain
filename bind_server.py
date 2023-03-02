@@ -72,11 +72,7 @@ class Connection(threading.Thread):
                             buff += data
                         except socket.timeout:
                             message_ended = True
-                        
-                        
-                        print(len(buff))
-                        print(buff)
-                    
+                                            
                     print(CCoinPackage(got_bytes=buff).unpackage_data())
                     print()
                     # buff += chunk

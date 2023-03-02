@@ -8,6 +8,7 @@ class Node:
         self.wallet = Wallet(blockchain)
         self.miner = Miner(blockchain, self.wallet.pk.to_string().hex())
         self.network_node = NetworkNode(blockchain)
+        self.network_node.start()
 
         self.res_values = res_values
 
@@ -30,3 +31,6 @@ class Node:
     @__update_utxos
     def mine_block(self): 
         return self.miner.mine_block()
+    
+    def __del__(self):
+        self.network_node.stop()

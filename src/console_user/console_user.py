@@ -97,6 +97,8 @@ class ConsoleUser:
                 for process in self.__processes:
                     process.terminate()
 
+                del self.node
+
                 break;
     
     def __update_queue(func):
