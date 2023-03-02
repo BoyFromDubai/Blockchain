@@ -21,8 +21,8 @@ class Connection(threading.Thread):
 
     def __send_pkg(self, pkg_type, data):
         pkg = CCoinPackage(pkg_type = pkg_type, data = data)
-        print(pkg.package_data())
-    
+        self.sock.send(pkg.package_data())
+
     def __send_active_peers(self, pkg_type):
         with open(Server.PEERS_FILE_PATH, 'r') as f:
             ips = f.read().splitlines()

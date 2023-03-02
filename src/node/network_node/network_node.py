@@ -267,6 +267,9 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
 
+                    print('got')
+                    print(buff)
+
                     self._handle_package(buff)
                     
             except socket.timeout:
