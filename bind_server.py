@@ -19,20 +19,26 @@ class Connection(threading.Thread):
     def __stop_peer_socket(self):
         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')
 
-    def __send_active_peers(self):
+    def __send_pkg(self, pkg_type, data):
+        pkg = CCoinPackage(pkg_type = pkg_type, data = data)
+        print(pkg.package_data())
+    
+    def __send_active_peers(self, pkg_type):
         with open(Server.PEERS_FILE_PATH, 'r') as f:
-            ips = f.readlines()
-            del ips[ips.index(self.ip)]
-            print(ips)
-            for ip in ips:
-                pass
+            ips = f.read().splitlines()
+            ips.remove(self.ip)
+            res = b''
             
+            for ip in ips:
+                res += (ip + '\n').encode()
+
+            self.__send_pkg(pkg_type, res)        
         
 
     def __handle_data(self, data: dict):
         print(data)
         if data['type'] == 'ask_for_peers':
-            self.__send_active_peers()
+            self.__send_active_peers('send_peers')
 
     def run(self):
         while not self.STOP_FLAG.is_set():
@@ -124,10 +130,13 @@ class Server():
         self.connections.append(connection)
 
         with open(Server.PEERS_FILE_PATH, 'r+') as f:
-            ips = f.readlines()
+            # ips = f.readlines()
+            ips = f.read().splitlines()
+
             if ip in ips:
                 print(ips)
-            f.write(ip)
+            else:
+                f.write(ip + '\n')
 
     def run(self) -> None:
         while True:
