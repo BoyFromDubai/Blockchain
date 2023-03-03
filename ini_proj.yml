@@ -31,7 +31,7 @@
         virtualenv_python: python3
 
     - name: Make interface down
-      command: ip link set dev eth0 down
+      command: ip link set dev eth1 down
 
     # - name: Install virtualenv package
     #   ansible.builtin.pip:
