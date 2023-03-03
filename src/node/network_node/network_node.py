@@ -227,7 +227,7 @@ class Connection(threading.Thread):
         super(Connection, self).__init__()
         self.ip = ip
         self._port = port
-        print(sock)
+        print('SOCK: ', sock)
         if sock:
             self._sock = sock
         else:
@@ -406,7 +406,6 @@ class NetworkNode(threading.Thread):
     def disconnect_node(self, ip):
         print(self.peers)
         for i in range(len(self.peers)):
-            print(i)
             if self.peers[i].ip == ip:
                 self.peers[i].stop()
                 del self.peers[i]
@@ -414,7 +413,6 @@ class NetworkNode(threading.Thread):
 
     def connect_with_node(self, ip, port):
         try:
-            print(self.peers)
             for node in self.peers:
                 if node.ip == ip:
                     raise ConnectionRefusedError('This host is already connected')
@@ -461,7 +459,6 @@ class NetworkNode(threading.Thread):
                     ip = client_address[0]
                     port = client_address[1]
                     print('Connected: ', ip)
-                    # print('LEN', len(self.peers))
                     peer = PeerConnection(ip, port, self.blockchain, sock)
                     peer.start()
                     self.peers.append(peer)
@@ -473,7 +470,6 @@ class NetworkNode(threading.Thread):
                 disconnected_peers = []
                 
                 for peer in self.peers:
-                    print(peer.is_alive())
                     if not peer.is_alive():
                         disconnected_peers.append(peer)
 
