@@ -27,8 +27,12 @@ class PeerConnection(Connection):
             ips.remove(self.ip)
             res = b''
             
-            for ip in ips:
-                res += (ip + '\n').encode()
+            for i in range(len(ips)):
+                if i == len(ips) - 1:
+                    res += (ips[i] + '\n').encode()
+                else:
+                    res += ips[i].encode()
+                    
 
             self._send_pkg(pkg_type, res)        
 
