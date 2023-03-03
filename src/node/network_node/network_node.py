@@ -488,6 +488,7 @@ class NetworkNode(threading.Thread):
 
             except socket.timeout:
                 print(self.peers)
+                print(self.ip)
                 disconnected_peers = []
                 
                 for peer in self.peers:
