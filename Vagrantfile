@@ -6,6 +6,7 @@ Vagrant.configure("2") do |config|
     config.vm.box = "generic/ubuntu2004"
     config.vm.define "node_#{i}" do |node|
       node.vm.network "public_network", type: "dhcp"
+      # config.vm.network "public_network", ip: "192.168.0.21#{i}"
       node.vm.hostname = "vm#{i}"
       node.vm.provider :vmware_desktop do |vb|
         vb.memory = 2048
