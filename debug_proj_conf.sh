@@ -1,7 +1,7 @@
 #!/bin/bash
 comment=${1:-'.'}
 
-prev_comment=$(<prev_comment.txt>)
+prev_comment=$(cat prev_comment.txt)
 if [[$prev_comment -eq $comment]]
 then
     comment="${comment} [DEBUG]"
