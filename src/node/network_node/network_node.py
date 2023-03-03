@@ -487,6 +487,7 @@ class NetworkNode(threading.Thread):
                     print('MAX CONNECTIONS REACHED!')
 
             except socket.timeout:
+                print(self.peers)
                 disconnected_peers = []
                 
                 for peer in self.peers:
