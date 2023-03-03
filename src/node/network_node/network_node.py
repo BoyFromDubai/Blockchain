@@ -227,7 +227,7 @@ class Connection(threading.Thread):
         super(Connection, self).__init__()
         self.ip = ip
         self._port = port
-
+        print(sock)
         if sock:
             self._sock = sock
         else:
