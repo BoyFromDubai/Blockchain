@@ -134,7 +134,7 @@ import os
 #             print(e)
 
 #     def __stop_socket(self):
-#         stop_pkg = CCoinPackage(pkg_type='send_stop_signal')
+#         stop_pkg = CCoinPackage(pkg_type='stop_signal')
 #         print(stop_pkg.package_data())
 #         self.sock.send(stop_pkg.package_data())
 #         # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')        
@@ -250,15 +250,15 @@ class Connection(threading.Thread):
         self._sock.send(pkg.package_data())
 
     def __stop_socket(self):
-        self._send_pkg(pkg_type='send_stop_signal')
+        self._send_pkg(pkg_type='stop_signal')
         self._sock.settimeout(None)
         self._sock.close()
 
     def _handle_package(self, pkg : CCoinPackage):
         pkg_dict = pkg.unpackage_data()
 
-        if pkg_dict['type'] == 'send_stop_signal':
-            self.stop_flag.set()
+        if pkg_dict['type'] == 'stop_signal':
+            self.stop()
 
     def run(self):
         while not self.stop_flag.is_set():
@@ -302,6 +302,7 @@ class PeerConnection(Connection):
         self.blockchain = blockchain
 
     def _handle_package(self, pkg : CCoinPackage):
+        super()._handle_package(pkg)
         print(pkg.unpackage_data())
 
         return 
@@ -312,6 +313,7 @@ class ServConnection(Connection):
         self.init_peers = init_peers
 
     def _handle_package(self, pkg : CCoinPackage):
+        super()._handle_package(pkg)
         print('Got: ', pkg.unpackage_data())
         pkg_dict = pkg.unpackage_data()
 
@@ -320,7 +322,7 @@ class ServConnection(Connection):
         # elif pkg_dict['type'] == '':
 
 
-        elif pkg_dict['type'] == 'send_stop_signal':
+        elif pkg_dict['type'] == 'stop_signal':
             self.stop_flag.set()
 
         return
@@ -489,14 +491,7 @@ class NetworkNode(threading.Thread):
             except socket.timeout:
                 print(self.peers)
                 print(self.ip)
-                disconnected_peers = []
-                
-                for peer in self.peers:
-                    if not peer.is_alive():
-                        disconnected_peers.append(peer)
-
-                for peer in disconnected_peers:
-                    self.peers.remove(peer)
+                self.__clear_disconnected_peers()
 
             except Exception as e:
                 raise e
@@ -504,6 +499,18 @@ class NetworkNode(threading.Thread):
         print(555)
             
         self.__close_sock()
+
+    def __clear_disconnected_peers(self):
+        disconnected_peers = []
+        
+        for peer in self.peers:
+            if not peer.is_alive():
+                disconnected_peers.append(peer)
+                self.__remove_disconnected_node_from_file(peer.ip)
+
+
+        for peer in disconnected_peers:
+            self.peers.remove(peer)
 
     def __close_sock(self):
         for peer in self.peers:

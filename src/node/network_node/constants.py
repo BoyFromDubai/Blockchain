@@ -11,7 +11,7 @@ PKG_TYPE_VARS = {
     'peers_request':        b'\x00\x00\x00\x07',
     'peers_ack':           b'\x00\x00\x00\x08',
 
-    'send_stop_signal':     b'\x00\x00\xFF\xFF',
+    'stop_signal':     b'\x00\x00\xFF\xFF',
 }
 HASH_OFFSET = 4
 HASH_SIZE = 16
