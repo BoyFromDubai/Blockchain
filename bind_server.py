@@ -8,7 +8,7 @@ class PeerConnection(Connection):
         super().__init__(ip, port, sock)
 
     def _handle_package(self, pkg : CCoinPackage):
-        super()._handle_package()
+        super()._handle_package(pkg)
         print('Got: ', pkg.unpackage_data())
         pkg_dict = pkg.unpackage_data()
         if pkg_dict['type'] == 'peers_request':
