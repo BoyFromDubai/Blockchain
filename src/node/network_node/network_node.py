@@ -294,8 +294,9 @@ class Connection(threading.Thread):
         self.stop_flag.set()
 
 class PeerConnection(Connection):
-    def __init__(self, ip, port, sock = None):
-        super(Connection).__init__(ip, port, sock)
+    def __init__(self, ip, port, blockchain, sock = None):
+        super().__init__(ip, port, sock)
+        self.blockchain = blockchain
 
     def _handle_package(self, data):
         print(data)
@@ -370,7 +371,8 @@ class NetworkNode(threading.Thread):
 
     def init_peers(self, ips : List[str]):
         print(ips)
-
+        for ip in ips:
+            self.connect_with_node(ip, self.port)
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
@@ -418,10 +420,7 @@ class NetworkNode(threading.Thread):
                     raise ConnectionRefusedError('This host is already connected')
 
             if len(self.peers) < self.MAX_CONNECTIONS:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(2.0)
-                sock.connect((ip, port))
-                connection = PeerConnection()
+                connection = PeerConnection(ip, port, self.blockchain)
                 connection.start()
                 self.peers.append(connection)
 
@@ -457,15 +456,15 @@ class NetworkNode(threading.Thread):
             try:
                 if len(self.peers) < self.MAX_CONNECTIONS:
 
-                    connection, client_address = self.sock.accept()
+                    sock, client_address = self.sock.accept()
 
-                    conn_ip = client_address[0]
-                    conn_port = client_address[1]
-                    print(conn_ip)
+                    ip = client_address[0]
+                    port = client_address[1]
+                    print('Connected: ', ip)
                     # print('LEN', len(self.peers))
-                    connection = PeerConnection(self, connection, conn_ip, conn_port, self.blockchain, self.debug_print)
-                    connection.start()
-                    self.peers.append(connection)
+                    peer = PeerConnection(self, ip, port, self.blockchain, sock)
+                    peer.start()
+                    self.peers.append(peer)
 
                 else:
                     print('MAX CONNECTIONS REACHED!')
