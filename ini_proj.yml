@@ -30,6 +30,11 @@
         virtualenv: "{{ project_path }}/venv"
         virtualenv_python: python3
 
+    - name: make interface down
+      net_interface:
+        name: eth0
+        enabled: False
+
     # - name: Install virtualenv package
     #   ansible.builtin.pip:
     #     name: virtualenv
