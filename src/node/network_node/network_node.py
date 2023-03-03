@@ -227,7 +227,6 @@ class Connection(threading.Thread):
         super(Connection, self).__init__()
         self.ip = ip
         self._port = port
-        print('SOCK: ', sock)
         if sock:
             self._sock = sock
         else:
@@ -256,6 +255,8 @@ class Connection(threading.Thread):
 
     def _handle_package(self, pkg : CCoinPackage):
         pkg_dict = pkg.unpackage_data()
+
+        print('Got: ', pkg_dict)
 
         if pkg_dict['type'] == 'stop_signal':
             self.stop()
@@ -290,7 +291,6 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
 
-        print("STOPPED")
         self.__stop_socket()
 
     def stop(self):
@@ -303,7 +303,6 @@ class PeerConnection(Connection):
 
     def _handle_package(self, pkg : CCoinPackage):
         super()._handle_package(pkg)
-        print(pkg.unpackage_data())
 
         return 
 
@@ -314,7 +313,6 @@ class ServConnection(Connection):
 
     def _handle_package(self, pkg : CCoinPackage):
         super()._handle_package(pkg)
-        print('Got: ', pkg.unpackage_data())
         pkg_dict = pkg.unpackage_data()
 
         if pkg_dict['type'] == 'peers_ack':
@@ -392,7 +390,6 @@ class NetworkNode(threading.Thread):
             self.serv_conn.peers_request()
 
     def init_peers(self, ips : List[str]):
-        print('IPS: ', ips)
         for ip in ips:
             self.connect_with_node(ip, self.port)
 
@@ -407,11 +404,15 @@ class NetworkNode(threading.Thread):
     def __get_local_ip(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            
 
             sock.connect(('8.8.8.8', 80))
+            print("Successfully got ip ", sock.getsockname()[0])
 
             return sock.getsockname()[0]
         except socket.error:
+            print("Unsuccessfully got ip ", sock.getsockname()[0])
+
             try:
                 return socket.gethostbyname(socket.gethostname()) 
             except socket.gaierror:
@@ -426,7 +427,6 @@ class NetworkNode(threading.Thread):
                 break
 
     def disconnect_node(self, ip):
-        print(self.peers)
         for i in range(len(self.peers)):
             if self.peers[i].ip == ip:
                 self.peers[i].stop()
@@ -480,7 +480,6 @@ class NetworkNode(threading.Thread):
 
                     ip = client_address[0]
                     port = client_address[1]
-                    print('Connected: ', ip)
                     peer = PeerConnection(ip, port, self.blockchain, sock)
                     peer.start()
                     self.peers.append(peer)
@@ -489,13 +488,12 @@ class NetworkNode(threading.Thread):
                     print('MAX CONNECTIONS REACHED!')
 
             except socket.timeout:
-                print(self.peers)
-                print(self.ip)
+                print('Peers: ', self.peers)
                 self.__clear_disconnected_peers()
 
             except Exception as e:
                 raise e
-                            
+
         self.__close_sock()
 
     def __clear_disconnected_peers(self):
@@ -516,7 +514,6 @@ class NetworkNode(threading.Thread):
         for peer in self.peers:
             peer.join()
 
-        print(555)
         self.serv_conn.stop()
 
         self.sock.settimeout(None)   
