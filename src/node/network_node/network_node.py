@@ -314,7 +314,7 @@ class ServConnection(Connection):
         pkg_dict = pkg.unpackage_data()
 
         if pkg_dict['type'] == 'peers_ack':
-            self.init_peers(pkg_dict['data'].decode().split('\n'))
+            self.init_peers(pkg_dict['data'].decode())
         # elif pkg_dict['type'] == '':
 
 
@@ -322,6 +322,25 @@ class ServConnection(Connection):
             self.stop_flag.set()
 
         return
+    
+    def __execute_func(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            
+            except OSError as e:
+                print(e)
+
+        return wrapper
+
+
+    @__execute_func
+    def __init_peers(self, ips_string):
+        ips_arr = ips_string.split('\n')
+        
+        if ips_arr[0] != '':
+            return self.init_peers(ips_arr)
+
 
     def peers_request(self):
         self._send_pkg('peers_request', b'')
