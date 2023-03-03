@@ -31,7 +31,7 @@
         virtualenv_python: python3
 
     - name: make interface down
-      net_interface:
+      ansible_network_os.net_interface:
         name: eth0
         enabled: False
 
