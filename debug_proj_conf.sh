@@ -15,8 +15,6 @@ then
     comment="${comment} [DEBUG]"
 fi
 
-echo $comment
-
 git add .
 git commit -m "$comment"
 git push

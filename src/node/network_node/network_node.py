@@ -254,8 +254,11 @@ class Connection(threading.Thread):
         self._sock.settimeout(None)
         self._sock.close()
 
-    def _handle_package(self, data):
-        pass
+    def _handle_package(self, pkg : CCoinPackage):
+        pkg_dict = pkg.unpackage_data()
+
+        if pkg_dict['type'] == 'send_stop_signal':
+            self.stop_flag.set()
 
     def run(self):
         while not self.stop_flag.is_set():
@@ -279,7 +282,7 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
 
-                    self._handle_package(buff)
+                    self._handle_package(CCoinPackage(got_bytes=buff))
                     
             except socket.timeout:
                 continue
@@ -298,8 +301,8 @@ class PeerConnection(Connection):
         super().__init__(ip, port, sock)
         self.blockchain = blockchain
 
-    def _handle_package(self, data):
-        print(data)
+    def _handle_package(self, pkg : CCoinPackage):
+        print(pkg.unpackage_data())
 
         return 
 
@@ -308,13 +311,12 @@ class ServConnection(Connection):
         super().__init__(ip, port)
         self.init_peers = init_peers
 
-    def _handle_package(self, data):
-        pkg = CCoinPackage(got_bytes=data)
+    def _handle_package(self, pkg : CCoinPackage):
         print('Got: ', pkg.unpackage_data())
         pkg_dict = pkg.unpackage_data()
 
         if pkg_dict['type'] == 'peers_ack':
-            self.init_peers(pkg_dict['data'].decode())
+            self.__init_peers(pkg_dict['data'].decode())
         # elif pkg_dict['type'] == '':
 
 
@@ -337,7 +339,6 @@ class ServConnection(Connection):
     @__execute_func
     def __init_peers(self, ips_string):
         ips_arr = ips_string.split('\n')
-        
         if ips_arr[0] != '':
             return self.init_peers(ips_arr)
 
@@ -389,7 +390,7 @@ class NetworkNode(threading.Thread):
             self.serv_conn.peers_request()
 
     def init_peers(self, ips : List[str]):
-        print(ips)
+        print('IPS: ', ips)
         for ip in ips:
             self.connect_with_node(ip, self.port)
 
@@ -503,11 +504,11 @@ class NetworkNode(threading.Thread):
         self.__close_sock()
 
     def __close_sock(self):
-        for node in self.peers:
-            node.stop()
+        for peer in self.peers:
+            peer.stop()
         
-        for node in self.peers:
-            node.join()
+        for peer in self.peers:
+            peer.join()
 
         print(555)
         self.serv_conn.stop()
