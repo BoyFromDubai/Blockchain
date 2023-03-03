@@ -462,7 +462,7 @@ class NetworkNode(threading.Thread):
                     port = client_address[1]
                     print('Connected: ', ip)
                     # print('LEN', len(self.peers))
-                    peer = PeerConnection(self, ip, port, self.blockchain, sock)
+                    peer = PeerConnection(ip, port, self.blockchain, sock)
                     peer.start()
                     self.peers.append(peer)
 
