@@ -28,7 +28,7 @@ class PeerConnection(Connection):
             res = b''
             
             for i in range(len(ips)):
-                if i == len(ips) - 1:
+                if i != len(ips) - 1:
                     res += (ips[i] + '\n').encode()
                 else:
                     res += ips[i].encode()

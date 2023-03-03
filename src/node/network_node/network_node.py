@@ -270,7 +270,6 @@ class Connection(threading.Thread):
                         
                         try:
                             chunk = self._sock.recv(BUF_SIZE)
-                            print('Chunk: ', chunk)
                             
                             if not chunk:
                                 message_ended = True
