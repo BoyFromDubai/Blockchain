@@ -5,8 +5,8 @@ Vagrant.configure("2") do |config|
   (1..N).each do |i|
     config.vm.box = "generic/ubuntu2004"
     config.vm.define "node_#{i}" do |node|
+      node.vm.network "public_network", type: "dhcp"
       node.vm.hostname = "vm#{i}"
-      config.vm.network "public_network", type: "dhcp"
       node.vm.provider :vmware_desktop do |vb|
         vb.memory = 2048
         vb.cpus = 1

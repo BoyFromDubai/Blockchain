@@ -495,9 +495,7 @@ class NetworkNode(threading.Thread):
 
             except Exception as e:
                 raise e
-            
-        print(555)
-            
+                            
         self.__close_sock()
 
     def __clear_disconnected_peers(self):
