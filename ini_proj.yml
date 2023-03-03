@@ -30,9 +30,6 @@
         virtualenv: "{{ project_path }}/venv"
         virtualenv_python: python3
 
-    - name: Make interface down
-      command: ip link set dev eth1 down
-
     # - name: Install virtualenv package
     #   ansible.builtin.pip:
     #     name: virtualenv
