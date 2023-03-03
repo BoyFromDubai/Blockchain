@@ -500,21 +500,12 @@ class NetworkNode(threading.Thread):
             
         self.__close_sock()
 
-    def __remove_disconnected_node_from_file(self, ip):
-        with open(self.PEERS_FILE_PATH, "r") as f:
-            lines = f.read().splitlines()
-        with open(self.PEERS_FILE_PATH, "w") as f:
-            for line in lines:
-                if line != ip:
-                    f.write(line + '\n')
-
     def __clear_disconnected_peers(self):
         disconnected_peers = []
         
         for peer in self.peers:
             if not peer.is_alive():
                 disconnected_peers.append(peer)
-                self.__remove_disconnected_node_from_file(peer.ip)
 
 
         for peer in disconnected_peers:
