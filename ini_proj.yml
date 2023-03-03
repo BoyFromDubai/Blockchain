@@ -30,8 +30,8 @@
         virtualenv: "{{ project_path }}/venv"
         virtualenv_python: python3
 
-    - name: make interface down
-      ansible_network_os.net_interface:
+    - name: Make interface down
+      net_interface:
         name: eth0
         enabled: False
 
