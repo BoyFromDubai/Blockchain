@@ -407,12 +407,10 @@ class NetworkNode(threading.Thread):
             
 
             sock.connect(('8.8.8.8', 80))
-            print("Successfully got ip ", sock.getsockname()[0])
+            print("Got ip ", sock.getsockname()[0])
 
             return sock.getsockname()[0]
         except socket.error:
-            print("Unsuccessfully got ip ", sock.getsockname()[0])
-
             try:
                 return socket.gethostbyname(socket.gethostname()) 
             except socket.gaierror:
