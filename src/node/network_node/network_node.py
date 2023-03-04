@@ -254,8 +254,7 @@ class Connection(threading.Thread):
         self._sock.settimeout(None)
         self._sock.close()
 
-    def _handle_package(self, pkg : CCoinPackage):
-        pkg_dict = pkg.unpackage_data()
+    def _handle_package(self, pkg_dict : dict):
 
         print('Got: ', pkg_dict)
 
@@ -282,7 +281,7 @@ class Connection(threading.Thread):
 
         return buff
 
-    def __handle_pkg_in_thread(self, pkg : CCoinPackage):
+    def __handle_pkg_in_thread(self, pkg_dict : dict):
         handler_thread = threading.Thread(target=self._handle_package, args=(pkg, ))
         handler_thread.start()
 
@@ -292,8 +291,8 @@ class Connection(threading.Thread):
                 got_data = self._get_data()
                 print(got_data)
 
-                self._handle_package(CCoinPackage(got_bytes=got_data))
-                # self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data))
+                self._handle_package(CCoinPackage(got_bytes=got_data).unpackage_data())
+                # self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data).unpackage_data())
                 
             except socket.timeout:
                 continue
@@ -316,9 +315,8 @@ class PeerConnection(Connection):
 
         self.__send_version_pkg()
 
-    def _handle_package(self, pkg : CCoinPackage):
-        super()._handle_package(pkg)
-        pkg_dict = pkg.unpackage_data()
+    def _handle_package(self, pkg_dict : dict):
+        super()._handle_package(pkg_dict)
         
         if pkg_dict['type'] == 'version':
             self.__handle_version_pkg(int.from_bytes(pkg_dict['data'], 'big'))
@@ -348,9 +346,8 @@ class ServConnection(Connection):
         super().__init__(ip, port)
         self.init_peers = init_peers
 
-    def _handle_package(self, pkg : CCoinPackage):
-        super()._handle_package(pkg)
-        pkg_dict = pkg.unpackage_data()
+    def _handle_package(self, pkg_dict : dict):
+        super()._handle_package(pkg_dict)
 
         if pkg_dict['type'] == 'peers_ack':
             self.__init_peers(pkg_dict['data'].decode())

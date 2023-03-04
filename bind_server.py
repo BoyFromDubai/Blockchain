@@ -7,9 +7,8 @@ class PeerConnection(Connection):
     def __init__(self, ip, port, sock):
         super().__init__(ip, port, sock)
 
-    def _handle_package(self, pkg : CCoinPackage):
-        super()._handle_package(pkg)
-        pkg_dict = pkg.unpackage_data()
+    def _handle_package(self, pkg_dict : dict):
+        super()._handle_package(pkg_dict)
         if pkg_dict['type'] == 'peers_request':
             self.__send_active_peers('peers_ack')
         # elif pkg_dict['type'] == '':
