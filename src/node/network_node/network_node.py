@@ -294,8 +294,8 @@ class Connection(threading.Thread):
                 got_data = self._get_data()
                 print(got_data)
 
-                self._handle_package(CCoinPackage(got_bytes=got_data).unpackage_data())
-                # self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data).unpackage_data())
+                # self._handle_package(CCoinPackage(got_bytes=got_data).unpackage_data())
+                self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data).unpackage_data())
                 
             except socket.timeout:
                 continue
