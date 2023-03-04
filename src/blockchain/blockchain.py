@@ -39,15 +39,15 @@ class Blockchain:
         return False
 
     def get_nth_block(self, n: int):
-        with open(f'{Blockchain.BLOCKS_DIR}/blk_{str(n).zfill(NUMS_IN_NAME)}.dat', 'rb') as f:
+        with open(f'{self.BLOCKS_DIR}/blk_{str(n).zfill(NUMS_IN_NAME)}.dat', 'rb') as f:
             blk_size = int.from_bytes(f.read(SIZE), 'little')
             return f.read(blk_size)
 
     def hash_nth_block_in_digest(self, n: int):
-        return hashlib.sha256(Blockchain.get_nth_block_header(n)).digest()
+        return hashlib.sha256(self.get_nth_block_header(n)).digest()
 
     def hash_nth_block_in_hexdigest(self, n: int):
-        return hashlib.sha256(Blockchain.get_nth_block_header(n)).hexdigest()
+        return hashlib.sha256(self.get_nth_block_header(n)).hexdigest()
 
     def hash_last_block_in_digest(self):
         return hashlib.sha256(self.get_nth_block_header(self.get_chain_len() - 1)).digest()

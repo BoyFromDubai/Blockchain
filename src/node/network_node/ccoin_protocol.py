@@ -33,6 +33,7 @@ class CCoinPackage:
         elif pkg_type == 'peers_ack':
             res['peers'] = data.decode().split('\n')
         elif pkg_type == 'blocks_request':
+            res['peer\'s_chain_len'] = int.from_bytes(data, 'big')
             pass
 
         print('-------------')
