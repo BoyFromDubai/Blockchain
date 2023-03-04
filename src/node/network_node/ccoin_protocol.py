@@ -29,9 +29,11 @@ class CCoinPackage:
         res = {}
 
         if pkg_type == 'version':
-            res['data'] = int.from_bytes(data, 'big')
+            res['version'] = int.from_bytes(data, 'big')
         elif pkg_type == 'peers_ack':
             res['peers'] = data.decode().split('\n')
+        elif pkg_type == 'blocks_request':
+            pass
 
         print('-------------')
         print(res)
@@ -49,9 +51,9 @@ class CCoinPackage:
         data_len = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE]
 
 
-        res['data_field'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
+        res['data_dict'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
 
-        self.__unpackage_data_field(res['type'], res['data_field'])
+        self.__unpackage_data_field(res['type'], res['data_dict'])
 
         return res
         

@@ -322,21 +322,23 @@ class PeerConnection(Connection):
         super()._handle_package(pkg_dict)
         
         if pkg_dict['type'] == 'version':
-            self.__handle_version_pkg(int.from_bytes(pkg_dict['data_field'], 'big'))
+            self.__handle_version_pkg(int.from_bytes(pkg_dict['data_dict'], 'big'))
         elif pkg_dict['type'] == 'blocks_request':
             pass
 
         return 
     
-    def __handle_version_pkg(self, peer_chain_len):
+    def __handle_version_pkg(self, peer_chain_len : int):
         # self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
+        chain_len_msg_len = 2
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg('blocks_request')
+            self._send_pkg('blocks_request', int.to_bytes(chain_len_msg_len, my_chain_len, 'big'))
 
     def __handle_blocks_request_pkg(self):
         
+
         pass
     
     def __send_version_pkg(self):
@@ -353,7 +355,7 @@ class ServConnection(Connection):
         super()._handle_package(pkg_dict)
 
         if pkg_dict['type'] == 'peers_ack':
-            self.__init_peers(pkg_dict['data_field'].decode())
+            self.__init_peers(pkg_dict['data_dict'].decode())
         # elif pkg_dict['type'] == '':
 
         elif pkg_dict['type'] == 'stop_signal':
