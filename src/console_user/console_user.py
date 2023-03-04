@@ -30,7 +30,7 @@ class ConsoleUser:
         self.__processes = []
         self.blockchain = Blockchain()
         self.res_values = Queue()
-        self.node = Node(self.blockchain, self.res_values)
+        self.node = Node(self.blockchain)
 
         self.__verify_chain()
         self.__start_output()
@@ -49,6 +49,11 @@ class ConsoleUser:
                 if not commands_arr:
                     print('Command must not be empty!')
                     continue
+
+                if commands_arr[0] == 'start':
+                    if len(commands_arr) > 1 and commands_arr[1] == 'server': 
+                        self.__execute_func(func=self.node.connect_with_bind_server)               
+
 
                 if commands_arr[0] == 'mine':
 
@@ -119,8 +124,8 @@ class ConsoleUser:
         #     return func(*args)
         # except Exception as e:
         #     return e
-        return func(*args)
 
+        return func(*args)
 
     @__append_process
     def __start_output(self):

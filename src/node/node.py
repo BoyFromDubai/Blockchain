@@ -3,14 +3,12 @@ from .network_node import NetworkNode
 from .wallet import Wallet
 
 class Node:
-    def __init__(self, blockchain, res_values) -> None:
+    def __init__(self, blockchain) -> None:
         self.blockchain = blockchain
         self.wallet = Wallet(blockchain)
         self.miner = Miner(blockchain, self.wallet.pk.to_string().hex())
         self.network_node = NetworkNode(blockchain)
         self.network_node.start()
-
-        self.res_values = res_values
 
     def __update_utxos(func):
         def wrapper(*args, **kwargs):
@@ -22,6 +20,9 @@ class Node:
             return blk_data
 
         return wrapper
+    
+    def connect_with_bind_server(self):
+        self.network_node.connect_with_bind_server()
     
     def set_bind_server(self, ip, port):
         return self.network_node.set_bind_server(ip, port)

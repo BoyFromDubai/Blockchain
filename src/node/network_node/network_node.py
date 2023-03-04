@@ -6,219 +6,219 @@ from typing import List, Callable
 import threading
 import os
 
-# class Connection(threading.Thread):
-#     CHAIN_LEN_SIZE = 2 
-#     def __init__(self, main_node, sock, ip, port, blockchain, debug_print):
-#         super(Connection, self).__init__()
-#         self.ip = ip
-#         self.port = port
-#         self.sock = sock
-#         self.sock.settimeout(1.0)
-#         self.STOP_FLAG = threading.Event()
+class Conn(threading.Thread):
+    CHAIN_LEN_SIZE = 2 
+    def __init__(self, main_node, sock, ip, port, blockchain, debug_print):
+        super(Connection, self).__init__()
+        self.ip = ip
+        self.port = port
+        self.sock = sock
+        self.sock.settimeout(1.0)
+        self.STOP_FLAG = threading.Event()
 
-#         self.blockchain = blockchain
+        self.blockchain = blockchain
 
-#         self.debug_print = debug_print
+        self.debug_print = debug_print
 
-#         self.TYPE_FIELD_OFFSET = 0
-#         self.MEANING_OF_MSG_OFFSET = 1
-#         self.SIZE_FIELD_OFFSET = 9
-#         self.MSG_FIELD_OFFSET = 25
+        self.TYPE_FIELD_OFFSET = 0
+        self.MEANING_OF_MSG_OFFSET = 1
+        self.SIZE_FIELD_OFFSET = 9
+        self.MSG_FIELD_OFFSET = 25
 
-#         self.HASH_OF_BLOCK_SIZE = 32 
+        self.HASH_OF_BLOCK_SIZE = 32 
 
-#         self.main_node = main_node
+        self.main_node = main_node
 
-#         self.__send_version_msg()
-#         # self.__answer_get_blocks_msg()
+        self.__send_version_msg()
+        # self.__answer_get_blocks_msg()
 
-#     def send(self, type, meaning, data):
-#         packet = self.__create_packet(type, meaning, data)
-#         print('SEND')
-#         print(packet)
-#         print()
-#         self.sock.send(packet)
+    def send(self, type, meaning, data):
+        packet = self.__create_packet(type, meaning, data)
+        print('SEND')
+        print(packet)
+        print()
+        self.sock.send(packet)
 
-#     def __create_packet(self, type, meaning, data):
-#         msg = b''
-#         msg += type
-#         msg += meaning
-#         msg += len(data).to_bytes(self.MSG_FIELD_OFFSET-self.SIZE_FIELD_OFFSET, 'big')
-#         msg += data
+    def __create_packet(self, type, meaning, data):
+        msg = b''
+        msg += type
+        msg += meaning
+        msg += len(data).to_bytes(self.MSG_FIELD_OFFSET-self.SIZE_FIELD_OFFSET, 'big')
+        msg += data
 
-#         return msg
+        return msg
     
-#     def __answer(self, request_msg_meaning, msg):
+    def __answer(self, request_msg_meaning, msg):
 
-#         if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
-#             self.__answer_get_blocks_msg(msg)
-#         elif request_msg_meaning == self.main_node.meaning_of_msg['last_block_id']:
-#             self.__start_sending_blk_hashes(int.from_bytes(msg, 'big'))
-#         else:
-#             pass
+        if request_msg_meaning == self.main_node.meaning_of_msg['get_blocks']:
+            self.__answer_get_blocks_msg(msg)
+        elif request_msg_meaning == self.main_node.meaning_of_msg['last_block_id']:
+            self.__start_sending_blk_hashes(int.from_bytes(msg, 'big'))
+        else:
+            pass
 
-#     def __send_version_msg(self):
-#         height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
-#         self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
+    def __send_version_msg(self):
+        height = len(os.listdir('blockchain/blocks')).to_bytes(4, 'big')
+        self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['version'], height)
     
-#     def __answer_get_blocks_msg(self, msg):
-#         blk_to_start_with = int.from_bytes(msg, 'big')
-#         chain_len = self.blockchain.get_chain_len()
+    def __answer_get_blocks_msg(self, msg):
+        blk_to_start_with = int.from_bytes(msg, 'big')
+        chain_len = self.blockchain.get_chain_len()
         
-#         for i in range(blk_to_start_with, chain_len):
-#             data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-#             print('ith block')
-#             print(i.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
-#             data += self.blockchain.get_nth_block(i)
-#             self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
+        for i in range(blk_to_start_with, chain_len):
+            data = i.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            print('ith block')
+            print(i.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            data += self.blockchain.get_nth_block(i)
+            self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['block'], data)
 
-#     def __start_sending_blk_hashes(self, n):
-#         self.sock.send(self.blockchain.hash_nth_block_in_digest(n-1))
-#         answer = self.sock.recv(1)
-#         print('answer')
-#         print(answer)
-#         if int.from_bytes(answer, 'big'):
-#             self.__start_sending_blk_hashes(n-1)
+    def __start_sending_blk_hashes(self, n):
+        self.sock.send(self.blockchain.hash_nth_block_in_digest(n-1))
+        answer = self.sock.recv(1)
+        print('answer')
+        print(answer)
+        if int.from_bytes(answer, 'big'):
+            self.__start_sending_blk_hashes(n-1)
 
-#     def __get(self, info_msg_meaning, msg):
+    def __get(self, info_msg_meaning, msg):
         
-#         if  info_msg_meaning == self.main_node.meaning_of_msg['version']:
-#             self.__get_version_msg(msg)
-#         elif  info_msg_meaning ==  self.main_node.meaning_of_msg['last_block_id']:
-#             self.__get_last_block_info_msg(msg)
-#         elif  info_msg_meaning ==  self.main_node.meaning_of_msg['block']:
-#             self.__get_blocks_msg(msg)
-#         elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
-#             self.__get_tx_msg(msg)
-#         elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
-#             self.__kill_socket()
-#         else:
-#             pass
+        if  info_msg_meaning == self.main_node.meaning_of_msg['version']:
+            self.__get_version_msg(msg)
+        elif  info_msg_meaning ==  self.main_node.meaning_of_msg['last_block_id']:
+            self.__get_last_block_info_msg(msg)
+        elif  info_msg_meaning ==  self.main_node.meaning_of_msg['block']:
+            self.__get_blocks_msg(msg)
+        elif info_msg_meaning == self.main_node.meaning_of_msg['tx']:
+            self.__get_tx_msg(msg)
+        elif info_msg_meaning == self.main_node.meaning_of_msg['stop_socket']:
+            self.__kill_socket()
+        else:
+            pass
 
-#     def __get_version_msg(self, msg):
-#         chain_len = self.blockchain.get_chain_len()
-#         print('chain_len')
-#         print(chain_len)
+    def __get_version_msg(self, msg):
+        chain_len = self.blockchain.get_chain_len()
+        print('chain_len')
+        print(chain_len)
 
-#         if int.from_bytes(msg, 'big') > chain_len:
-#             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
-#             self.__start_getting_blk_hashes(chain_len)
+        if int.from_bytes(msg, 'big') > chain_len:
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['last_block_id'], chain_len.to_bytes(self.CHAIN_LEN_SIZE, 'big'))
+            self.__start_getting_blk_hashes(chain_len)
 
-#     def __get_blocks_msg(self, msg):
-#         print(msg)
-#         file_num = msg[:self.CHAIN_LEN_SIZE]
-#         blk_data = msg[self.CHAIN_LEN_SIZE:]
-#         print('get_blk_msgs')
-#         print(file_num)
-#         # self.blockchain.getNewBlockFromPeer(int.from_bytes(file_num, 'big'), blk_data)
+    def __get_blocks_msg(self, msg):
+        print(msg)
+        file_num = msg[:self.CHAIN_LEN_SIZE]
+        blk_data = msg[self.CHAIN_LEN_SIZE:]
+        print('get_blk_msgs')
+        print(file_num)
+        # self.blockchain.getNewBlockFromPeer(int.from_bytes(file_num, 'big'), blk_data)
 
-#     def __start_getting_blk_hashes(self, n):
-#         his_hash = self.sock.recv(self.HASH_OF_BLOCK_SIZE)
-#         my_hash = self.blockchain.hash_nth_block_in_digest(n-1)
-#         print(f'asking for {n-1}')
+    def __start_getting_blk_hashes(self, n):
+        his_hash = self.sock.recv(self.HASH_OF_BLOCK_SIZE)
+        my_hash = self.blockchain.hash_nth_block_in_digest(n-1)
+        print(f'asking for {n-1}')
 
-#         if his_hash == my_hash:
-#             self.sock.send((0).to_bytes(1, 'big'))
-#             blk_to_start_with = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-#             # msg += n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
-#             self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], blk_to_start_with)
-#         else:
-#             self.sock.send((1).to_bytes(1, 'big'))
-#             self.__start_getting_blk_hashes(n-1)
+        if his_hash == my_hash:
+            self.sock.send((0).to_bytes(1, 'big'))
+            blk_to_start_with = n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            # msg += n.to_bytes(self.CHAIN_LEN_SIZE, 'big')
+            self.send(self.main_node.types['request'], self.main_node.meaning_of_msg['get_blocks'], blk_to_start_with)
+        else:
+            self.sock.send((1).to_bytes(1, 'big'))
+            self.__start_getting_blk_hashes(n-1)
 
     
-#     def __get_tx_msg(self, msg):
-#         try:
-#             self.blockchain.verifyTransaction(msg)
-#         except Exception as e:
-#             print(e)
+    def __get_tx_msg(self, msg):
+        try:
+            self.blockchain.verifyTransaction(msg)
+        except Exception as e:
+            print(e)
 
-#     def __stop_socket(self):
-#         stop_pkg = CCoinPackage(pkg_type='stop_signal')
-#         print(stop_pkg.package_data())
-#         self.sock.send(stop_pkg.package_data())
-#         # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')        
-#         self.sock.settimeout(None)
-#         self.sock.close()
+    def __stop_socket(self):
+        stop_pkg = CCoinPackage(pkg_type='stop_signal')
+        print(stop_pkg.package_data())
+        self.sock.send(stop_pkg.package_data())
+        # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')        
+        self.sock.settimeout(None)
+        self.sock.close()
 
-#     def __kill_socket(self):
-#         self.main_node.close_connection(self)
+    def __kill_socket(self):
+        self.main_node.close_connection(self)
     
-#     def __parse_header(self, header):
-#         msg_type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
-#         msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
-#         size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
+    def __parse_header(self, header):
+        msg_type = header[self.TYPE_FIELD_OFFSET:self.MEANING_OF_MSG_OFFSET]
+        msg_meaning = header[self.MEANING_OF_MSG_OFFSET:self.SIZE_FIELD_OFFSET]
+        size = int.from_bytes(header[self.SIZE_FIELD_OFFSET:self.MSG_FIELD_OFFSET], 'big')
 
-#         return (msg_type, msg_meaning, size)
+        return (msg_type, msg_meaning, size)
 
-#     def run(self):
-#         while not self.STOP_FLAG.is_set():
-#             try:
-#                 buff = b''
-#                 header = self.sock.recv(self.MSG_FIELD_OFFSET)
+    def run(self):
+        while not self.STOP_FLAG.is_set():
+            try:
+                buff = b''
+                header = self.sock.recv(self.MSG_FIELD_OFFSET)
                 
-#                 if header != b'':
-#                     msg_type, msg_meaning, size = self.__parse_header(header)
+                if header != b'':
+                    msg_type, msg_meaning, size = self.__parse_header(header)
 
-#                     print('GOT')
-#                     print('Header')
-#                     print(header)
-#                     print('------------')
-#                     for key, item in self.main_node.types.items():
-#                         if item == msg_type:
-#                             print(key)
+                    print('GOT')
+                    print('Header')
+                    print(header)
+                    print('------------')
+                    for key, item in self.main_node.types.items():
+                        if item == msg_type:
+                            print(key)
 
-#                     for key, item in self.main_node.meaning_of_msg.items():
-#                         if item == msg_meaning:
-#                             print(key)
-#                             x = key
-#                     print(size)
-#                     print('------------')
-#                     print()
+                    for key, item in self.main_node.meaning_of_msg.items():
+                        if item == msg_meaning:
+                            print(key)
+                            x = key
+                    print(size)
+                    print('------------')
+                    print()
 
-#                     read_size = 1024
+                    read_size = 1024
 
-#                     if read_size > size:
-#                         buff += self.sock.recv(size)
+                    if read_size > size:
+                        buff += self.sock.recv(size)
                     
-#                     else:
-#                         for i in range(0, size, read_size):
-#                             if size - i > read_size:
-#                                 buff += self.sock.recv(read_size)
-#                             else:
-#                                 buff += self.sock.recv(size - i)
+                    else:
+                        for i in range(0, size, read_size):
+                            if size - i > read_size:
+                                buff += self.sock.recv(read_size)
+                            else:
+                                buff += self.sock.recv(size - i)
 
-#                     if msg_type == self.main_node.types['request']:
+                    if msg_type == self.main_node.types['request']:
 
-#                         self.__answer(msg_meaning, buff)
+                        self.__answer(msg_meaning, buff)
                     
-#                     else:
+                    else:
 
-#                         self.__get(msg_meaning, buff)
+                        self.__get(msg_meaning, buff)
 
-#                     print(f'MESSAGE from {self.ip} of meaning {x}')
-#                     print(buff)
-#                     print()
-#                     # buff += chunk
+                    print(f'MESSAGE from {self.ip} of meaning {x}')
+                    print(buff)
+                    print()
+                    # buff += chunk
 
-#             except socket.timeout:
-#                 continue
+            except socket.timeout:
+                continue
 
-#             except socket.error as e:
-#                 raise e
+            except socket.error as e:
+                raise e
 
-#         self.__stop_socket()
-#         print('stop')        
+        self.__stop_socket()
+        print('stop')        
 
-#     def stop(self):
-#         self.STOP_FLAG.set()
+    def stop(self):
+        self.STOP_FLAG.set()
 
-#     def __repr__(self):
-#         return f'''
+    def __repr__(self):
+        return f'''
         
-#         NODE INFO
-#         {self.ip}:{self.port}
-#         ----------------------------'''
+        NODE INFO
+        {self.ip}:{self.port}
+        ----------------------------'''
     
 
 
@@ -301,10 +301,17 @@ class PeerConnection(Connection):
         super().__init__(ip, port, sock)
         self.blockchain = blockchain
 
+        self.__send_version_pkg()
+
     def _handle_package(self, pkg : CCoinPackage):
         super()._handle_package(pkg)
 
         return 
+    
+    def __send_version_pkg(self):
+        chain_len = self.blockchain.get_chain_len()
+        version_msg_len = 2
+        self._send_pkg('version', int.to_bytes(chain_len, version_msg_len, 'big'))
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -361,8 +368,6 @@ class NetworkNode(threading.Thread):
         self.sock.settimeout(1.0)
         self.sock.listen(1)
 
-        self.__init_bind_server()
-
         self.blockchain = blockchain
 
         self.peers = []
@@ -370,9 +375,21 @@ class NetworkNode(threading.Thread):
 
         self.STOP_FLAG = threading.Event()
 
-    def __init_bind_server(self):
+    def connect_with_bind_server(self):
         if not os.path.exists(NetworkNode.NETWORK_CONF_DIR):
             os.mkdir(NetworkNode.NETWORK_CONF_DIR)
+            
+            with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
+                pass
+            
+            raise Exception('[ERROR] Firstly it\'s neccessary to set ip and port of a bind server!!!')
+        else:
+            with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
+                server_ip, server_port = f.read().split(':')
+                self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
+                self.serv_conn.start()
+                self.serv_conn.peers_request()
+
         
         # try:
         #     with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
@@ -383,11 +400,6 @@ class NetworkNode(threading.Thread):
         # except Exception as e:
         #     print(e)
 
-        with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
-            server_ip, server_port = f.read().split(':')
-            self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
-            self.serv_conn.start()
-            self.serv_conn.peers_request()
 
     def init_peers(self, ips : List[str]):
         for ip in ips:
@@ -396,7 +408,7 @@ class NetworkNode(threading.Thread):
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
             f.write(f'{ip}:{port}')
-            self.__init_bind_server()
+            self.connect_with_bind_server()
             self.__get_peers()
 
         return 'Server was succesfully initialized!'
@@ -486,7 +498,7 @@ class NetworkNode(threading.Thread):
                     print('MAX CONNECTIONS REACHED!')
 
             except socket.timeout:
-                print('Peers: ', self.peers)
+                # print('Peers: ', self.peers)
                 self.__clear_disconnected_peers()
 
             except Exception as e:

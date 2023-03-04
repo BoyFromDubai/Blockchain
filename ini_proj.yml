@@ -4,6 +4,7 @@
   
   vars:
     project_path: "/home/{{ ansible_user }}/Blockchain"
+    ansible_python_interpreter: /usr/bin/python3
   
   tasks:
     - name: Cloning github repo
