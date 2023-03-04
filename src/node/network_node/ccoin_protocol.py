@@ -49,9 +49,9 @@ class CCoinPackage:
         data_len = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE]
 
 
-        res['data'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
+        res['data_field'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
 
-        self.__unpackage_data_field(res['type'], res['data'])
+        self.__unpackage_data_field(res['type'], res['data_field'])
 
         return res
         
