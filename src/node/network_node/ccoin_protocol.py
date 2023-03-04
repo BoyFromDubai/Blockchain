@@ -49,9 +49,9 @@ class CCoinPackage:
 
         for key, item in PKG_TYPE_VARS.items():
             if item[0] == pkg_type:
+                res['type'] = key
                 handler_type_pair = item
 
-        res['type'] = handler_type_pair[0]
         data_len = pkg[self.pkg_type_size + self.hash_size:self.pkg_type_size + self.hash_size + self.data_len_size]
 
         data_field = pkg[self.pkg_type_size + self.hash_size + self.data_len_size:self.pkg_type_size + self.hash_size + self.data_len_size + int.from_bytes(data_len, 'big')]

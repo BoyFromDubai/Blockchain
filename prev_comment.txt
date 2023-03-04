@@ -1,1 +1,1 @@
-.
+New way of handling messages
