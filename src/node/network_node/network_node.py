@@ -261,33 +261,30 @@ class Connection(threading.Thread):
         if pkg_dict['type'] == 'stop_signal':
             self.stop()
 
-    # def _get_data(self):
+    def _get_data(self):
+        buff = self._sock.recv(BUF_SIZE)
+        message_ended = False
+        
+        while not message_ended:
+            self._sock.settimeout(self.__sock_timeout)
+            
+            try:
+                chunk = self._sock.recv(BUF_SIZE)
+                
+                if not chunk:
+                    message_ended = True
+                else:
+                    buff += chunk
 
+            except socket.timeout:
+                message_ended = True
 
     def run(self):
         while not self.stop_flag.is_set():
             try:
-                buff = self._sock.recv(BUF_SIZE)
-                
-                if buff != b'':
-                    message_ended = False
-                    
-                    while not message_ended:
-                        self._sock.settimeout(self.__sock_timeout)
-                        
-                        try:
-                            chunk = self._sock.recv(BUF_SIZE)
-                            
-                            if not chunk:
-                                message_ended = True
-                            else:
-                                buff += chunk
+                got_data = self._get_data()
 
-                        except socket.timeout:
-                            message_ended = True
-                print(buff)
-                if buff != b'':
-                    self._handle_package(CCoinPackage(got_bytes=buff))
+                self._handle_package(CCoinPackage(got_bytes=got_data))
                     
             except socket.timeout:
                 continue
