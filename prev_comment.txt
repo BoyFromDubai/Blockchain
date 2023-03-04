@@ -1,1 +1,1 @@
-Getting blocks if peer's blockchain is longer
+Test for updating Coneection class

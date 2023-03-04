@@ -261,6 +261,9 @@ class Connection(threading.Thread):
         if pkg_dict['type'] == 'stop_signal':
             self.stop()
 
+    # def _get_data(self):
+
+
     def run(self):
         while not self.stop_flag.is_set():
             try:
@@ -282,8 +285,8 @@ class Connection(threading.Thread):
 
                         except socket.timeout:
                             message_ended = True
-
-                    self._handle_package(CCoinPackage(got_bytes=buff))
+                print(buff)
+                self._handle_package(CCoinPackage(got_bytes=buff))
                     
             except socket.timeout:
                 continue
@@ -292,7 +295,7 @@ class Connection(threading.Thread):
                 raise e
 
         #TODO: stop socket correctly without sending 'stop_signal'
-        self.__stop_socket()
+        # self.__stop_socket()
 
     def stop(self):
         self.stop_flag.set()
