@@ -48,11 +48,7 @@ class ConsoleUser:
 
                 if not commands_arr:
                     print('Command must not be empty!')
-                    continue
-
-                if commands_arr[0] == 'start':
-                    if len(commands_arr) > 1 and commands_arr[1] == 'server': 
-                        self.__execute_func(func=self.node.connect_with_bind_server)               
+                    continue          
 
 
                 if commands_arr[0] == 'mine':

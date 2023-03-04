@@ -245,7 +245,7 @@ class Connection(threading.Thread):
     def _send_pkg(self, pkg_type, data = b''):
         pkg = CCoinPackage(pkg_type=pkg_type, data=data)
 
-        print('Sent: ', pkg.package_data())
+        print(f'Sent to {self.ip}: ', pkg.package_data())
         self._sock.send(pkg.package_data())
 
     def __stop_socket(self):
@@ -375,7 +375,9 @@ class NetworkNode(threading.Thread):
 
         self.STOP_FLAG = threading.Event()
 
-    def connect_with_bind_server(self):
+        self.__connect_with_bind_server()
+
+    def __connect_with_bind_server(self):
         if not os.path.exists(NetworkNode.NETWORK_CONF_DIR):
             os.mkdir(NetworkNode.NETWORK_CONF_DIR)
             
@@ -408,7 +410,7 @@ class NetworkNode(threading.Thread):
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
             f.write(f'{ip}:{port}')
-            self.connect_with_bind_server()
+            self.__connect_with_bind_server()
             self.__get_peers()
 
         return 'Server was succesfully initialized!'
