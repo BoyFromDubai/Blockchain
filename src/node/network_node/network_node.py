@@ -282,8 +282,11 @@ class Connection(threading.Thread):
         return buff
 
     def __handle_pkg_in_thread(self, pkg_dict : dict):
-        handler_thread = threading.Thread(target=self._handle_package, args=(pkg, ))
+        handler_thread = threading.Thread(target=self._handle_package, args=(pkg_dict, ))
         handler_thread.start()
+
+        if pkg_dict['type'] == 'stop_signal':
+            handler_thread.join()
 
     def run(self):
         while not self.stop_flag.is_set():
