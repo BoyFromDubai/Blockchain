@@ -1,1 +1,1 @@
-Display current peers in a bind server
+Ask for blocks

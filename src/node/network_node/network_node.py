@@ -309,7 +309,7 @@ class PeerConnection(Connection):
         pkg_dict = pkg.unpackage_data()
         
         if pkg_dict['type'] == 'version':
-            self.__handle_version_pkg(int.from_bytes(pkg_dict['data']))
+            self.__handle_version_pkg(int.from_bytes(pkg_dict['data'], 'big'))
         
         return 
     
