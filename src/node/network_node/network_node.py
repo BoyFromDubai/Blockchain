@@ -334,7 +334,7 @@ class PeerConnection(Connection):
         chain_len_msg_len = 2
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg('blocks_request', int.to_bytes(chain_len_msg_len, my_chain_len, 'big'))
+            self._send_pkg('blocks_request', int.to_bytes(my_chain_len, chain_len_msg_len, 'big'))
 
     def __handle_blocks_request_pkg(self):
         
