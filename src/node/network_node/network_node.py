@@ -227,6 +227,7 @@ class Connection(threading.Thread):
         super(Connection, self).__init__()
         self.ip = ip
         self._port = port
+        
         if sock:
             self._sock = sock
         else:
@@ -245,7 +246,7 @@ class Connection(threading.Thread):
     def _send_pkg(self, pkg_type, data = b''):
         pkg = CCoinPackage(pkg_type=pkg_type, data=data)
 
-        # print(f'Sent to {self.ip}: ', pkg.package_data())
+        print(f'Sent to {self.ip}: ', pkg.package_data())
         self._sock.send(pkg.package_data())
 
     def __stop_socket(self):
@@ -281,13 +282,19 @@ class Connection(threading.Thread):
 
         return buff
 
+    def __handle_pkg_in_thread(self, pkg : CCoinPackage):
+        handler_thread = threading.Thread(target=self._handle_package, args=(pkg))
+        handler_thread.start()
+
     def run(self):
         while not self.stop_flag.is_set():
             try:
                 got_data = self._get_data()
+                print(got_data)
 
                 self._handle_package(CCoinPackage(got_bytes=got_data))
-                    
+                # self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data))
+                
             except socket.timeout:
                 continue
 
@@ -321,6 +328,7 @@ class PeerConnection(Connection):
         return 
     
     def __handle_version_pkg(self, peer_chain_len):
+        self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
