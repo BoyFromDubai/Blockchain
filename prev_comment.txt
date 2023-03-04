@@ -1,1 +1,1 @@
-Ask for blocks
+Display alive and disconnected nodes in a bind server
