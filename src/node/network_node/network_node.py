@@ -286,7 +286,8 @@ class Connection(threading.Thread):
                         except socket.timeout:
                             message_ended = True
                 print(buff)
-                self._handle_package(CCoinPackage(got_bytes=buff))
+                if buff != b'':
+                    self._handle_package(CCoinPackage(got_bytes=buff))
                     
             except socket.timeout:
                 continue
@@ -295,7 +296,7 @@ class Connection(threading.Thread):
                 raise e
 
         #TODO: stop socket correctly without sending 'stop_signal'
-        # self.__stop_socket()
+        self.__stop_socket()
 
     def stop(self):
         self.stop_flag.set()
