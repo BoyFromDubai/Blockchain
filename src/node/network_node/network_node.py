@@ -283,7 +283,7 @@ class Connection(threading.Thread):
         return buff
 
     def __handle_pkg_in_thread(self, pkg : CCoinPackage):
-        handler_thread = threading.Thread(target=self._handle_package, args=(pkg))
+        handler_thread = threading.Thread(target=self._handle_package, args=(pkg, ))
         handler_thread.start()
 
     def run(self):
@@ -292,8 +292,8 @@ class Connection(threading.Thread):
                 got_data = self._get_data()
                 print(got_data)
 
-                self._handle_package(CCoinPackage(got_bytes=got_data))
-                # self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data))
+                # self._handle_package(CCoinPackage(got_bytes=got_data))
+                self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data))
                 
             except socket.timeout:
                 continue
@@ -328,7 +328,7 @@ class PeerConnection(Connection):
         return 
     
     def __handle_version_pkg(self, peer_chain_len):
-        self.lock.acquire()
+        # self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:

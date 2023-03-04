@@ -4,6 +4,7 @@ from hashlib import md5
 class CCoinPackage:
     def __init__(self, got_bytes : bytes = b'', pkg_type : str = '', data : bytes = b'') -> None:
         self.__bytes = got_bytes
+        
         if got_bytes:
             actual_data = self.__check_got_msg()
             if not actual_data:
