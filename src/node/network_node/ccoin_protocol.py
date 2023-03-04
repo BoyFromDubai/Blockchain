@@ -1,22 +1,34 @@
-from .constants import *
 from hashlib import md5
+from .data_field_helpers import *
+
+
+PKG_TYPE_VARS = {
+    'version':              (b'\x00\x00\x00\x00', VersionData),
+    'blocks_request':       (b'\x00\x00\x00\x01', BlocksRequestData),
+    'blocks_ack':           b'\x00\x00\x00\x02',
+    'blocks_finished':      b'\x00\x00\x00\x03',
+    
+    'send_tx':              b'\x00\x00\x00\x04',
+    'ask_last_block_id':    b'\x00\x00\x00\x05',
+    'get_last_block_id':    b'\x00\x00\x00\x06',
+
+    'peers_request':        (b'\x00\x00\x00\x07', PeersRequestData),
+    'peers_ack':            (b'\x00\x00\x00\x08', PeersAcktData),
+
+    'stop_signal':          (b'\x00\x00\xFF\xFF', StopSignalData)
+}
 
 class CCoinPackage:
-    def __init__(self, got_bytes : bytes = b'', pkg_type : str = '', data : bytes = b'') -> None:
-        self.__bytes = got_bytes
+    def __init__(self) -> None:
+        self.pkg_type_size = 4
+        self.hash_offset = 4
+        self.hash_size = 16
+        self.data_len_size = 4
 
-        if got_bytes:
-            actual_data = self.__check_got_msg()
-            if not actual_data:
-                raise Exception('Broken package!')
-        
-        self.__type = pkg_type
-        self.__data = data
-
-    def __check_got_msg(self):
-        if self.__bytes:
-            pkg = self.__bytes[:HASH_OFFSET] + self.__bytes[HASH_OFFSET + HASH_SIZE:]
-            got_hash_of_pkg = self.__bytes[HASH_OFFSET:HASH_OFFSET + HASH_SIZE]
+    def __check_got_msg(self, pkg):
+        if pkg:
+            pkg = pkg[:self.hash_offset] + pkg[self.hash_offset + self.hash_size:]
+            got_hash_of_pkg = pkg[self.hash_offset:self.hash_offset + self.hash_size]
             actual_hash_of_pkg = self.__hash_package(pkg)
             
             if got_hash_of_pkg != actual_hash_of_pkg:
@@ -25,50 +37,42 @@ class CCoinPackage:
                 return True
 
 
-    def __unpackage_data_field(self, pkg_type, data):
+    def unpackage_data(self, pkg):
         res = {}
 
-        if pkg_type == 'version':
-            res['version'] = int.from_bytes(data, 'big')
-        elif pkg_type == 'peers_ack':
-            res['peers'] = data.decode().split('\n')
-        elif pkg_type == 'blocks_request':
-            res['peer\'s_chain_len'] = int.from_bytes(data, 'big')
-            pass
+        pkg_not_broken = self.__check_got_msg(pkg)
+        if pkg_not_broken:
+            raise Exception('Broken package!')
 
-        print('-------------')
-        print(res)
+        pkg_type = pkg[:self.pkg_type_size]
+        handler_type_pair = None
 
-    def unpackage_data(self):
-        res = {}
-
-        data_copy = self.__bytes
-        pkg_type = data_copy[:PKG_TYPE_SIZE]
-        
         for key, item in PKG_TYPE_VARS.items():
-            if item == pkg_type:
-                res['type'] = key
+            if item[0] == pkg_type:
+                handler_type_pair = item
 
-        data_len = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE]
+        res['type'] = handler_type_pair[0]
+        data_len = pkg[self.pkg_type_size + self.hash_size:self.pkg_type_size + self.hash_size + self.data_len_size]
 
-
-        res['data_dict'] = self.__bytes[PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE:PKG_TYPE_SIZE + HASH_SIZE + DATA_LEN_SIZE + int.from_bytes(data_len, 'big')]
-
-        self.__unpackage_data_field(res['type'], res['data_dict'])
-
+        data_field = pkg[self.pkg_type_size + self.hash_size + self.data_len_size:self.pkg_type_size + self.hash_size + self.data_len_size + int.from_bytes(data_len, 'big')]
+        res['data_dict'] = handler_type_pair[1](pkg_data=data_field).parse_data()
+        
         return res
         
 
-    def package_data(self):
+    def package_data(self, pkg_type: str, **kwargs):
         res = b''
-        res += PKG_TYPE_VARS[self.__type]
-        res += int.to_bytes(len(self.__data), DATA_LEN_SIZE, 'big')
+        handler_type_pair = PKG_TYPE_VARS[pkg_type]
+        res += handler_type_pair[0]
+        data_field = handler_type_pair[1](**kwargs).package_data()
+        res += int.to_bytes(len(data_field), self.data_len_size, 'big')
         
-        res += self.__data
-        # print('Hash: ', self.__hash_package(res))
-        # print('Hashed: ', res)
-        res = res[:HASH_OFFSET] + self.__hash_package(res) + res[HASH_OFFSET:]
+        res += data_field
+        res = res[:self.hash_offset] + self.__hash_package(res) + res[self.hash_offset:]
 
         return res
 
     def __hash_package(self, data): return md5(data).digest()
+
+
+    

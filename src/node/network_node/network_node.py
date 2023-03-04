@@ -1,5 +1,4 @@
 from .ccoin_protocol import CCoinPackage
-from .constants import *
 
 import socket
 from typing import List, Callable
@@ -134,9 +133,9 @@ class Conn(threading.Thread):
             print(e)
 
     def __stop_socket(self):
-        stop_pkg = CCoinPackage(pkg_type='stop_signal')
-        print(stop_pkg.package_data())
-        self.sock.send(stop_pkg.package_data())
+        stop_pkg = CCoinPackage().package_data(pkg_type='stop_signal')
+        print(stop_pkg)
+        self.sock.send(stop_pkg)
         # self.send(self.main_node.types['info'], self.main_node.meaning_of_msg['stop_socket'], b'')        
         self.sock.settimeout(None)
         self.sock.close()
@@ -223,6 +222,8 @@ class Conn(threading.Thread):
 
 
 class Connection(threading.Thread):
+    BUF_SIZE = 10
+
     def __init__(self, ip : str, port : int, sock = None):
         super(Connection, self).__init__()
         self.ip = ip
@@ -243,11 +244,11 @@ class Connection(threading.Thread):
 
     def is_alive(self): return not self.stop_flag.is_set()
 
-    def _send_pkg(self, pkg_type, data = b''):
-        pkg = CCoinPackage(pkg_type=pkg_type, data=data)
+    def _send_pkg(self, pkg_type, pkg_data = b''):
+        pkg = CCoinPackage().package_data(pkg_type=pkg_type, pkg_data=pkg_data)
 
-        print(f'Sent to {self.ip}: ', pkg.package_data())
-        self._sock.send(pkg.package_data())
+        print(f'Sent to {self.ip}: ', pkg)
+        self._sock.send(pkg)
 
     def __stop_socket(self):
         self._send_pkg(pkg_type='stop_signal')
@@ -262,14 +263,14 @@ class Connection(threading.Thread):
             self.stop()
 
     def _get_data(self):
-        buff = self._sock.recv(BUF_SIZE)
+        buff = self._sock.recv(self.BUF_SIZE)
         message_ended = False
         
         while not message_ended:
             self._sock.settimeout(self.__sock_timeout)
             
             try:
-                chunk = self._sock.recv(BUF_SIZE)
+                chunk = self._sock.recv(self.BUF_SIZE)
                 
                 if not chunk:
                     message_ended = True
@@ -295,7 +296,7 @@ class Connection(threading.Thread):
                 print(got_data)
 
                 # self._handle_package(CCoinPackage(got_bytes=got_data).unpackage_data())
-                self.__handle_pkg_in_thread(CCoinPackage(got_bytes=got_data).unpackage_data())
+                self.__handle_pkg_in_thread(CCoinPackage().unpackage_data(pkg=got_data))
                 
             except socket.timeout:
                 continue

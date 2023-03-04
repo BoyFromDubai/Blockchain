@@ -1,6 +1,5 @@
 import socket
-import threading
-from src.node.network_node import CCoinPackage, constants, Connection
+from src.node.network_node import Connection
 import os
 
 class PeerConnection(Connection):
@@ -37,7 +36,7 @@ class PeerConnection(Connection):
     def peers_request(self):
         self._send_pkg('peers_request', b'')
 
-class Server():
+class Server:
     PEERS_FILE_PATH = 'peers.txt'
 
     def __init__(self):
