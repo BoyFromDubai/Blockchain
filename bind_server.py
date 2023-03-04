@@ -9,7 +9,6 @@ class PeerConnection(Connection):
 
     def _handle_package(self, pkg : CCoinPackage):
         super()._handle_package(pkg)
-        print('Got: ', pkg.unpackage_data())
         pkg_dict = pkg.unpackage_data()
         if pkg_dict['type'] == 'peers_request':
             self.__send_active_peers('peers_ack')
@@ -63,12 +62,9 @@ class Server():
 
             sock.connect(('8.8.8.8', 80))
 
-            print("Successfully got ip ", sock.getsockname()[0])
-
             return sock.getsockname()[0]
         except socket.error:
             try:
-                print("Unsuccessfully got ip ", sock.getsockname()[0])
                 return socket.gethostbyname(socket.gethostname()) 
             except socket.gaierror:
                 return '127.0.0.1'
@@ -119,6 +115,8 @@ class Server():
 
         for peer in disconnected_peers:
             self.__peers.remove(peer)
+
+        print([peers_ip for peers_ip in self.__peers])
 
 
     def __listen_for_connection(self):
