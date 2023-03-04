@@ -358,7 +358,7 @@ class ServConnection(Connection):
         super()._handle_package(pkg_dict)
 
         if pkg_dict['type'] == 'peers_ack':
-            self.__init_peers(pkg_dict['data_dict'].decode())
+            self.__init_peers(pkg_dict['data_dict']['ips'])
         # elif pkg_dict['type'] == '':
 
         elif pkg_dict['type'] == 'stop_signal':
@@ -379,8 +379,7 @@ class ServConnection(Connection):
         return wrapper
 
     @__execute_func
-    def __init_peers(self, ips_string):
-        ips_arr = ips_string.split('\n')
+    def __init_peers(self, ips_arr):
         if ips_arr[0] != '':
             return self.init_peers(ips_arr)
 

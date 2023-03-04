@@ -33,6 +33,7 @@ class PeersAcktData(PackageData):
         self.peers_ips = peers_ips
 
     def package_data(self) -> bytes:
+        res = b''
         for i in range(len(self.peers_ips)):
             if i != len(self.peers_ips) - 1:
                 res += (self.peers_ips[i] + '\n').encode()
