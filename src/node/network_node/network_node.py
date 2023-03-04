@@ -291,6 +291,7 @@ class Connection(threading.Thread):
             except socket.error as e:
                 raise e
 
+        #TODO: stop socket correctly without sending 'stop_signal'
         self.__stop_socket()
 
     def stop(self):
@@ -305,8 +306,18 @@ class PeerConnection(Connection):
 
     def _handle_package(self, pkg : CCoinPackage):
         super()._handle_package(pkg)
-
+        pkg_dict = pkg.unpackage_data()
+        
+        if pkg_dict['type'] == 'version':
+            self.__handle_version_pkg(int.from_bytes(pkg_dict['data']))
+        
         return 
+    
+    def __handle_version_pkg(self, peer_chain_len):
+        my_chain_len = self.blockchain.get_chain_len()
+
+        if peer_chain_len > my_chain_len:
+            self._send_pkg('get_blocks')
     
     def __send_version_pkg(self):
         chain_len = self.blockchain.get_chain_len()
@@ -326,11 +337,12 @@ class ServConnection(Connection):
             self.__init_peers(pkg_dict['data'].decode())
         # elif pkg_dict['type'] == '':
 
-
         elif pkg_dict['type'] == 'stop_signal':
             self.stop_flag.set()
 
         return
+    
+    
     
     def __execute_func(func):
         def wrapper(*args, **kwargs):
@@ -341,7 +353,6 @@ class ServConnection(Connection):
                 print(e)
 
         return wrapper
-
 
     @__execute_func
     def __init_peers(self, ips_string):
