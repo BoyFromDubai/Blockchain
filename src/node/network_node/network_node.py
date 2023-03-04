@@ -245,7 +245,7 @@ class Connection(threading.Thread):
     def _send_pkg(self, pkg_type, data = b''):
         pkg = CCoinPackage(pkg_type=pkg_type, data=data)
 
-        print(f'Sent to {self.ip}: ', pkg.package_data())
+        # print(f'Sent to {self.ip}: ', pkg.package_data())
         self._sock.send(pkg.package_data())
 
     def __stop_socket(self):
@@ -298,9 +298,11 @@ class Connection(threading.Thread):
         self.stop_flag.set()
 
 class PeerConnection(Connection):
-    def __init__(self, ip, port, blockchain, sock = None):
+    def __init__(self, ip, port, blockchain, lock, sock = None):
         super().__init__(ip, port, sock)
         self.blockchain = blockchain
+
+        self.lock = lock
 
         self.__send_version_pkg()
 
@@ -310,19 +312,25 @@ class PeerConnection(Connection):
         
         if pkg_dict['type'] == 'version':
             self.__handle_version_pkg(int.from_bytes(pkg_dict['data'], 'big'))
-        
+        elif pkg_dict['type'] == 'blocks_request':
+            pass
+
         return 
     
     def __handle_version_pkg(self, peer_chain_len):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg('get_blocks')
+            self._send_pkg('blocks_request')
+
+    def __handle_blocks_request_pkg(self):
+        
+        pass
     
     def __send_version_pkg(self):
         chain_len = self.blockchain.get_chain_len()
-        version_msg_len = 2
-        self._send_pkg('version', int.to_bytes(chain_len, version_msg_len, 'big'))
+        chain_len_msg_len = 2
+        self._send_pkg('version', int.to_bytes(chain_len, chain_len_msg_len, 'big'))
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -379,6 +387,8 @@ class NetworkNode(threading.Thread):
         self.sock.settimeout(1.0)
         self.sock.listen(1)
 
+        self.lock = threading.Lock()
+
         self.blockchain = blockchain
 
         self.peers = []
@@ -402,17 +412,6 @@ class NetworkNode(threading.Thread):
                 self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
                 self.serv_conn.start()
                 self.serv_conn.peers_request()
-
-        
-        # try:
-        #     with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
-        #         server_ip, server_port = f.read().split(':')
-        #         self.serv_conn = ServConnection(server_ip, server_port)
-
-        #         self.__get_peers()
-        # except Exception as e:
-        #     print(e)
-
 
     def init_peers(self, ips : List[str]):
         for ip in ips:
@@ -463,7 +462,7 @@ class NetworkNode(threading.Thread):
                     raise ConnectionRefusedError('This host is already connected')
 
             if len(self.peers) < self.MAX_CONNECTIONS:
-                connection = PeerConnection(ip, port, self.blockchain)
+                connection = PeerConnection(ip, port, self.blockchain, self.lock)
                 connection.start()
                 self.peers.append(connection)
 
@@ -503,7 +502,7 @@ class NetworkNode(threading.Thread):
 
                     ip = client_address[0]
                     port = client_address[1]
-                    peer = PeerConnection(ip, port, self.blockchain, sock)
+                    peer = PeerConnection(ip, port, self.blockchain, self.lock, sock)
                     peer.start()
                     self.peers.append(peer)
 

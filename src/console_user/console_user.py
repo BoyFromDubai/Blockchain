@@ -1,5 +1,4 @@
 from ..node import Node
-from ..blockchain import Blockchain
 from multiprocessing import Process, Queue
 import time
 import os
@@ -28,9 +27,9 @@ class ConsoleUser:
         self.__username = 'ccoin_client'
         self.prefix = self.__username + ': '
         self.__processes = []
-        self.blockchain = Blockchain()
         self.res_values = Queue()
-        self.node = Node(self.blockchain)
+        self.node = Node()
+        self.blockchain = self.node.blockchain
 
         self.__verify_chain()
         self.__start_output()

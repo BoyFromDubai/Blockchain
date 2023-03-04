@@ -1,13 +1,15 @@
 from .miner import Miner
 from .network_node import NetworkNode
 from .wallet import Wallet
+from ..blockchain import Blockchain
+
 
 class Node:
-    def __init__(self, blockchain) -> None:
-        self.blockchain = blockchain
-        self.wallet = Wallet(blockchain)
-        self.miner = Miner(blockchain, self.wallet.pk.to_string().hex())
-        self.network_node = NetworkNode(blockchain)
+    def __init__(self) -> None:
+        self.blockchain = Blockchain()
+        self.wallet = Wallet(self.blockchain)
+        self.miner = Miner(self.blockchain, self.wallet.pk.to_string().hex())
+        self.network_node = NetworkNode(self.blockchain)
         self.network_node.start()
 
     def __update_utxos(func):

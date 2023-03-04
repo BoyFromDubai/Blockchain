@@ -1,8 +1,9 @@
 PKG_TYPE_SIZE = 4
 PKG_TYPE_VARS = {
     'version':          b'\x00\x00\x00\x00',
-    'get_blocks':           b'\x00\x00\x00\x01',
-    'send_block':           b'\x00\x00\x00\x02',
+    'blocks_request':           b'\x00\x00\x00\x01',
+    'blocks_ack':           b'\x00\x00\x00\x02',
+    
     'send_tx':              b'\x00\x00\x00\x03',
     'ask_last_block_id':    b'\x00\x00\x00\x04',
     'get_last_block_id':    b'\x00\x00\x00\x05',
