@@ -279,6 +279,8 @@ class Connection(threading.Thread):
             except socket.timeout:
                 message_ended = True
 
+        return buff
+
     def run(self):
         while not self.stop_flag.is_set():
             try:
