@@ -116,7 +116,7 @@ class Server():
         for peer in disconnected_peers:
             self.__peers.remove(peer)
 
-        if not len(disconnected_peers):
+        if disconnected_peers:
             print('DISCONNECTED NODES:', end=' ')
             print(*disconnected_peers, sep = "\t")
             print('ALIVE NODES:', end=' ')
