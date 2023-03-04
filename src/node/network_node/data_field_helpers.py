@@ -3,11 +3,9 @@ class PackageData:
     def __init__(self, pkg_data : bytes = b'') -> None:
         self.pkg_data = pkg_data
 
-    def package_data(self):
-        return self.pkg_data
+    def package_data(self): return self.pkg_data
     
-    def parse_data(self):
-        return {'data': None}
+    def parse_data(self): return {'data': None}
     
 class VersionData(PackageData):
     VERSION_MSG_LEN = 2
@@ -16,11 +14,9 @@ class VersionData(PackageData):
         super().__init__(pkg_data)
         self.version = version
     
-    def package_data(self) -> bytes:
-        return int.to_bytes(self.version, self.VERSION_MSG_LEN, 'big')
+    def package_data(self) -> bytes: return int.to_bytes(self.version, self.VERSION_MSG_LEN, 'big')
 
-    def parse_data(self) -> dict:
-        return {'version': int.from_bytes(self.pkg_data, 'big')}
+    def parse_data(self) -> dict: return {'version': int.from_bytes(self.pkg_data, 'big')}
     
 class PeersRequestData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
@@ -34,15 +30,16 @@ class PeersAcktData(PackageData):
 
     def package_data(self) -> bytes:
         res = b''
+        
         for i in range(len(self.peers_ips)):
             if i != len(self.peers_ips) - 1:
                 res += (self.peers_ips[i] + '\n').encode()
             else:
                 res += self.peers_ips[i].encode()
-        return 
+        
+        return res
     
-    def parse_data(self) -> dict:
-        return { 'ips': self.pkg_data.decode().split('\n')}
+    def parse_data(self) -> dict: return { 'ips': self.pkg_data.decode().split('\n')}
 
 class BlocksRequestData(PackageData):
     CUR_CHAIN_LEN_MSG_LEN = 2
