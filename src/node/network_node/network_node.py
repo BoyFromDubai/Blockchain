@@ -322,7 +322,7 @@ class PeerConnection(Connection):
         super()._handle_package(pkg_dict)
         
         if pkg_dict['type'] == 'version':
-            self.__handle_version_pkg(int.from_bytes(pkg_dict['data'], 'big'))
+            self.__handle_version_pkg(int.from_bytes(pkg_dict['data_field'], 'big'))
         elif pkg_dict['type'] == 'blocks_request':
             pass
 
@@ -353,7 +353,7 @@ class ServConnection(Connection):
         super()._handle_package(pkg_dict)
 
         if pkg_dict['type'] == 'peers_ack':
-            self.__init_peers(pkg_dict['data'].decode())
+            self.__init_peers(pkg_dict['data_field'].decode())
         # elif pkg_dict['type'] == '':
 
         elif pkg_dict['type'] == 'stop_signal':
