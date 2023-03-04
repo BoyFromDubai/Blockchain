@@ -118,9 +118,9 @@ class Server():
 
         if disconnected_peers:
             print('DISCONNECTED NODES:', end=' ')
-            print(*disconnected_peers, sep = "\t")
+            print(*[peer.ip for peer in disconnected_peers], sep = "\t")
             print('ALIVE NODES:', end=' ')
-            print(*self.__peers, sep = "\t")
+            print(*[peer.ip for peer in self.__peers], sep = "\t")
 
     def __listen_for_connection(self):
         sock, client_address = self.__sock.accept()
