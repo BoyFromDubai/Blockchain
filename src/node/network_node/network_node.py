@@ -244,8 +244,8 @@ class Connection(threading.Thread):
 
     def is_alive(self): return not self.stop_flag.is_set()
 
-    def _send_pkg(self, pkg_type, pkg_data = b''):
-        pkg = CCoinPackage().package_data(pkg_type=pkg_type, pkg_data=pkg_data)
+    def _send_pkg(self, pkg_type, **kwargs):
+        pkg = CCoinPackage().package_data(pkg_type=pkg_type, kwargs=kwargs)
 
         print(f'Sent to {self.ip}: ', pkg)
         self._sock.send(pkg)
@@ -332,12 +332,9 @@ class PeerConnection(Connection):
     def __handle_version_pkg(self, peer_chain_len : int):
         # self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
-        chain_len_msg_len = 2
 
         if peer_chain_len > my_chain_len:
-            data = int.to_bytes(my_chain_len, chain_len_msg_len, 'big')
-            data += self.blockchain.hash_nth_block_in_digest(my_chain_len - 1)
-            self._send_pkg('blocks_request', data)
+            self._send_pkg(pkg_type='blocks_request', cur_chain_len=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
 
     def __handle_blocks_request_pkg(self):
         
@@ -346,8 +343,7 @@ class PeerConnection(Connection):
     
     def __send_version_pkg(self):
         chain_len = self.blockchain.get_chain_len()
-        chain_len_msg_len = 2
-        self._send_pkg('version', int.to_bytes(chain_len, chain_len_msg_len, 'big'))
+        self._send_pkg(pkg_type='version', version=chain_len)
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -383,9 +379,8 @@ class ServConnection(Connection):
         if ips_arr[0] != '':
             return self.init_peers(ips_arr)
 
-
     def peers_request(self):
-        self._send_pkg('peers_request', b'')
+        self._send_pkg(pkg_type='peers_request')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'

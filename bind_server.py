@@ -12,29 +12,15 @@ class PeerConnection(Connection):
             self.__send_active_peers('peers_ack')
         # elif pkg_dict['type'] == '':
 
-
-
-
         return
 
     def __send_active_peers(self, pkg_type):
         with open(Server.PEERS_FILE_PATH, 'r') as f:
             ips = f.read().splitlines()
             ips.remove(self.ip)
-            res = b''
-            
-            for i in range(len(ips)):
-                if i != len(ips) - 1:
-                    res += (ips[i] + '\n').encode()
-                else:
-                    res += ips[i].encode()
-                    
 
-            self._send_pkg(pkg_type, res)        
+            self._send_pkg(pkg_type=pkg_type, peers_ips=ips)        
 
-
-    def peers_request(self):
-        self._send_pkg('peers_request', b'')
 
 class Server:
     PEERS_FILE_PATH = 'peers.txt'
