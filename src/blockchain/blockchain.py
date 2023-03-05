@@ -2,6 +2,7 @@ from .constants import *
 from .mempool import Mempool
 from .chainstate_db import ChainStateDB
 from .transaction import Transaction
+from ..merkle_tree import MerkleTree
 
 import ecdsa
 from typing import List
@@ -25,6 +26,36 @@ class Blockchain:
 
 
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
+
+    def get_new_block_from_peer(self, index: int, blk_data: bytes):
+        print('blk_data got')
+        print(blk_data)
+        txs = self.get_block_txs(blk_data[len(self.get_block_header(blk_data)):])
+        real_mrkl_root = self.get_block_mrkl_root(blk_data)
+        got_mrkl_root = MerkleTree(txs).root
+        print(real_mrkl_root)
+        print(got_mrkl_root)
+
+        if self.hash_nth_block_in_digest(index - 1) == self.get_block_prev_hash(blk_data):
+            if real_mrkl_root == got_mrkl_root:
+                prev_blk_info = b''
+                cur_blk_file_name = f'blockchain/blocks/blk_{str(index).zfill(NUMS_IN_NAME)}.dat' 
+
+                if os.path.exists(cur_blk_file_name):
+                    with open(cur_blk_file_name, 'rb') as f:
+                        prev_blk_info = f.read()
+
+                
+                # for tx in txs:
+                #     utxos_info = self.db.updateDB(tx)
+                    # self.__save_utxo_to_undo(txid, utxos_info)
+                with open(cur_blk_file_name, 'wb') as f:
+                    f.write(len(blk_data).to_bytes(SIZE, 'little') + blk_data + prev_blk_info)
+
+            else:
+                print('[ERROR]: New Block was falsified')
+        else:
+            print('[ERROR]: New Block was falsified')
 
     @staticmethod
     def get_property_offset(property_name: str):

@@ -10,7 +10,7 @@ PKG_TYPE_VARS = {
     'compare_nth_block_ack':        (b'\x00\x00\x00\x05', CompareNthBlockAckData),
 
     'block_request':                (b'\x00\x00\x00\x06', BlockRequestData),
-    'blocks_ack':                   (b'\x00\x00\x00\x07', BlockAckData),
+    'block_ack':                   (b'\x00\x00\x00\x07', BlockAckData),
     'blocks_finished':              b'\x00\x00\x00\x08',
     
     'send_tx':                      b'\x00\x00\x00\x09',

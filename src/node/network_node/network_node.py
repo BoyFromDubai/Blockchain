@@ -329,7 +329,7 @@ class PeerConnection(Connection):
         elif pkg_dict['type'] == 'block_request':
             self.__handle_block_request(pkg_dict['data_dict']['index'])
         elif pkg_dict['type'] == 'block_ack':
-            pass
+            self.__handle_block_ack(pkg_dict['data_dict']['index'], pkg_dict['data_dict']['blk_data'])
 
         return 
     
@@ -364,8 +364,19 @@ class PeerConnection(Connection):
             self._send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
 
     def __handle_block_request(self, index : int):
-        nth_blk = self.blockchain.get_nth_block(index)
-        self._send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
+        if index >= self.blockchain.get_chain_len():
+            pass
+        
+        else:
+            nth_blk = self.blockchain.get_nth_block(index)
+            self._send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
+
+    def __handle_block_ack(self, index : int, blk_data : bytes):
+        self.blockchain.get_new_block_from_peer(index, blk_data)
+        
+        index_to_request = index + 1
+        self._send_pkg(pkg_type='block_request', request_index=index_to_request)
+
 
 
 class ServConnection(Connection):

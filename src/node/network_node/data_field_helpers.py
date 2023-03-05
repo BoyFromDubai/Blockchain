@@ -105,6 +105,8 @@ class BlockRequestData(PackageData):
         res = {}
         res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
 
+        return res
+
 
 class BlockAckData(PackageData):
     INDEX_MSG_LEN = 2
