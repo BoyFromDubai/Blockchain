@@ -328,7 +328,7 @@ class PeerConnection(Connection):
         return 
     
     def __handle_version_pkg(self, peer_chain_len : int):
-        # self.lock.acquire()
+        self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
