@@ -362,8 +362,6 @@ class ServConnection(Connection):
 
         return
     
-    
-    
     def __execute_func(func):
         def wrapper(*args, **kwargs):
             try:
@@ -380,7 +378,7 @@ class ServConnection(Connection):
             return self.init_peers(ips_arr)
 
     def peers_request(self):
-        self._send_pkg(pkg_type='peers_request')
+        self._send_pkg(pkg_type='peers_request', data_to_send=b'')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'

@@ -13,7 +13,7 @@ PKG_TYPE_VARS = {
     'get_last_block_id':    b'\x00\x00\x00\x06',
 
     'peers_request':        (b'\x00\x00\x00\x07', PeersRequestData),
-    'peers_ack':            (b'\x00\x00\x00\x08', PeersAcktData),
+    'peers_ack':            (b'\x00\x00\x00\x08', PeersAckData),
 
     'stop_signal':          (b'\x00\x00\xFF\xFF', StopSignalData)
 }
@@ -45,6 +45,7 @@ class CCoinPackage:
             raise Exception('Broken package!')
 
         pkg_type = pkg[:self.pkg_type_size]
+        print(pkg_type)
         handler_type_pair = None
 
         for key, item in PKG_TYPE_VARS.items():
@@ -60,13 +61,13 @@ class CCoinPackage:
         return res
         
 
-    def package_data(self, pkg_type: str, **kwargs):
+    def package_data(self, kwargs, pkg_type: str):
         res = b''
         handler_type_pair = PKG_TYPE_VARS[pkg_type]
         res += handler_type_pair[0]
-        data_field = handler_type_pair[1](kwargs).package_data()
-        res += int.to_bytes(len(data_field), self.data_len_size, 'big')
+        data_field = handler_type_pair[1](kwargs=kwargs).package_data()
         print(data_field)
+        res += int.to_bytes(len(data_field), self.data_len_size, 'big')
         res += data_field
         res = res[:self.hash_offset] + self.__hash_package(res) + res[self.hash_offset:]
 
