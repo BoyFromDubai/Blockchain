@@ -50,7 +50,7 @@ class BlocksRequestData(PackageData):
         self.last_blk_hash = last_blk_hash
 
     def package_data(self) -> bytes:
-        res = int.to_bytes(self.cur_chain_len, self.CUR_CHAIN_LEN_MSG_LEN, 'big')
+        res = int.to_bytes(self.last_index, self.CUR_CHAIN_LEN_MSG_LEN, 'big')
         res += self.last_blk_hash
 
         return res
