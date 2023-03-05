@@ -333,13 +333,14 @@ class PeerConnection(Connection):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg(pkg_type='nth_block_request', request_index=my_chain_len, last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+            self._send_pkg(pkg_type='nth_block_request', request_index=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
         self.lock.release()
 
-    def __handle_blocks_request_pkg(self):
-        
-
+    def __handle_blocks_request_pkg(self, peer_last_blk_index : int, blk_hash : bytes):
+        nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_last_blk_index)
+        print(nth_blk_hash)
+        print(blk_hash)
         pass
     
     def __send_version_pkg(self):
