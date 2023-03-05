@@ -3,9 +3,9 @@ class PackageData:
     def __init__(self, pkg_data : bytes = b'') -> None:
         self.pkg_data = pkg_data
 
-    def package_data(self): return b''
+    def package_data(self): return self.pkg_data
     
-    def parse_data(self): return {'data': None}
+    def parse_data(self):return {'data': None}
     
 class VersionData(PackageData):
     VERSION_MSG_LEN = 2
@@ -21,13 +21,12 @@ class VersionData(PackageData):
 class PeersRequestData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-    
 
     
 class PeersAckData(PackageData):
-    def __init__(self, kwargs : dict = {}, pkg_data: bytes = b'') -> None:
+    def __init__(self, peers_ips : str = '', pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-        self.peers_ips = kwargs['peers_ips']
+        self.peers_ips = peers_ips
 
     def package_data(self) -> bytes:
         res = b''

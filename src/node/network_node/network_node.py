@@ -245,7 +245,7 @@ class Connection(threading.Thread):
     def is_alive(self): return not self.stop_flag.is_set()
 
     def _send_pkg(self, pkg_type, **kwargs):
-        pkg = CCoinPackage().package_data(pkg_type=pkg_type, kwargs=kwargs)
+        pkg = CCoinPackage().package_data(pkg_type=pkg_type, **kwargs)
 
         print(f'Sent to {self.ip}: ', pkg)
         self._sock.send(pkg)
@@ -378,7 +378,7 @@ class ServConnection(Connection):
             return self.init_peers(ips_arr)
 
     def peers_request(self):
-        self._send_pkg(pkg_type='peers_request', data_to_send=b'')
+        self._send_pkg(pkg_type='peers_request')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'
