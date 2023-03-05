@@ -57,8 +57,7 @@ class Blockchain:
         else:
             print('[ERROR]: New Block was falsified')
 
-    @staticmethod
-    def get_property_offset(property_name: str):
+    def get_property_offset(self, property_name: str):
         cur_offset = 0
 
         for key, value in BLOCK_STRUCT.items():
@@ -256,9 +255,8 @@ class Blockchain:
         
         return block_info
 
-    @staticmethod
-    def get_block_mrkl_root(data: bytes):
-        header = Blockchain.get_block_header(data)
+    def get_block_mrkl_root(self, data: bytes):
+        header = self.get_block_header(data)
         cur_offset = 0
         size = 0
         for key in BLOCK_STRUCT:
@@ -280,9 +278,8 @@ class Blockchain:
         return self.get_block_header(data)
         
 
-    @staticmethod
-    def get_block_prev_hash(data: bytes):
-        header = Blockchain.get_block_header(data)
+    def get_block_prev_hash(self, data: bytes):
+        header = self.get_block_header(data)
         cur_offset = 0
         size = 0
 
