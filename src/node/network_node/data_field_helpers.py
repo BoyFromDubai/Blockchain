@@ -44,9 +44,9 @@ class PeersAckData(PackageData):
 class BlocksRequestData(PackageData):
     CUR_CHAIN_LEN_MSG_LEN = 2
 
-    def __init__(self, cur_chain_len : int, last_blk_hash : bytes, pkg_data: bytes = b'') -> None:
+    def __init__(self, last_index : int = None, last_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-        self.cur_chain_len = cur_chain_len
+        self.last_index = last_index
         self.last_blk_hash = last_blk_hash
 
     def package_data(self) -> bytes:
@@ -57,7 +57,7 @@ class BlocksRequestData(PackageData):
     
     def parse_data(self):
         res = {}
-        res['chain_len'] = int.to_bytes(self.pkg_data[:self.CUR_CHAIN_LEN_MSG_LEN], 'big')
+        res['peer_last_blk_index'] = int.from_bytes(self.pkg_data[:self.CUR_CHAIN_LEN_MSG_LEN], 'big')
         res['blk_hash'] = self.pkg_data[self.CUR_CHAIN_LEN_MSG_LEN:]
 
         return res

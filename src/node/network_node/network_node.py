@@ -257,7 +257,7 @@ class Connection(threading.Thread):
 
     def _handle_package(self, pkg_dict : dict):
 
-        print('Got: ', pkg_dict)
+        print(f'Got from {self.ip}: ', pkg_dict)
 
         if pkg_dict['type'] == 'stop_signal':
             self.stop()
@@ -293,9 +293,7 @@ class Connection(threading.Thread):
         while not self.stop_flag.is_set():
             try:
                 got_data = self._get_data()
-                print(got_data)
 
-                # self._handle_package(CCoinPackage(got_bytes=got_data).unpackage_data())
                 self.__handle_pkg_in_thread(CCoinPackage().unpackage_data(pkg=got_data))
                 
             except socket.timeout:
@@ -334,7 +332,7 @@ class PeerConnection(Connection):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg(pkg_type='blocks_request', cur_chain_len=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+            self._send_pkg(pkg_type='blocks_request', last_index=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
 
     def __handle_blocks_request_pkg(self):
         
