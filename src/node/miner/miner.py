@@ -31,10 +31,7 @@ class Miner:
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
                 check_proof = True
 
-                # for tx in transactions:
-                #     self.appendVoutsToDb(tx)
-
-                self.blockchain.append_block(block_data)
+                self.blockchain.append_block(block_data, transactions)
                 self.blockchain.mempool.clear_mempool()
 
                 # self.db.deleteTxids()

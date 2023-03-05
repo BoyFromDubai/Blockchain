@@ -34,26 +34,11 @@ class Blockchain:
 
         print(self.parse_block_digest(blk_data))
 
-        print('mrkl_root')
-        print(real_mrkl_root.hex())
-        print(got_mrkl_root.hex())
-
         if self.hash_nth_block_in_digest(index - 1) == self.get_block_prev_hash(blk_data):
             if real_mrkl_root == got_mrkl_root:
-                prev_blk_info = b''
-                cur_blk_file_name = f'blockchain/blocks/blk_{str(index).zfill(NUMS_IN_NAME)}.dat' 
-
-                if os.path.exists(cur_blk_file_name):
-                    with open(cur_blk_file_name, 'rb') as f:
-                        prev_blk_info = f.read()
-
+                #TODO: use append_block and handle old blocks
+                self.append_block(blk_data, txs)
                 
-                # for tx in txs:
-                #     utxos_info = self.db.updateDB(tx)
-                    # self.__save_utxo_to_undo(txid, utxos_info)
-                with open(cur_blk_file_name, 'wb') as f:
-                    f.write(len(blk_data).to_bytes(SIZE, 'little') + blk_data + prev_blk_info)
-
             else:
                 print('[ERROR]: New Block was falsified')
         else:
@@ -256,7 +241,6 @@ class Blockchain:
 
     def parse_nth_block_digest(self, n: int):
         return self.parse_block_digest(self.get_nth_block(n))
-        
 
     def get_block_mrkl_root(self, data: bytes):
         header = self.get_block_header(data)
@@ -280,7 +264,6 @@ class Blockchain:
         
         return self.get_block_header(data)
         
-
     def get_block_prev_hash(self, data: bytes):
         header = self.get_block_header(data)
         cur_offset = 0
@@ -294,7 +277,6 @@ class Blockchain:
                 cur_offset += BLOCK_STRUCT[key]
         
         return header[cur_offset:cur_offset + size] 
-
 
     def get_nth_block_prev_hash(self, n: int): return Blockchain.get_block_prev_hash(Blockchain.get_nth_block(n))
 
@@ -321,7 +303,6 @@ class Blockchain:
 
         return vins
 
-
     def get_vout_offset(self, tx_data: bytes):
         cur_offset = BLOCK_STRUCT['version']
         vins_num = int.from_bytes(tx_data[cur_offset:cur_offset + BLOCK_STRUCT['input_count']], 'little')
@@ -335,7 +316,6 @@ class Blockchain:
             cur_offset += script_sig_size
 
         return cur_offset
-
 
     def get_vouts(self, tx_data: bytes):
         vouts_offset = self.get_vout_offset(tx_data)
@@ -362,7 +342,6 @@ class Blockchain:
             vouts.append(vout)
         
         return vouts
-
 
     def get_nth_block_txs(self, n: int):        
         
@@ -426,16 +405,24 @@ class Blockchain:
 
         return txs
 
-    def append_block(self, block_info: bytes):
-        txs = self.get_block_txs(block_info)
+    def append_block(self, block_info: bytes, txs : List):
+        prev_blk_info = b''
+        cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(self.get_chain_len()).zfill(NUMS_IN_NAME)}.dat"
+
+    
+        #TODO: bring back transactions
+        if os.path.exists(cur_blk_file):
+            with open(cur_blk_file, 'rb') as f:
+                prev_blk_info = f.read()
 
         for tx in txs:
             self.chainstate_db.update_db(tx)
 
         res = len(block_info).to_bytes(SIZE, 'little')
         res += block_info
-        with open(f"{self.BLOCKS_DIR}/blk_{str(self.get_chain_len()).zfill(NUMS_IN_NAME)}.dat", 'wb') as f:
-            f.write(res)
+
+        with open(cur_blk_file, 'wb') as f:
+            f.write(res + prev_blk_info)
         
     def get_chain_len(self):
         # files_in_dir_len = len(os.listdir('blockchain/blocks'))
