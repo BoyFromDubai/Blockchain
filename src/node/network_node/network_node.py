@@ -293,9 +293,10 @@ class Connection(threading.Thread):
         while not self.stop_flag.is_set():
             try:
                 got_data = self._get_data()
-
+                
                 if got_data == b'':
                     self.stop()
+                    continue
 
                 self.__handle_pkg_in_thread(CCoinPackage().unpackage_data(pkg=got_data))
                 
@@ -590,7 +591,7 @@ class NetworkNode(threading.Thread):
         self.sock.close()
 
 
-    def getPeers(self): return self.peers
+    def get_peers(self): return [peer.ip for peer in self.peers]
 
     def __str__(self) -> str:
         return f'''

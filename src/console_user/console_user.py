@@ -60,10 +60,17 @@ class ConsoleUser:
                         self.__execute_func(self.blockchain.chainstate_db.get_utxos)
                     if len(commands_arr) > 1 and commands_arr[1] == 'utxos':
                         self.__execute_func(self.node.wallet.get_utxos)
+                    if len(commands_arr) > 1 and commands_arr[1] == 'peers':
+                        self.__execute_func(self.node.get_peers)
                 
                 if commands_arr[0] == 'show':
                     if len(commands_arr) > 1 and commands_arr[1] == 'ip':
                         self.__execute_func(self.node.get_ip)
+                    if len(commands_arr) > 1 and commands_arr[1] == 'chain':
+                        if len(commands_arr) > 2 and commands_arr[2] == 'len':
+                            self.__execute_func(self.node.get_chain_len)
+                            
+                    
                 
                 if commands_arr[0] == 'set':
                     if len(commands_arr) > 1 and commands_arr[1] == 'server':

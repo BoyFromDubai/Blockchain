@@ -30,7 +30,10 @@ class Node:
         return self.network_node.set_bind_server(ip, port)
 
     def get_ip(self): return self.network_node.ip
+
+    def get_peers(self): return self.network_node.get_peers()
     
+    def get_chain_len(self): return self.blockchain.get_chain_len()
     @__update_utxos
     def mine_block(self):
         blk_info = self.miner.mine_block() 

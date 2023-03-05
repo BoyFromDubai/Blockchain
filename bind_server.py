@@ -101,9 +101,7 @@ class Server:
             self.__peers.remove(peer)
 
         if disconnected_peers:
-            print('DISCONNECTED NODES:', end=' ')
-            print(*[peer.ip for peer in disconnected_peers], sep = "\t")
-            print('ALIVE NODES:', end=' ')
+            print('NODES:', end=' ')
             print(*[peer.ip for peer in self.__peers], sep = "\t")
 
     def __listen_for_connection(self):
@@ -128,6 +126,10 @@ class Server:
         return f'''
         Server listening on {self.__ip}:{self.__port}
         '''
+    
+    def __del__(self):
+        with open(self.PEERS_FILE_PATH, 'w'):
+            pass
 
 if __name__ == '__main__':
     server = Server()
