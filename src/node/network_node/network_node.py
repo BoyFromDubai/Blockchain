@@ -369,6 +369,7 @@ class PeerConnection(Connection):
         
         else:
             nth_blk = self.blockchain.get_nth_block(index)
+            print(self.blockchain.parse_block_digest(index))
             self._send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
 
     def __handle_block_ack(self, index : int, blk_data : bytes):

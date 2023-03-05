@@ -28,13 +28,15 @@ class Blockchain:
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
     def get_new_block_from_peer(self, index: int, blk_data: bytes):
-        print('blk_data got')
-        print(blk_data)
         txs = self.get_block_txs(blk_data[len(self.get_block_header(blk_data)):])
         real_mrkl_root = self.get_block_mrkl_root(blk_data)
         got_mrkl_root = MerkleTree(txs).root
-        print(real_mrkl_root)
-        print(got_mrkl_root)
+
+        print(self.parse_block_digest(blk_data))
+        
+        print('mrkl_root')
+        print(real_mrkl_root.hex())
+        print(got_mrkl_root.hex())
 
         if self.hash_nth_block_in_digest(index - 1) == self.get_block_prev_hash(blk_data):
             if real_mrkl_root == got_mrkl_root:
@@ -85,55 +87,52 @@ class Blockchain:
     def hash_last_block_in_hexdigest(self):
         return hashlib.sha256(self.get_nth_block_header(self.get_chain_len() - 1)).hexdigest()
 
-    @staticmethod
-    def parse_block(n: int):
-        block = Blockchain.get_nth_block(n)
-
+    def parse_block(self, blk_data : bytes):
         block_info = {}
 
         cur_offset = 0
-        prev_blk_hash = block[cur_offset:cur_offset + BLOCK_STRUCT['prev_blk_hash']].hex()
+        prev_blk_hash = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['prev_blk_hash']].hex()
         cur_offset += BLOCK_STRUCT['prev_blk_hash']
         block_info['prev_blk_hash'] = prev_blk_hash
-        mrkl_root = block[cur_offset:cur_offset + BLOCK_STRUCT['mrkl_root']].hex()
+        mrkl_root = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['mrkl_root']].hex()
         cur_offset += BLOCK_STRUCT['mrkl_root']
         block_info['mrkl_root'] = mrkl_root
-        time = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['time']], 'little')
+        time = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['time']], 'little')
         cur_offset += BLOCK_STRUCT['time']
         block_info['time'] = time
-        difficulty = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['difficulty']], 'little')
+        difficulty = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['difficulty']], 'little')
         cur_offset += BLOCK_STRUCT['difficulty']
         block_info['difficulty'] = difficulty
-        nonce = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['nonce']], 'little')
+        nonce = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['nonce']], 'little')
         cur_offset += BLOCK_STRUCT['nonce']
         block_info['nonce'] = nonce
-        tx_count = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['tx_count']], 'little')
+        tx_count = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['tx_count']], 'little')
         cur_offset += BLOCK_STRUCT['tx_count']
         block_info['tx_count '] = tx_count
         txs = []
         
         for _ in range(tx_count):
             tx = {}
-            version = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['version']], 'little')
+            version = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['version']], 'little')
             cur_offset += BLOCK_STRUCT['version']
             tx['version'] = version
-            input_count = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['input_count']], 'little')
+            input_count = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['input_count']], 'little')
             cur_offset += BLOCK_STRUCT['input_count']
             tx['input_count'] = input_count
             vins = []
             
             for __ in range(input_count):
                 vin = {}
-                txid = hex(int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['txid']], 'little'))[2:]
+                txid = hex(int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['txid']], 'little'))[2:]
                 cur_offset += BLOCK_STRUCT['txid']
                 vin['txid'] = txid
-                vout = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['vout']], 'little')
+                vout = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['vout']], 'little')
                 cur_offset += BLOCK_STRUCT['vout']
                 vin['vout'] = vout
-                script_sig_size = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['script_sig_size']], 'little')
+                script_sig_size = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['script_sig_size']], 'little')
                 cur_offset += BLOCK_STRUCT['script_sig_size']
                 vin['script_sig_size'] = script_sig_size
-                script_sig = block[cur_offset:cur_offset + script_sig_size].hex()
+                script_sig = blk_data[cur_offset:cur_offset + script_sig_size].hex()
                 cur_offset += script_sig_size
                 vin['script_sig'] = script_sig
 
@@ -141,7 +140,7 @@ class Blockchain:
             
             tx['vins'] = vins
 
-            output_count = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['output_count']], 'little')
+            output_count = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['output_count']], 'little')
             cur_offset += BLOCK_STRUCT['output_count']
             tx['output_count'] = output_count
 
@@ -150,13 +149,13 @@ class Blockchain:
             for __ in range(output_count):
                 vout = {}
 
-                value = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['value']], 'little')
+                value = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['value']], 'little')
                 cur_offset += BLOCK_STRUCT['value']
                 vout['value'] = value
-                script_pub_key_size = int.from_bytes(block[cur_offset:cur_offset + BLOCK_STRUCT['script_pub_key_size']], 'little')
+                script_pub_key_size = int.from_bytes(blk_data[cur_offset:cur_offset + BLOCK_STRUCT['script_pub_key_size']], 'little')
                 cur_offset += BLOCK_STRUCT['script_pub_key_size']
                 vout['script_pub_key_size'] = script_pub_key_size
-                script_sig = block[cur_offset:cur_offset + script_pub_key_size].hex()
+                script_sig = blk_data[cur_offset:cur_offset + script_pub_key_size].hex()
                 cur_offset += script_pub_key_size
                 vout['script_pub_key'] = script_sig
 
@@ -170,55 +169,55 @@ class Blockchain:
         
         return block_info
 
-    @staticmethod
-    def parse_block_digest(n: int):
-        block = Blockchain.get_nth_block(n)
+    def parse_nth_block(self, n : int):
+        return self.parse_block(self.get_nth_block(n))
 
+    def parse_block_digest(self, blk_data : bytes):
         block_info = {}
 
         cur_offset = 0
-        prev_blk_hash = block[cur_offset:cur_offset + BLOCK_STRUCT['prev_blk_hash']]
+        prev_blk_hash = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['prev_blk_hash']]
         cur_offset += BLOCK_STRUCT['prev_blk_hash']
         block_info['prev_blk_hash'] = prev_blk_hash
-        mrkl_root = block[cur_offset:cur_offset + BLOCK_STRUCT['mrkl_root']].hex()
+        mrkl_root = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['mrkl_root']].hex()
         cur_offset += BLOCK_STRUCT['mrkl_root']
         block_info['mrkl_root'] = mrkl_root
-        time = block[cur_offset:cur_offset + BLOCK_STRUCT['time']]
+        time = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['time']]
         cur_offset += BLOCK_STRUCT['time']
         block_info['time'] = time
-        difficulty = block[cur_offset:cur_offset + BLOCK_STRUCT['difficulty']]
+        difficulty = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['difficulty']]
         cur_offset += BLOCK_STRUCT['difficulty']
         block_info['difficulty'] = difficulty
-        nonce = block[cur_offset:cur_offset + BLOCK_STRUCT['nonce']]
+        nonce = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['nonce']]
         cur_offset += BLOCK_STRUCT['nonce']
         block_info['nonce'] = nonce
-        tx_count = block[cur_offset:cur_offset + BLOCK_STRUCT['tx_count']]
+        tx_count = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['tx_count']]
         cur_offset += BLOCK_STRUCT['tx_count']
         block_info['tx_count '] = tx_count
         txs = []
         
         for _ in range(int.from_bytes(tx_count, 'little')):
             tx = {}
-            version = block[cur_offset:cur_offset + BLOCK_STRUCT['version']]
+            version = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['version']]
             cur_offset += BLOCK_STRUCT['version']
             tx['version'] = version
-            input_count = block[cur_offset:cur_offset + BLOCK_STRUCT['input_count']]
+            input_count = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['input_count']]
             cur_offset += BLOCK_STRUCT['input_count']
             tx['input_count'] = input_count
             vins = []
             
             for __ in range(int.from_bytes(input_count, 'little')):
                 vin = {}
-                txid = block[cur_offset:cur_offset + BLOCK_STRUCT['txid']]
+                txid = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['txid']]
                 cur_offset += BLOCK_STRUCT['txid']
                 vin['txid'] = txid
-                vout = block[cur_offset:cur_offset + BLOCK_STRUCT['vout']]
+                vout = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['vout']]
                 cur_offset += BLOCK_STRUCT['vout']
                 vin['vout'] = vout
-                script_sig_size = block[cur_offset:cur_offset + BLOCK_STRUCT['script_sig_size']]
+                script_sig_size = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['script_sig_size']]
                 cur_offset += BLOCK_STRUCT['script_sig_size']
                 vin['script_sig_size'] = script_sig_size
-                script_sig = block[cur_offset:cur_offset + int.from_bytes(script_sig_size, 'little')]
+                script_sig = blk_data[cur_offset:cur_offset + int.from_bytes(script_sig_size, 'little')]
                 cur_offset += int.from_bytes(script_sig_size, 'little')
                 vin['script_sig'] = script_sig
 
@@ -226,7 +225,7 @@ class Blockchain:
             
             tx['vins'] = vins
 
-            output_count = block[cur_offset:cur_offset + BLOCK_STRUCT['output_count']]
+            output_count = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['output_count']]
             cur_offset += BLOCK_STRUCT['output_count']
             tx['output_count'] = output_count
 
@@ -235,13 +234,13 @@ class Blockchain:
             for __ in range(int.from_bytes(output_count, 'little')):
                 vout = {}
 
-                value = block[cur_offset:cur_offset + BLOCK_STRUCT['value']]
+                value = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['value']]
                 cur_offset += BLOCK_STRUCT['value']
                 vout['value'] = value
-                script_pub_key_size = block[cur_offset:cur_offset + BLOCK_STRUCT['script_pub_key_size']]
+                script_pub_key_size = blk_data[cur_offset:cur_offset + BLOCK_STRUCT['script_pub_key_size']]
                 cur_offset += BLOCK_STRUCT['script_pub_key_size']
                 vout['script_pub_key_size'] = script_pub_key_size
-                script_sig = block[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
+                script_sig = blk_data[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
                 cur_offset += int.from_bytes(script_pub_key_size, 'little')
                 vout['script_pub_key'] = script_sig
 
@@ -254,6 +253,10 @@ class Blockchain:
         block_info['txs'] = txs
         
         return block_info
+
+    def parse_nth_block_digest(self, n: int):
+        return self.parse_block_digest(self.get_nth_block(n))
+        
 
     def get_block_mrkl_root(self, data: bytes):
         header = self.get_block_header(data)
