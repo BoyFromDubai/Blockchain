@@ -89,6 +89,43 @@ class CompareNthBlockAckData(PackageData):
         res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:], 'big') != 0
 
         return res
+    
+class BlockRequestData(PackageData):
+    INDEX_MSG_LEN = 2
+
+    def __init__(self, index : int = None, pkg_data: bytes = b'') -> None:
+        super().__init__(pkg_data)
+        self.index = index
+
+    def package_data(self):
+        res = int.to_bytes(self.index, self.INDEX_MSG_LEN, 'big')
+        return res
+    
+    def parse_data(self):
+        res = {}
+        res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
+
+
+class BlockAckData(PackageData):
+    INDEX_MSG_LEN = 2
+
+    def __init__(self, index : int = None, nth_blk : bytes = b'', pkg_data: bytes = b'') -> None:
+        super().__init__(pkg_data)
+        self.index = index 
+        self.nth_blk = nth_blk
+
+    def package_data(self):
+        res = int.to_bytes(self.index, self.INDEX_MSG_LEN, 'big')
+        res += self.nth_blk
+
+        return res
+
+    def parse_data(self):
+        res = {}
+        res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
+        res['blk_data'] = self.pkg_data[self.INDEX_MSG_LEN:]
+
+        return res
 
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:

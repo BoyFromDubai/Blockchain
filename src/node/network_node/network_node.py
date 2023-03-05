@@ -247,7 +247,7 @@ class Connection(threading.Thread):
     def _send_pkg(self, pkg_type, **kwargs):
         pkg = CCoinPackage().package_data(pkg_type=pkg_type, **kwargs)
 
-        print(f'Sent to {self.ip}: ', pkg)
+        # print(f'Sent to {self.ip}: ', pkg)
         self._sock.send(pkg)
 
     def __stop_socket(self):
@@ -326,6 +326,10 @@ class PeerConnection(Connection):
             self.__handle_compare_nth_block_request_pkg(pkg_dict['data_dict']['peer_blk_index'], pkg_dict['data_dict']['blk_hash'])
         elif pkg_dict['type'] == 'compare_nth_block_ack':
             self.__handle_compare_nth_block_ack_pkg(pkg_dict['data_dict']['index'], pkg_dict['data_dict']['success'])
+        elif pkg_dict['type'] == 'block_request':
+            self.__handle_block_request(pkg_dict['data_dict']['index'])
+        elif pkg_dict['type'] == 'block_ack':
+            pass
 
         return 
     
@@ -338,6 +342,10 @@ class PeerConnection(Connection):
         
         self.lock.release()
 
+    def __send_version_pkg(self):
+        chain_len = self.blockchain.get_chain_len()
+        self._send_pkg(pkg_type='version', version=chain_len)
+
     def __handle_compare_nth_block_request_pkg(self, peer_blk_index : int, blk_hash : bytes):
         nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_blk_index)
         print(blk_hash == nth_blk_hash)
@@ -349,15 +357,17 @@ class PeerConnection(Connection):
 
     def __handle_compare_nth_block_ack_pkg(self, index : int, success : bool):
         if success:
-            pass
+            index_to_request = index + 1
+            self._send_pkg(pkg_type='block_request', request_index=index_to_request)
         else:
             index_to_request = index - 1
             nth_blk_hash = self.blockchain.hash_nth_block_in_digest(index_to_request)
             self._send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
 
-    def __send_version_pkg(self):
-        chain_len = self.blockchain.get_chain_len()
-        self._send_pkg(pkg_type='version', version=chain_len)
+    def __handle_block_request(self, index : int):
+        nth_blk = self.blockchain.get_nth_block(index)
+        self._send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
+
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
