@@ -333,6 +333,8 @@ class PeerConnection(Connection):
 
         if peer_chain_len > my_chain_len:
             self._send_pkg(pkg_type='blocks_request', last_index=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+        
+        self.lock.release()
 
     def __handle_blocks_request_pkg(self):
         
