@@ -41,16 +41,16 @@ class PeersAckData(PackageData):
     
     def parse_data(self) -> dict: return { 'ips': self.pkg_data.decode().split('\n')}
 
-class BlocksRequestData(PackageData):
+class NthBlockRequestData(PackageData):
     CUR_CHAIN_LEN_MSG_LEN = 2
 
-    def __init__(self, last_index : int = None, last_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
+    def __init__(self, request_index : int = None, last_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-        self.last_index = last_index
+        self.request_index = request_index
         self.last_blk_hash = last_blk_hash
 
     def package_data(self) -> bytes:
-        res = int.to_bytes(self.last_index, self.CUR_CHAIN_LEN_MSG_LEN, 'big')
+        res = int.to_bytes(self.request_index, self.CUR_CHAIN_LEN_MSG_LEN, 'big')
         res += self.last_blk_hash
 
         return res
@@ -61,6 +61,10 @@ class BlocksRequestData(PackageData):
         res['blk_hash'] = self.pkg_data[self.CUR_CHAIN_LEN_MSG_LEN:]
 
         return res
+    
+class NthBlockAckData(PackageData):
+    def __init__(self, pkg_data: bytes = b'') -> None:
+        super().__init__(pkg_data)
     
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:

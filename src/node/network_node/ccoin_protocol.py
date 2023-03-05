@@ -3,17 +3,19 @@ from .data_field_helpers import *
 
 
 PKG_TYPE_VARS = {
-    'version':              (b'\x00\x00\x00\x00', VersionData),
-    'blocks_request':       (b'\x00\x00\x00\x01', BlocksRequestData),
-    'blocks_ack':           b'\x00\x00\x00\x02',
-    'blocks_finished':      b'\x00\x00\x00\x03',
-    
-    'send_tx':              b'\x00\x00\x00\x04',
-    'ask_last_block_id':    b'\x00\x00\x00\x05',
-    'get_last_block_id':    b'\x00\x00\x00\x06',
+    'peers_request':        (b'\x00\x00\x00\x01', PeersRequestData),
+    'peers_ack':            (b'\x00\x00\x00\x02', PeersAckData),
+    'version':              (b'\x00\x00\x00\x03', VersionData),
+    'nth_block_request':    (b'\x00\x00\x00\x04', NthBlockRequestData),
+    'nth_block_ack':        (b'\x00\x00\x00\x05', NthBlockAckData),
 
-    'peers_request':        (b'\x00\x00\x00\x07', PeersRequestData),
-    'peers_ack':            (b'\x00\x00\x00\x08', PeersAckData),
+    'blocks_ack':           b'\x00\x00\x00\x06',
+    'blocks_finished':      b'\x00\x00\x00\x07',
+    
+    'send_tx':              b'\x00\x00\x00\x08',
+    'ask_last_block_id':    b'\x00\x00\x00\x09',
+    'get_last_block_id':    b'\x00\x00\x00\x0a',
+
 
     'stop_signal':          (b'\x00\x00\xFF\xFF', StopSignalData)
 }

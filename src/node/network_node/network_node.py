@@ -322,8 +322,9 @@ class PeerConnection(Connection):
         
         if pkg_dict['type'] == 'version':
             self.__handle_version_pkg(pkg_dict['data_dict']['version'])
-        elif pkg_dict['type'] == 'blocks_request':
-            pass
+        elif pkg_dict['type'] == 'nth_block_request':
+            # pass
+            self.__handle_blocks_request_pkg(pkg_dict['data_dict']['peer_last_blk_index'], pkg_dict['data_dict']['blk_hash'])
 
         return 
     
@@ -332,7 +333,7 @@ class PeerConnection(Connection):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg(pkg_type='blocks_request', last_index=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+            self._send_pkg(pkg_type='nth_block_request', request_index=my_chain_len, last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
         self.lock.release()
 
