@@ -41,8 +41,8 @@ class PeersAckData(PackageData):
     
     def parse_data(self) -> dict: return { 'ips': self.pkg_data.decode().split('\n')}
 
-class NthBlockRequestData(PackageData):
-    CUR_CHAIN_LEN_MSG_LEN = 2
+class CompareNthBlockRequestData(PackageData):
+    INDEX_MSG_LEN = 2
 
     def __init__(self, request_index : int = None, last_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
@@ -50,22 +50,41 @@ class NthBlockRequestData(PackageData):
         self.last_blk_hash = last_blk_hash
 
     def package_data(self) -> bytes:
-        res = int.to_bytes(self.request_index, self.CUR_CHAIN_LEN_MSG_LEN, 'big')
+        res = int.to_bytes(self.request_index, self.INDEX_MSG_LEN, 'big')
         res += self.last_blk_hash
 
         return res
     
     def parse_data(self):
         res = {}
-        res['peer_last_blk_index'] = int.from_bytes(self.pkg_data[:self.CUR_CHAIN_LEN_MSG_LEN], 'big')
-        res['blk_hash'] = self.pkg_data[self.CUR_CHAIN_LEN_MSG_LEN:]
+        res['peer_blk_index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
+        res['blk_hash'] = self.pkg_data[self.INDEX_MSG_LEN:]
 
         return res
     
-class NthBlockAckData(PackageData):
-    def __init__(self, pkg_data: bytes = b'') -> None:
+class CompareNthBlockAckData(PackageData):
+    INDEX_MSG_LEN = 2
+    SUCCESS = 1
+
+    def __init__(self, index : int = None, success : bool = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-    
+        self.index = index
+        self.success = success
+
+    def package_data(self):
+        res = int.to_bytes(self.index, self.INDEX_MSG_LEN, 'big')
+
+        if self.success:
+            res += int.to_bytes(1, self.SUCCESS, 'big')
+        else:    
+            res += int.to_bytes(0, self.SUCCESS, 'big')
+
+    def parse_data(self):
+        res = {}
+        res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
+        res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:, 'big']) != 0
+
+
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
