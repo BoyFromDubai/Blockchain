@@ -64,7 +64,7 @@ class CompareNthBlockRequestData(PackageData):
     
 class CompareNthBlockAckData(PackageData):
     INDEX_MSG_LEN = 2
-    SUCCESS = 1
+    SUCCESS_LEN = 1
 
     def __init__(self, index : int = None, success : bool = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
@@ -75,16 +75,18 @@ class CompareNthBlockAckData(PackageData):
         res = int.to_bytes(self.index, self.INDEX_MSG_LEN, 'big')
 
         if self.success:
-            res += int.to_bytes(1, self.SUCCESS, 'big')
+            res += int.to_bytes(1, self.SUCCESS_LEN, 'big')
         else:    
-            res += int.to_bytes(0, self.SUCCESS, 'big')
+            res += int.to_bytes(0, self.SUCCESS_LEN, 'big')
 
         return res
 
     def parse_data(self):
         res = {}
+        print()
+        print()
         res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
-        res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:, 'big']) != 0
+        res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:], 'big') != 0
 
         return res
 

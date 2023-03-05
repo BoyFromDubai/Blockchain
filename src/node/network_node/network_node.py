@@ -342,12 +342,13 @@ class PeerConnection(Connection):
         nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_blk_index)
         print(nth_blk_hash)
         print(blk_hash)
+        print(blk_hash == nth_blk_hash)
 
         if blk_hash == nth_blk_hash:
             self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)            
         else:
             #TODO: handle case when they are not equal
-            self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)
+            self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=False)
 
     
     def __send_version_pkg(self):
