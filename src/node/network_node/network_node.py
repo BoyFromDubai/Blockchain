@@ -323,7 +323,7 @@ class PeerConnection(Connection):
         super()._handle_package(pkg_dict)
         
         if pkg_dict['type'] == 'version':
-            self.__handle_version_pkg(int.from_bytes(pkg_dict['data_dict'], 'big'))
+            self.__handle_version_pkg(pkg_dict['data_dict']['version'])
         elif pkg_dict['type'] == 'blocks_request':
             pass
 
