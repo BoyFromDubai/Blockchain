@@ -44,14 +44,14 @@ class PeersAckData(PackageData):
 class CompareNthBlockRequestData(PackageData):
     INDEX_MSG_LEN = 2
 
-    def __init__(self, request_index : int = None, last_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
+    def __init__(self, request_index : int = None, nth_blk_hash : bytes = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
         self.request_index = request_index
-        self.last_blk_hash = last_blk_hash
+        self.nth_blk_hash = nth_blk_hash
 
     def package_data(self) -> bytes:
         res = int.to_bytes(self.request_index, self.INDEX_MSG_LEN, 'big')
-        res += self.last_blk_hash
+        res += self.nth_blk_hash
 
         return res
     
