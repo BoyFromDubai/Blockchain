@@ -28,12 +28,12 @@ class Blockchain:
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
     def get_new_block_from_peer(self, index: int, blk_data: bytes):
-        txs = self.get_block_txs(blk_data[len(self.get_block_header(blk_data)):])
+        txs = self.get_block_txs(blk_data)
         real_mrkl_root = self.get_block_mrkl_root(blk_data)
         got_mrkl_root = MerkleTree(txs).root
 
         print(self.parse_block_digest(blk_data))
-        
+
         print('mrkl_root')
         print(real_mrkl_root.hex())
         print(got_mrkl_root.hex())
@@ -368,9 +368,9 @@ class Blockchain:
         
         return Blockchain.get_block_txs(Blockchain.get_nth_block(n))
 
-    def get_block_txs(self, data: bytes):
-        header = self.get_block_header(data)
-        txs_field = data[len(header):] 
+    def get_block_txs(self, blk_data: bytes):
+        header = self.get_block_header(blk_data)
+        txs_field = blk_data[len(header):] 
 
         tx_count = int.from_bytes(txs_field[:BLOCK_STRUCT['tx_count']], 'little')
         cur_offset = BLOCK_STRUCT['tx_count']
