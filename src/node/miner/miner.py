@@ -32,8 +32,6 @@ class Miner:
                 check_proof = True
 
                 self.blockchain.append_block(block_data, transactions)
-                self.blockchain.mempool.clear_mempool()
-
                 # self.db.deleteTxids()
 
                 return block_data

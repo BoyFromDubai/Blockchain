@@ -32,8 +32,11 @@ class Node:
     def get_ip(self): return self.network_node.ip
     
     @__update_utxos
-    def mine_block(self): 
-        return self.miner.mine_block()
+    def mine_block(self):
+        blk_info = self.miner.mine_block() 
+        self.network_node.new_block_msg(blk_info)
+        
+        return blk_info
     
     def __del__(self):
         self.network_node.stop()

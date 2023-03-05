@@ -83,8 +83,6 @@ class CompareNthBlockAckData(PackageData):
 
     def parse_data(self):
         res = {}
-        print()
-        print()
         res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
         res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:], 'big') != 0
 
@@ -128,6 +126,14 @@ class BlockAckData(PackageData):
         res['blk_data'] = self.pkg_data[self.INDEX_MSG_LEN:]
 
         return res
+
+class StopSignalData(PackageData):
+    def __init__(self, pkg_data: bytes = b'') -> None:
+        super().__init__(pkg_data)
+
+class StopSignalData(PackageData):
+    def __init__(self, pkg_data: bytes = b'') -> None:
+        super().__init__(pkg_data)
 
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:

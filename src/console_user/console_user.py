@@ -49,7 +49,6 @@ class ConsoleUser:
                     print('Command must not be empty!')
                     continue          
 
-
                 if commands_arr[0] == 'mine':
 
                     if len(commands_arr) > 1 and commands_arr[1] == '-o': 

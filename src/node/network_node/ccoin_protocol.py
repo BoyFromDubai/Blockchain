@@ -3,27 +3,25 @@ from .data_field_helpers import *
 
 
 PKG_TYPE_VARS = {
-    'peers_request':                (b'\x00\x00\x00\x01', PeersRequestData),
-    'peers_ack':                    (b'\x00\x00\x00\x02', PeersAckData),
-    'version':                      (b'\x00\x00\x00\x03', VersionData),
-    'compare_nth_block_request':    (b'\x00\x00\x00\x04', CompareNthBlockRequestData),
-    'compare_nth_block_ack':        (b'\x00\x00\x00\x05', CompareNthBlockAckData),
+    'peers_request':                (b'\x01', PeersRequestData),
+    'peers_ack':                    (b'\x02', PeersAckData),
+    'version':                      (b'\x03', VersionData),
+    'compare_nth_block_request':    (b'\x04', CompareNthBlockRequestData),
+    'compare_nth_block_ack':        (b'\x05', CompareNthBlockAckData),
 
-    'block_request':                (b'\x00\x00\x00\x06', BlockRequestData),
-    'block_ack':                   (b'\x00\x00\x00\x07', BlockAckData),
-    'blocks_finished':              b'\x00\x00\x00\x08',
-    
-    'send_tx':                      b'\x00\x00\x00\x09',
-    'ask_last_block_id':            b'\x00\x00\x00\x0a',
-    'get_last_block_id':            b'\x00\x00\x00\x0b',
-
-
-    'stop_signal':          (b'\x00\x00\xFF\xFF', StopSignalData)
+    'block_request':                (b'\x06', BlockRequestData),
+    'block_ack':                    (b'\x07', BlockAckData),
+     
+    'send_tx':                      b'\x08',
+    'ask_last_block_id':            b'\x09',
+    'get_last_block_id':            b'\x0a',
+         
+    'stop_signal':                  (b'\xFF', StopSignalData)
 }
 
 class CCoinPackage:
     def __init__(self) -> None:
-        self.pkg_type_size = 4
+        self.pkg_type_size = 1
         self.hash_offset = 4
         self.hash_size = 16
         self.data_len_size = 4
@@ -48,7 +46,6 @@ class CCoinPackage:
             raise Exception('Broken package!')
 
         pkg_type = pkg[:self.pkg_type_size]
-        print(pkg_type)
         handler_type_pair = None
 
         for key, item in PKG_TYPE_VARS.items():

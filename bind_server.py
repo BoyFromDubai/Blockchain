@@ -19,7 +19,7 @@ class PeerConnection(Connection):
             ips = f.read().splitlines()
             ips.remove(self.ip)
 
-            self._send_pkg(pkg_type=pkg_type, peers_ips=ips)        
+            self.send_pkg(pkg_type=pkg_type, peers_ips=ips)        
 
 
 class Server:

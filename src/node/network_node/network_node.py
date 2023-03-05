@@ -244,14 +244,14 @@ class Connection(threading.Thread):
 
     def is_alive(self): return not self.stop_flag.is_set()
 
-    def _send_pkg(self, pkg_type, **kwargs):
+    def send_pkg(self, pkg_type, **kwargs):
         pkg = CCoinPackage().package_data(pkg_type=pkg_type, **kwargs)
 
         # print(f'Sent to {self.ip}: ', pkg)
         self._sock.send(pkg)
 
     def __stop_socket(self):
-        self._send_pkg(pkg_type='stop_signal')
+        self.send_pkg(pkg_type='stop_signal')
         self._sock.settimeout(None)
         self._sock.close()
 
@@ -294,6 +294,9 @@ class Connection(threading.Thread):
             try:
                 got_data = self._get_data()
 
+                if got_data == b'':
+                    self.stop()
+
                 self.__handle_pkg_in_thread(CCoinPackage().unpackage_data(pkg=got_data))
                 
             except socket.timeout:
@@ -334,34 +337,31 @@ class PeerConnection(Connection):
         return 
     
     def __handle_version_pkg(self, peer_chain_len : int):
-        self.lock.acquire()
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), nth_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+            self.send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), nth_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
-        self.lock.release()
-
     def __send_version_pkg(self):
         chain_len = self.blockchain.get_chain_len()
-        self._send_pkg(pkg_type='version', version=chain_len)
+        self.send_pkg(pkg_type='version', version=chain_len)
 
     def __handle_compare_nth_block_request_pkg(self, peer_blk_index : int, blk_hash : bytes):
         nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_blk_index)
 
         if blk_hash == nth_blk_hash:
-            self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)            
+            self.send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)            
         else:
-            self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=False)
+            self.send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=False)
 
     def __handle_compare_nth_block_ack_pkg(self, index : int, success : bool):
         if success:
             index_to_request = index + 1
-            self._send_pkg(pkg_type='block_request', request_index=index_to_request)
+            self.send_pkg(pkg_type='block_request', request_index=index_to_request)
         else:
             index_to_request = index - 1
             nth_blk_hash = self.blockchain.hash_nth_block_in_digest(index_to_request)
-            self._send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
+            self.send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
 
     def __handle_block_request(self, index : int):
         if index >= self.blockchain.get_chain_len():
@@ -369,16 +369,21 @@ class PeerConnection(Connection):
         
         else:
             nth_blk = self.blockchain.get_nth_block(index)
-            print(self.blockchain.parse_block_digest(nth_blk))
-            self._send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
+            self.send_pkg(pkg_type='block_ack', index=index, nth_blk=nth_blk)
 
     def __handle_block_ack(self, index : int, blk_data : bytes):
-        self.blockchain.get_new_block_from_peer(index, blk_data)
+        self.lock.acquire()
+        
+        if self.blockchain.get_chain_len() <= index + 1:
+            try:
+                self.blockchain.get_new_block_from_peer(index, blk_data)
+            except Exception as e:
+                print(e)
+            finally:
+                self.lock.release()
         
         index_to_request = index + 1
-        self._send_pkg(pkg_type='block_request', request_index=index_to_request)
-
-
+        self.send_pkg(pkg_type='block_request', request_index=index_to_request)
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -413,7 +418,7 @@ class ServConnection(Connection):
             return self.init_peers(ips_arr)
 
     def peers_request(self):
-        self._send_pkg(pkg_type='peers_request')
+        self.send_pkg(pkg_type='peers_request')
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'
@@ -520,19 +525,19 @@ class NetworkNode(threading.Thread):
         except Exception as e:
             raise e
 
-    def __send_msg_to_peers(self, type, meaning, data):
+    def __send_msg_to_peers(self, **kwargs):
         for sock in self.peers:
-            sending_thread = threading.Thread(target=sock.send, args=(type, meaning, data))
+            sending_thread = threading.Thread(target=sock.send_pkg, kwargs=kwargs)
             sending_thread.start()
 
     def stop(self):
         self.STOP_FLAG.set()
 
-    def new_block_message(self, blk_info):
-        msg = (self.blockchain.get_chain_len() - 1).to_bytes(Connection.CHAIN_LEN_SIZE, 'big') + blk_info
-        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['block'], msg)
+    def new_block_msg(self, blk_info):
+        # blk_info = (self.blockchain.get_chain_len() - 1).to_bytes(Connection.CHAIN_LEN_SIZE, 'big') + blk_info
+        self.__send_msg_to_peers(pkg_type='block_ack', index=self.blockchain.get_chain_len() - 1,  nth_blk=blk_info)
 
-    def newTxMessage(self, tx_data):
+    def new_tx_msg(self, tx_data):
         self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['tx'], tx_data)
 
     def run(self):
