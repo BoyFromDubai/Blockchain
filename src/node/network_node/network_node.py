@@ -325,7 +325,7 @@ class PeerConnection(Connection):
         elif pkg_dict['type'] == 'compare_nth_block_request':
             self.__handle_compare_nth_block_request_pkg(pkg_dict['data_dict']['peer_blk_index'], pkg_dict['data_dict']['blk_hash'])
         elif pkg_dict['type'] == 'compare_nth_block_ack':
-            pass
+            self.__handle_compare_nth_block_ack_pkg(pkg_dict['data_dict']['index'], pkg_dict['data_dict']['success'])
 
         return 
     
@@ -334,23 +334,27 @@ class PeerConnection(Connection):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            self._send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), last_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
+            self._send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), nth_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
         self.lock.release()
 
     def __handle_compare_nth_block_request_pkg(self, peer_blk_index : int, blk_hash : bytes):
         nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_blk_index)
-        print(nth_blk_hash)
-        print(blk_hash)
         print(blk_hash == nth_blk_hash)
 
         if blk_hash == nth_blk_hash:
             self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)            
         else:
-            #TODO: handle case when they are not equal
             self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=False)
 
-    
+    def __handle_compare_nth_block_ack_pkg(self, index : int, success : bool):
+        if success:
+            pass
+        else:
+            index_to_request = index - 1
+            nth_blk_hash = self.blockchain.hash_nth_block_in_digest(index_to_request)
+            self._send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
+
     def __send_version_pkg(self):
         chain_len = self.blockchain.get_chain_len()
         self._send_pkg(pkg_type='version', version=chain_len)
