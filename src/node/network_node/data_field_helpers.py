@@ -93,12 +93,12 @@ class CompareNthBlockAckData(PackageData):
 class BlockRequestData(PackageData):
     INDEX_MSG_LEN = 2
 
-    def __init__(self, index : int = None, pkg_data: bytes = b'') -> None:
+    def __init__(self, request_index : int = None, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
-        self.index = index
+        self.request_index = request_index
 
     def package_data(self):
-        res = int.to_bytes(self.index, self.INDEX_MSG_LEN, 'big')
+        res = int.to_bytes(self.request_index, self.INDEX_MSG_LEN, 'big')
         return res
     
     def parse_data(self):

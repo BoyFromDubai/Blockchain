@@ -348,7 +348,6 @@ class PeerConnection(Connection):
 
     def __handle_compare_nth_block_request_pkg(self, peer_blk_index : int, blk_hash : bytes):
         nth_blk_hash = self.blockchain.hash_nth_block_in_digest(peer_blk_index)
-        print(blk_hash == nth_blk_hash)
 
         if blk_hash == nth_blk_hash:
             self._send_pkg(pkg_type='compare_nth_block_ack', index=peer_blk_index, success=True)            
