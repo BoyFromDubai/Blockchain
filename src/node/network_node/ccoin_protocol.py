@@ -66,7 +66,7 @@ class CCoinPackage:
         res += handler_type_pair[0]
         data_field = handler_type_pair[1](kwargs).package_data()
         res += int.to_bytes(len(data_field), self.data_len_size, 'big')
-        
+        print(data_field)
         res += data_field
         res = res[:self.hash_offset] + self.__hash_package(res) + res[self.hash_offset:]
 
