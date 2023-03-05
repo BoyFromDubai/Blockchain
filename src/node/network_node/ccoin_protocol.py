@@ -64,7 +64,7 @@ class CCoinPackage:
         res = b''
         handler_type_pair = PKG_TYPE_VARS[pkg_type]
         res += handler_type_pair[0]
-        data_field = handler_type_pair[1](**kwargs).package_data()
+        data_field = handler_type_pair[1](kwargs).package_data()
         res += int.to_bytes(len(data_field), self.data_len_size, 'big')
         
         res += data_field
