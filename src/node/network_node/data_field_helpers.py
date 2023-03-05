@@ -79,11 +79,14 @@ class CompareNthBlockAckData(PackageData):
         else:    
             res += int.to_bytes(0, self.SUCCESS, 'big')
 
+        return res
+
     def parse_data(self):
         res = {}
         res['index'] = int.from_bytes(self.pkg_data[:self.INDEX_MSG_LEN], 'big')
         res['success'] = int.from_bytes(self.pkg_data[self.INDEX_MSG_LEN:, 'big']) != 0
 
+        return res
 
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
