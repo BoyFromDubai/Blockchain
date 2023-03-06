@@ -5,7 +5,7 @@ class PackageData:
 
     def package_data(self): return self.pkg_data
     
-    def parse_data(self):return {'data': None}
+    def parse_data(self): return {'data': None}
     
 class VersionData(PackageData):
     VERSION_MSG_LEN = 2
@@ -134,7 +134,7 @@ class TxMsgData(PackageData):
 
     def parse_data(self):
         res = {}
-        res['tx_data'] = self.tx_data
+        res['tx_data'] = self.pkg_data
 
         return res
 

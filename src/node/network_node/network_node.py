@@ -544,6 +544,7 @@ class NetworkNode(threading.Thread):
         self.__send_msg_to_peers(pkg_type='block_ack', index=self.blockchain.get_chain_len() - 1,  nth_blk=blk_info)
 
     def new_tx_msg(self, tx_data):
+        print('FFF', tx_data)
         self.__send_msg_to_peers(pkg_type='tx_msg', tx_data=tx_data)
 
     def run(self):
