@@ -19,8 +19,23 @@ class Wallet:
 
         self.utxos = []
 
+        self.__cur_vins = []
+        self.__cur_vouts = []
+
         self.__get_utxos()
     
+    def append_to_vins(self, vin): self.__cur_vins.append(vin)
+
+    def append_to_vouts(self, vout): self.__cur_vouts.append(vout)
+
+    def get_vins(self): return self.__cur_vins
+
+    def get_vouts(self): return self.__cur_vouts
+
+    def clear_vins(self): self.__cur_vins = []
+
+    def clear_vouts(self): self.__cur_vouts = []
+
     def __generate_keys(self) -> None:
         
         self.sk = ecdsa.SigningKey.generate(ecdsa.SECP256k1)

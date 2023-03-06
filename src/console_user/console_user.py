@@ -33,8 +33,6 @@ class ConsoleUser:
         self.__start_output()
 
     def start_input(self):
-        vins_info = []
-        vouts_info = []
 
         while True:
             try:
@@ -57,7 +55,7 @@ class ConsoleUser:
                     if len(commands_arr) > 1 and commands_arr[1] == 'db':
                         self.__execute_func(self.node.get_db_utxos)
                     if len(commands_arr) > 1 and commands_arr[1] == 'utxos':
-                        self.__execute_func(self.node.wallet.get_utxos)
+                        self.__execute_func(self.node.get_my_utxos)
                     if len(commands_arr) > 1 and commands_arr[1] == 'peers':
                         self.__execute_func(self.node.get_peers)
                 
@@ -76,23 +74,15 @@ class ConsoleUser:
 
                 if commands_arr[0] == 'vin':
                     if len(commands_arr) > 2:
-                        vin = []
-                        vin.append(commands_arr[1])
-                        vin.append(commands_arr[2])
-
-                        vins_info.append(vin)
+                        self.node.append_to_vins((commands_arr[1], commands_arr[2]))
 
                 if commands_arr[0] == 'vout':
                     if len(commands_arr) > 2:
-                        vout = []
-                        vout.append(commands_arr[1])
-                        vout.append(commands_arr[2])
-
-                        vouts_info.append(vout)
+                        self.node.append_to_vouts((commands_arr[1], commands_arr[2]))
 
                 if commands_arr[0] == 'commit':
                     if len(commands_arr) > 1 and commands_arr[1] == 'tx':
-                        self.__execute_func(self.node.create_tx, vouts_info, vins_info, self.node.wallet.sk)
+                        self.__execute_func(self.node.create_tx)
                         
                         vins_info = []
                         vouts_info = []
