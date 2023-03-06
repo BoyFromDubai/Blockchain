@@ -377,7 +377,7 @@ class PeerConnection(Connection):
     def __handle_block_ack(self, index : int, blk_data : bytes):
         self.lock.acquire()
         
-        if self.blockchain.get_chain_len() <= index + 1:
+        if self.blockchain.get_chain_len() < index + 1:
             try:
                 self.blockchain.get_new_block_from_peer(index, blk_data)
             except Exception as e:

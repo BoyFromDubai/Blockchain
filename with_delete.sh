@@ -1,3 +1,5 @@
 #!bin/bash
-python3 tmp.py
+rm -r blocks/
+rm -r chainstate/
+
 python3 main.py
