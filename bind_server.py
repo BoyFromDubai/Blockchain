@@ -120,6 +120,7 @@ class Server:
                 self.__listen_for_connection()
 
             except socket.timeout:
+                print(self.__peers)
                 self.__clear_disconnected_peers()
 
             except (KeyboardInterrupt, EOFError):
