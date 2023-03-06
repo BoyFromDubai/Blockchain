@@ -3,7 +3,7 @@ class PackageData:
     def __init__(self, pkg_data : bytes = b'') -> None:
         self.pkg_data = pkg_data
 
-    def package_data(self): return self.pkg_data
+    def package_data(self): return b''
     
     def parse_data(self): return {'data': None}
     
@@ -131,6 +131,8 @@ class TxMsgData(PackageData):
     def __init__(self, tx_data : bytes = b'', pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
         self.tx_data = tx_data
+
+    def package_data(self): return self.tx_data
 
     def parse_data(self):
         res = {}
