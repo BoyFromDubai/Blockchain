@@ -15,7 +15,7 @@ class Node:
         self.__verify_chain()
 
     def __update_utxos(func):
-        def wrapper(self, *args, **kwargs):
+        def wrapper(*args, **kwargs):
             blk_data = func(*args, **kwargs)
             txs = args[0].__blockchain.get_block_txs(blk_data)
 
