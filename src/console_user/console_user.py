@@ -29,9 +29,7 @@ class ConsoleUser:
         self.__processes = []
         self.res_values = Queue()
         self.node = Node()
-        self.blockchain = self.node.blockchain
 
-        self.__verify_chain()
         self.__start_output()
 
     def start_input(self):
@@ -57,7 +55,7 @@ class ConsoleUser:
 
                 if commands_arr[0] == 'list':
                     if len(commands_arr) > 1 and commands_arr[1] == 'db':
-                        self.__execute_func(self.blockchain.chainstate_db.get_utxos)
+                        self.__execute_func(self.node.get_db_utxos)
                     if len(commands_arr) > 1 and commands_arr[1] == 'utxos':
                         self.__execute_func(self.node.wallet.get_utxos)
                     if len(commands_arr) > 1 and commands_arr[1] == 'peers':
@@ -94,7 +92,7 @@ class ConsoleUser:
 
                 if commands_arr[0] == 'commit':
                     if len(commands_arr) > 1 and commands_arr[1] == 'tx':
-                        self.__execute_func(self.blockchain.add_transaction, vouts_info, vins_info, self.node.wallet.sk)
+                        self.__execute_func(self.node.create_tx, vouts_info, vins_info, self.node.wallet.sk)
                         
                         vins_info = []
                         vouts_info = []
@@ -134,13 +132,6 @@ class ConsoleUser:
         self.output_process.start()
 
         return self.output_process
-
-    def __verify_chain(self):
-        try:
-            self.blockchain.verify_chain()
-        except:
-            pass
-            #TODO ask peers for correct blocks
 
     def __del__(self):
         for process in self.__processes:

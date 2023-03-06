@@ -441,7 +441,9 @@ class Blockchain:
             if not self.confirm_sign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
                 raise Exception('[ERROR] Not valid transaction!!!')
 
-        self.mempool.add_tx(tx_data)
+        return self.append_to_mempool(tx_data)
+    
+    def append_to_mempool(self, tx_data : bytes): self.mempool.add_tx(tx_data)
 
     def verify_chain(self):
         block_files = self.get_block_files()
@@ -473,7 +475,7 @@ class Blockchain:
         tx_data = tx.tx_data
 
         if len(vin_data):
-            self.mempool.add_tx(tx_data)
+            self.append_to_mempool(tx_data)
 
         return tx_data 
 

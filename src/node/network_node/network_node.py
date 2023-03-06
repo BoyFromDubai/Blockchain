@@ -334,6 +334,8 @@ class PeerConnection(Connection):
             self.__handle_block_request(pkg_dict['data_dict']['index'])
         elif pkg_dict['type'] == 'block_ack':
             self.__handle_block_ack(pkg_dict['data_dict']['index'], pkg_dict['data_dict']['blk_data'])
+        elif pkg_dict['type'] == 'tx_msg':
+            self.__handle_tx_msg(pkg_dict['data_dict']['tx_data'])
 
         return 
     
@@ -385,6 +387,9 @@ class PeerConnection(Connection):
         
         index_to_request = index + 1
         self.send_pkg(pkg_type='block_request', request_index=index_to_request)
+
+    def __handle_tx_msg(self, tx_data : bytes):
+        self.blockchain.append_to_mempool(tx_data)
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -539,7 +544,7 @@ class NetworkNode(threading.Thread):
         self.__send_msg_to_peers(pkg_type='block_ack', index=self.blockchain.get_chain_len() - 1,  nth_blk=blk_info)
 
     def new_tx_msg(self, tx_data):
-        self.__send_msg_to_peers(self.types['info'], self.meaning_of_msg['tx'], tx_data)
+        self.__send_msg_to_peers(pkg_type='tx_msg', tx_data=tx_data)
 
     def run(self):
 

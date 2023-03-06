@@ -12,9 +12,7 @@ PKG_TYPE_VARS = {
     'block_request':                (b'\x06', BlockRequestData),
     'block_ack':                    (b'\x07', BlockAckData),
      
-    'send_tx':                      b'\x08',
-    'ask_last_block_id':            b'\x09',
-    'get_last_block_id':            b'\x0a',
+    'tx_msg':                       (b'\x08', TxMsgData),
          
     'stop_signal':                  (b'\xFF', StopSignalData)
 }

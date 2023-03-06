@@ -127,13 +127,25 @@ class BlockAckData(PackageData):
 
         return res
 
-class StopSignalData(PackageData):
-    def __init__(self, pkg_data: bytes = b'') -> None:
+class TxMsgData(PackageData):
+    def __init__(self, tx_data : bytes = b'', pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
+        self.tx_data = tx_data
 
-class StopSignalData(PackageData):
-    def __init__(self, pkg_data: bytes = b'') -> None:
-        super().__init__(pkg_data)
+    def parse_data(self):
+        res = {}
+        res['tx_data'] = self.tx_data
+
+        return res
+
+
+# class StopSignalData(PackageData):
+#     def __init__(self, pkg_data: bytes = b'') -> None:
+#         super().__init__(pkg_data)
+
+# class StopSignalData(PackageData):
+#     def __init__(self, pkg_data: bytes = b'') -> None:
+#         super().__init__(pkg_data)
 
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
