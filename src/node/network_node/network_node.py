@@ -4,6 +4,7 @@ import socket
 from typing import List, Callable
 import threading
 import os
+import netifaces
 
 class Conn(threading.Thread):
     CHAIN_LEN_SIZE = 2 
@@ -480,21 +481,30 @@ class NetworkNode(threading.Thread):
         return 'Server was succesfully initialized!'
 
     def __get_local_ip(self):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        interfaces = netifaces.interfaces() 
+
+        if 'wlp4so' in interfaces:
+            return netifaces.ifaddresses('wlp4s0')[netifaces.AF_INET][0]['addr']
+        elif 'eth1' in interfaces:
+            return netifaces.ifaddresses('eth1')[netifaces.AF_INET][0]['addr']
+
+        return '127.0.0.1'
+
+        # try:
+        #     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             
 
-            sock.connect(('8.8.8.8', 80))
-            print("Got ip ", sock.getsockname()[0])
+        #     sock.connect(('8.8.8.8', 80))
+        #     print("Got ip ", sock.getsockname()[0])
 
-            return sock.getsockname()[0]
-        except socket.error:
-            try:
-                return socket.gethostbyname(socket.gethostname()) 
-            except socket.gaierror:
-                return '127.0.0.1'
-        finally:
-            sock.close()
+        #     return sock.getsockname()[0]
+        # except socket.error:
+        #     try:
+        #         return socket.gethostbyname(socket.gethostname()) 
+        #     except socket.gaierror:
+        #         return '127.0.0.1'
+        # finally:
+        #     sock.close()
 
     def close_connection(self, conn):
         for i in range(len(self.peers)):
