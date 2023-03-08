@@ -27,6 +27,10 @@ class Blockchain:
 
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
+    def __create_rev_file(self, txs : dict):
+        print('txs')
+        print(txs)
+
     def get_new_block_from_peer(self, index: int, blk_data: bytes):
         txs = self.get_block_txs(blk_data)
         real_mrkl_root = self.get_block_mrkl_root(blk_data)
@@ -35,7 +39,7 @@ class Blockchain:
         if self.hash_nth_block_in_digest(index - 1) == self.get_block_prev_hash(blk_data):
             if real_mrkl_root == got_mrkl_root:
                 #TODO: use append_block and handle old blocks
-                self.append_block(blk_data, txs)
+                self.append_block(index, blk_data, txs)
             else:
                 print('[ERROR]: New Block was falsified')
         else:
@@ -401,10 +405,10 @@ class Blockchain:
             txs.append(tx)
 
         return txs
-
-    def append_block(self, block_info: bytes, txs : List):
+    
+    def append_block(self, index, block_info: bytes, txs : List):
         prev_blk_info = b''
-        cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(self.get_chain_len()).zfill(NUMS_IN_NAME)}.dat"
+        cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(index).zfill(NUMS_IN_NAME)}.dat"
 
     
         #TODO: bring back transactions
@@ -417,7 +421,6 @@ class Blockchain:
 
         res = len(block_info).to_bytes(SIZE, 'little')
         res += block_info
-        print(f'Appending block {self.get_chain_len()}')
         with open(cur_blk_file, 'wb') as f:
             f.write(res + prev_blk_info)
 

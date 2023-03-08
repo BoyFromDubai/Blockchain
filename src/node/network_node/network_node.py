@@ -344,6 +344,9 @@ class PeerConnection(Connection):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
+            print('AAAAA')
+            print('Peer chain: ', peer_chain_len)
+            print('My chain: ', my_chain_len)
             self.send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), nth_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
     def __send_version_pkg(self):
@@ -363,7 +366,9 @@ class PeerConnection(Connection):
             index_to_request = index + 1
             self.send_pkg(pkg_type='block_request', request_index=index_to_request)
         else:
+            print('index_to_request')
             index_to_request = index - 1
+            print(index_to_request)
             nth_blk_hash = self.blockchain.hash_nth_block_in_digest(index_to_request)
             self.send_pkg(pkg_type='compare_nth_block_request', request_index=index_to_request, nth_blk_hash=nth_blk_hash)
 
@@ -378,13 +383,13 @@ class PeerConnection(Connection):
     def __handle_block_ack(self, index : int, blk_data : bytes):
         self.lock.acquire()
         
-        if self.blockchain.get_chain_len() < index + 1:
-            try:
-                self.blockchain.get_new_block_from_peer(index, blk_data)
-            except Exception as e:
-                print(e)
-            finally:
-                self.lock.release()
+        # if self.blockchain.get_chain_len() < index + 1:
+        try:
+            self.blockchain.get_new_block_from_peer(index, blk_data)
+        except Exception as e:
+            print(e)
+
+        self.lock.release()
         
         index_to_request = index + 1
         self.send_pkg(pkg_type='block_request', request_index=index_to_request)
@@ -483,7 +488,7 @@ class NetworkNode(threading.Thread):
     def __get_local_ip(self):
         interfaces = netifaces.interfaces() 
 
-        if 'wlp4so' in interfaces:
+        if 'wlp4s0' in interfaces:
             return netifaces.ifaddresses('wlp4s0')[netifaces.AF_INET][0]['addr']
         elif 'eth1' in interfaces:
             return netifaces.ifaddresses('eth1')[netifaces.AF_INET][0]['addr']

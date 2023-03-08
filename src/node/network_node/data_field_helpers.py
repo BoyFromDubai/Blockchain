@@ -1,11 +1,16 @@
+from abc import ABC, abstractmethod 
 
-class PackageData:
+class PackageData(ABC):
     def __init__(self, pkg_data : bytes = b'') -> None:
         self.pkg_data = pkg_data
 
-    def package_data(self): return b''
+    @abstractmethod
+    def package_data(self):
+        pass
     
-    def parse_data(self): return {'data': None}
+    @abstractmethod
+    def parse_data(self):
+        pass
     
 class VersionData(PackageData):
     VERSION_MSG_LEN = 2
@@ -21,6 +26,12 @@ class VersionData(PackageData):
 class PeersRequestData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
+
+    def package_data(self):
+        return b''
+    
+    def parse_data(self):
+        return {'data': None}
 
     
 class PeersAckData(PackageData):
@@ -132,7 +143,8 @@ class TxMsgData(PackageData):
         super().__init__(pkg_data)
         self.tx_data = tx_data
 
-    def package_data(self): return self.tx_data
+    def package_data(self): 
+        return self.tx_data
 
     def parse_data(self):
         res = {}
@@ -152,3 +164,9 @@ class TxMsgData(PackageData):
 class StopSignalData(PackageData):
     def __init__(self, pkg_data: bytes = b'') -> None:
         super().__init__(pkg_data)
+
+    def package_data(self):
+        return b''
+    
+    def parse_data(self):
+        return {'data': None}
