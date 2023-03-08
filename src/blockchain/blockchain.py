@@ -417,7 +417,7 @@ class Blockchain:
 
         res = len(block_info).to_bytes(SIZE, 'little')
         res += block_info
-
+        print(f'Appending block {self.get_chain_len()}')
         with open(cur_blk_file, 'wb') as f:
             f.write(res + prev_blk_info)
 
