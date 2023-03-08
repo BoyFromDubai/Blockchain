@@ -64,6 +64,9 @@ class Server:
         self.__sock.settimeout(None)   
         self.__sock.close()
 
+        with open(self.PEERS_FILE_PATH, 'w'):
+            pass
+
         return 'Server was stopped by an administrator!'
     
     def __append_connection(self, sock, ip, port):
@@ -130,10 +133,6 @@ class Server:
         return f'''
         Server listening on {self.__ip}:{self.__port}
         '''
-    
-    def __del__(self):
-        with open(self.PEERS_FILE_PATH, 'w'):
-            pass
 
 if __name__ == '__main__':
     server = Server()
