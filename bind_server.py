@@ -1,6 +1,7 @@
 import socket
 from src.node.network_node import Connection
 import os
+import netifaces
 
 class PeerConnection(Connection):
     def __init__(self, ip, port, sock):
@@ -41,19 +42,29 @@ class Server:
         self.__init_server()
     
     def __get_local_ip(self):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        interfaces = netifaces.interfaces() 
 
-            sock.connect(('8.8.8.8', 80))
+        if 'wlp4so' in interfaces:
+            return netifaces.ifaddresses('wlp4s0')[netifaces.AF_INET][0]['addr']
+        elif 'eth1' in interfaces:
+            return netifaces.ifaddresses('eth1')[netifaces.AF_INET][0]['addr']
 
-            return sock.getsockname()[0]
-        except socket.error:
-            try:
-                return socket.gethostbyname(socket.gethostname()) 
-            except socket.gaierror:
-                return '127.0.0.1'
-        finally:
-            sock.close()
+        return '127.0.0.1'
+
+
+        # try:
+        #     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        #     sock.connect(('8.8.8.8', 80))
+
+        #     return sock.getsockname()[0]
+        # except socket.error:
+        #     try:
+        #         return socket.gethostbyname(socket.gethostname()) 
+        #     except socket.gaierror:
+        #         return '127.0.0.1'
+        # finally:
+        #     sock.close()
 
     def __init_server(self):
         self.__sock.bind((self.__ip, self.__port))
