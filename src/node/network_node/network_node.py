@@ -395,7 +395,7 @@ class PeerConnection(Connection):
         self.send_pkg(pkg_type='block_request', request_index=index_to_request)
 
     def __handle_tx_msg(self, tx_data : bytes):
-        self.blockchain.append_to_mempool(tx_data)
+        self.blockchain.get_new_tx_from_peer(tx_data)
 
 class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
@@ -467,11 +467,14 @@ class NetworkNode(threading.Thread):
             
             raise Exception('[ERROR] Firstly it\'s neccessary to set ip and port of a bind server!!!')
         else:
-            with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
-                server_ip, server_port = f.read().split(':')
-                self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
-                self.serv_conn.start()
-                self.serv_conn.peers_request()
+            try:
+                with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
+                    server_ip, server_port = f.read().split(':')
+                    self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
+                    self.serv_conn.start()
+                    self.serv_conn.peers_request()
+            except Exception as e:
+                print(e)
 
     def init_peers(self, ips : List[str]):
         for ip in ips:

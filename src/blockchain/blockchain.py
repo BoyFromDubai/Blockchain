@@ -28,22 +28,29 @@ class Blockchain:
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
     def __create_rev_file(self, txs : dict):
-        print('txs')
-        print(txs)
+        for tx in txs:
+            vins = self.get_vins(tx)
+            print(vins)
+            # txid = hashlib.sha256(tx).digest()
+            # utxo = self.db.get_utxo_formatted(txid)
 
     def get_new_block_from_peer(self, index: int, blk_data: bytes):
         txs = self.get_block_txs(blk_data)
-        real_mrkl_root = self.get_block_mrkl_root(blk_data)
-        got_mrkl_root = MerkleTree(txs).root
 
-        if self.hash_nth_block_in_digest(index - 1) == self.get_block_prev_hash(blk_data):
-            if real_mrkl_root == got_mrkl_root:
-                #TODO: use append_block and handle old blocks
-                self.append_block(index, blk_data, txs)
-            else:
-                print('[ERROR]: New Block was falsified')
+        if self.__check_block_correctness(index, blk_data, txs):
+            self.__create_rev_file(txs)
+            self.__save_block(index, blk_data)
+            self.__update_db(txs)
+
         else:
-            print('[ERROR]: New Block was falsified')
+            raise Exception('[ERROR]: New Block was falsified')
+
+    def get_new_tx_from_peer(self, tx_data: bytes):
+        if self.__verify_transaction(tx_data):
+            self.__append_to_mempool(tx_data)
+        
+        else:
+            raise Exception('[EEROR] Transaction is not valid')
 
     def get_property_offset(self, property_name: str):
         cur_offset = 0
@@ -406,26 +413,51 @@ class Blockchain:
 
         return txs
     
-    def append_block(self, index, block_info: bytes, txs : List):
-        prev_blk_info = b''
+    def __check_block_correctness(self, index: int, blk_data: bytes, txs: List):
+
+        if self.hash_nth_block_in_digest(index - 1) != self.get_block_prev_hash(blk_data):
+            return False
+        
+        real_mrkl_root = self.get_block_mrkl_root(blk_data)
+        got_mrkl_root = MerkleTree(txs).root
+
+        if real_mrkl_root != got_mrkl_root:
+            return False
+        
+        for tx in txs:
+            if not self.__verify_transaction(tx):
+                return False
+            
+        return True
+    
+    def __save_block(self, index: int, blk_data: bytes):
+        prev_blk_data = b''
         cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(index).zfill(NUMS_IN_NAME)}.dat"
 
-    
         #TODO: bring back transactions
         if os.path.exists(cur_blk_file):
             with open(cur_blk_file, 'rb') as f:
-                prev_blk_info = f.read()
+                prev_blk_data = f.read()
 
+        res = len(blk_data).to_bytes(SIZE, 'little')
+        res += blk_data
+
+        with open(cur_blk_file, 'wb') as f:
+            f.write(res + prev_blk_data)
+
+    def __update_db(self, txs: List):
         for tx in txs:
+            #TODO: rev file
             self.chainstate_db.update_db(tx)
 
-        res = len(block_info).to_bytes(SIZE, 'little')
-        res += block_info
-        with open(cur_blk_file, 'wb') as f:
-            f.write(res + prev_blk_info)
-
-        self.mempool.clear_mempool()
+    def append_block(self, index, blk_data: bytes, txs : List):
+        if not self.__check_block_correctness(index, blk_data, txs):
+            raise Exception('[ERROR] Block is not correct!')
         
+        self.__save_block(index, blk_data)
+        self.__update_db(txs)
+        self.mempool.clear_mempool()
+
     def get_chain_len(self):
         # files_in_dir_len = len(os.listdir('blockchain/blocks'))
         # return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
@@ -434,19 +466,24 @@ class Blockchain:
     def get_block_files(self):
         return sorted(os.listdir(self.BLOCKS_DIR))
 
-    def verify_transaction(self, tx_data: bytes):
+    def __verify_transaction(self, tx_data: bytes):
         vins = self.get_vins(tx_data)
+
+        if len(vins) and self.chainstate_db.get_utxo(hashlib.sha256(tx_data).digest()):
+            return False
+        
 
         for vin in vins:
             txid = vin['txid']
-
             tx_vouts = self.chainstate_db.get_info_of_txid(txid)['vouts']
+            
             if not self.confirm_sign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
-                raise Exception('[ERROR] Not valid transaction!!!')
+                return False
+        
 
-        return self.append_to_mempool(tx_data)
-    
-    def append_to_mempool(self, tx_data : bytes): self.mempool.add_tx(tx_data)
+        return True
+        
+    def __append_to_mempool(self, tx_data : bytes): self.mempool.add_tx(tx_data)
 
     def verify_chain(self):
         block_files = self.get_block_files()
@@ -478,7 +515,7 @@ class Blockchain:
         tx_data = tx.tx_data
 
         if len(vin_data):
-            self.append_to_mempool(tx_data)
+            self.__append_to_mempool(tx_data)
 
         return tx_data 
 

@@ -36,13 +36,12 @@ class ChainStateDB:
             
             if i == vout:
                 if not int.from_bytes(spent, 'little'):
-                    print('SPENT SUCCESSFULLY')
                     res += new_txid 
                 elif spent == new_txid:
-                    print('TX ALREADY EXISTS')
+                    raise Exception('TX ALREADY EXISTS')
                     res += new_txid 
                 else:
-                    print('DOUBLE SPENDING DETECTED!!!')
+                    raise Exception('DOUBLE SPENDING DETECTED!!!')
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
@@ -114,6 +113,7 @@ class ChainStateDB:
         for key, value in self.DATA_STRUCT.items():
             if key == property_name:
                 return cur_offset
+            
             else:
                 cur_offset += value
 
