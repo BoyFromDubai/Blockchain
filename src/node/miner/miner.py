@@ -1,6 +1,5 @@
 from ...blockchain import Transaction
 from ...block import Block
-from ...blockchain import Blockchain
 
 import random
 import hashlib
@@ -30,9 +29,7 @@ class Miner:
             
             if hashlib.sha256(header).hexdigest()[:num_of_zeros] == difficulty:
                 check_proof = True
-
                 self.blockchain.append_block(self.blockchain.get_chain_len(), block_data, transactions)
-                # self.db.deleteTxids()
 
                 return block_data
 

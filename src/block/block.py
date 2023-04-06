@@ -26,20 +26,10 @@ class Header:
 
         return res
 
-
-class Body:
-    def __init__(self) -> None:
-        self.txs = []
-
-    def __init__(self, txs: list) -> None:
-        self.txs = txs
-
 class Block:
     def __init__(self, nonce, prev_block_hash, num_of_zeros, transactions) -> None:
         self.header = Header(nonce, prev_block_hash, num_of_zeros, transactions)
-        body = Body(transactions)
-        self.txs = body.txs
-        self.txs_data = len(self.txs).to_bytes(BLOCK_STRUCT['tx_count'], 'little') + b''.join(self.txs)
+        self.txs = transactions
 
     def create_block(self):
-        return self.header.header + self.txs_data
+        return self.header.header + len(self.txs).to_bytes(BLOCK_STRUCT['tx_count'], 'little') + b''.join(self.txs)

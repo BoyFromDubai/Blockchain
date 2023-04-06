@@ -5,6 +5,7 @@ from typing import List, Callable
 import threading
 import os
 import netifaces
+import re
 
 class Conn(threading.Thread):
     CHAIN_LEN_SIZE = 2 
@@ -220,27 +221,25 @@ class Conn(threading.Thread):
         {self.ip}:{self.port}
         ----------------------------'''
     
-
-
 class Connection(threading.Thread):
     BUF_SIZE = 10
 
     def __init__(self, ip : str, port : int, sock = None):
-        super(Connection, self).__init__()
+        super().__init__()
+
         self.ip = ip
         self._port = port
+        self.__sock_timeout = 1.0
         
         if sock:
             self._sock = sock
+            self._sock.settimeout(self.__sock_timeout)
         else:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._sock.settimeout(self.__sock_timeout)
             self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._sock.connect((self.ip, self._port))
         
-        self.__sock_timeout = 1.0
-
-        self._sock.settimeout(self.__sock_timeout)
-
         self.stop_flag = threading.Event()
 
     def is_alive(self): return not self.stop_flag.is_set()
@@ -401,13 +400,13 @@ class ServConnection(Connection):
     def __init__(self, ip, port, init_peers : Callable):
         super().__init__(ip, port)
         self.init_peers = init_peers
+        
 
     def _handle_package(self, pkg_dict : dict):
         super()._handle_package(pkg_dict)
 
         if pkg_dict['type'] == 'peers_ack':
             self.__init_peers(pkg_dict['data_dict']['ips'])
-        # elif pkg_dict['type'] == '':
 
         elif pkg_dict['type'] == 'stop_signal':
             self.stop_flag.set()
@@ -434,6 +433,7 @@ class ServConnection(Connection):
 
 class NetworkNode(threading.Thread):
     NETWORK_CONF_DIR = '.conf'
+    SERV_FILE = 'bind_server.txt'
 
     def __init__(self, blockchain):
         super(NetworkNode, self).__init__()
@@ -456,25 +456,34 @@ class NetworkNode(threading.Thread):
 
         self.STOP_FLAG = threading.Event()
 
-        self.__connect_with_bind_server()
+        try:
+            self.__connect_with_bind_server()
+        except:
+            pass
 
     def __connect_with_bind_server(self):
         if not os.path.exists(NetworkNode.NETWORK_CONF_DIR):
             os.mkdir(NetworkNode.NETWORK_CONF_DIR)
             
-            with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
+            with open(os.path.join(self.NETWORK_CONF_DIR, self.SERV_FILE), 'w') as f:
                 pass
             
             raise Exception('[ERROR] Firstly it\'s neccessary to set ip and port of a bind server!!!')
+        
         else:
             try:
-                with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'r') as f:
-                    server_ip, server_port = f.read().split(':')
+                with open(os.path.join(self.NETWORK_CONF_DIR, self.SERV_FILE), 'r') as f:                    
+                    server_ip, server_port = tuple(f.read().split(':'))
                     self.serv_conn = ServConnection(server_ip, int(server_port), self.init_peers)
-                    self.serv_conn.start()
-                    self.serv_conn.peers_request()
-            except Exception as e:
-                print(e)
+                
+                self.serv_conn.start()
+                self.serv_conn.peers_request()
+            
+            except socket.error:
+                raise Exception('[WARNING] Bind server is not available!')
+
+            finally:
+                self.serv_conn = None
 
     def init_peers(self, ips : List[str]):
         for ip in ips:
@@ -482,9 +491,13 @@ class NetworkNode(threading.Thread):
 
     def set_bind_server(self, ip, port):
         with open(os.path.join(NetworkNode.NETWORK_CONF_DIR, 'bind_server.txt'), 'w') as f:
+            if not bool(re.match(r'\d*\.\d*\.\d*\.\d*', ip)):
+                raise SyntaxError('[WARNING] Ip does not match pattern!')
+            
             f.write(f'{ip}:{port}')
-            self.__connect_with_bind_server()
-            self.__get_peers()
+
+        self.__connect_with_bind_server()
+        self.__get_peers()
 
         return 'Server was succesfully initialized!'
 
@@ -607,7 +620,8 @@ class NetworkNode(threading.Thread):
         for peer in self.peers:
             peer.join()
 
-        self.serv_conn.stop()
+        if self.serv_conn:
+            self.serv_conn.stop()
 
         self.sock.settimeout(None)   
         self.sock.close()

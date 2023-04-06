@@ -7,7 +7,7 @@ class Wallet:
     KEYS_PATH = 'wallet/signing_key.dat'
 
     def __init__(self, blockchain) -> None:
-        self.blockchain = blockchain
+        self.__blockchain = blockchain
 
         if os.path.exists(self.KEYS_PATH):
             with open(self.KEYS_PATH, 'rb') as f:
@@ -17,7 +17,7 @@ class Wallet:
         else:
             self.__generate_keys()
 
-        self.utxos = []
+        self.__utxos = []
 
         self.__cur_vins = []
         self.__cur_vouts = []
@@ -37,7 +37,6 @@ class Wallet:
     def clear_vouts(self): self.__cur_vouts = []
 
     def __generate_keys(self) -> None:
-        
         self.sk = ecdsa.SigningKey.generate(ecdsa.SECP256k1)
         self.pk = self.sk.get_verifying_key()
         os.mkdir(self.KEYS_DIR)
@@ -53,30 +52,32 @@ class Wallet:
                 vouts_arr.append(i)
         
         return vouts_arr
-                    
 
     def __get_utxo_from_db(self, tx_data: bytes):
         txid = hashlib.sha256(tx_data).digest()
-        return (txid, self.blockchain.chainstate_db.get_utxo_formatted(txid))
+
+        return (txid, self.__blockchain.chainstate_db.get_utxo_formatted(txid))
 
     def __get_utxos(self) -> None:
-        utxos = self.blockchain.chainstate_db.get_utxos()
+        utxos = self.__blockchain.chainstate_db.get_utxos()
 
         for utxo in utxos:
             vouts = self.__check_tx_on_vouts_posession(utxo[1])
             values = [utxo[1]['vouts'][vout]['value'] for vout in vouts]
             self.append_to_utxos(utxo[0], vouts, values)
             
-    def get_utxos(self): return self.utxos
+    def get_utxos(self): return self.__utxos
 
     def append_to_utxos(self, txid, vouts, values):
+
         for i in range(len(vouts)):
-            self.utxos.append({
+            self.__utxos.append({
             'txid': txid, 
             'vout': vouts[i],
             'value': values[i]})
 
     def update_utxos(self, txs: bytes):
+
         for tx in txs:
             txid, utxo = self.__get_utxo_from_db(tx)
             vouts = self.__check_tx_on_vouts_posession(utxo)

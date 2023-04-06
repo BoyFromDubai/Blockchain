@@ -24,13 +24,10 @@ class Node:
             return blk_data
 
         return wrapper
-    
-    def connect_with_bind_server(self):
-        self.__network_node.connect_with_bind_server()
 
-    def append_to_vins(self, vin): self.__wallet.append_to_vins(vin)
+    def append_to_vins(self, vin: tuple): self.__wallet.append_to_vins(vin)
 
-    def append_to_vouts(self, vout): self.__wallet.append_to_vouts(vout)
+    def append_to_vouts(self, vout: tuple): self.__wallet.append_to_vouts(vout)
 
     def create_tx(self):
         try:
@@ -48,8 +45,7 @@ class Node:
             self.__wallet.clear_vins()
             self.__wallet.clear_vouts()
     
-    def set_bind_server(self, ip, port):
-        return self.__network_node.set_bind_server(ip, port)
+    def set_bind_server(self, ip: str, port: str): return self.__network_node.set_bind_server(ip, port)
 
     def get_ip(self): return self.__network_node.ip
 

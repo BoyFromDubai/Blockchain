@@ -18,19 +18,18 @@ class Blockchain:
         self.chainstate_db = ChainStateDB(self)
 
         if not self.__blocks_folder_existance():
-
             os.mkdir(self.BLOCKS_DIR)
+
             with open(os.path.join(self.BLOCKS_DIR, f'blk_{str(0).zfill(NUMS_IN_NAME)}.dat'), 'wb') as f:
                 genezis_block = b'M\x00\x00\x00\xa9\xd1\xc5\xb6GjY\x9b\x9a\xd2\xa2\x1djw\xba\x94\x13_q\xc0\x8a0x@\xe0\xe1\xcf\xbb\xfe\x0b\xba\xad\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00m/\x9fc\x01\x00\x00\x00\x01\x00\x00\x00\x00'
                 f.write(genezis_block)
 
-
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
     def __create_rev_file(self, txs : dict):
-        for tx in txs:
-            vins = self.get_vins(tx)
-            print(vins)
+        pass
+        # for tx in txs:
+        #     vins = self.get_vins(tx)
             # txid = hashlib.sha256(tx).digest()
             # utxo = self.db.get_utxo_formatted(txid)
 
@@ -327,7 +326,6 @@ class Blockchain:
 
     def get_vouts(self, tx_data: bytes):
         vouts_offset = self.get_vout_offset(tx_data)
-
         vouts_info = tx_data[vouts_offset:]
         cur_offset = 0
         vouts_field_len = BLOCK_STRUCT['output_count']
@@ -433,7 +431,7 @@ class Blockchain:
     def __save_block(self, index: int, blk_data: bytes):
         prev_blk_data = b''
         cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(index).zfill(NUMS_IN_NAME)}.dat"
-
+        
         #TODO: bring back transactions
         if os.path.exists(cur_blk_file):
             with open(cur_blk_file, 'rb') as f:
@@ -453,7 +451,7 @@ class Blockchain:
     def append_block(self, index, blk_data: bytes, txs : List):
         if not self.__check_block_correctness(index, blk_data, txs):
             raise Exception('[ERROR] Block is not correct!')
-        
+
         self.__save_block(index, blk_data)
         self.__update_db(txs)
         self.mempool.clear_mempool()
@@ -472,7 +470,6 @@ class Blockchain:
         if len(vins) and self.chainstate_db.get_utxo(hashlib.sha256(tx_data).digest()):
             return False
         
-
         for vin in vins:
             txid = vin['txid']
             tx_vouts = self.chainstate_db.get_info_of_txid(txid)['vouts']
@@ -519,7 +516,7 @@ class Blockchain:
 
         return tx_data 
 
-    def confirm_sign(self, script_sig, script_pub_key: ecdsa.VerifyingKey, message_to_sign: bytes):
+    def confirm_sign(self, script_sig, script_pub_key: bytes, message_to_sign: bytes):
         if len(script_pub_key) < 32:
             return False
 
