@@ -120,13 +120,13 @@ class Server:
 
     def __listen_for_connection(self):
         sock, client_address = self.__sock.accept()
+        self.__append_connection(sock, client_address[0], client_address[1])
+        
         print(f'{client_address[0]} connected')
         print()
         print('NODES:', end=' ')
         print(*[peer.ip for peer in self.__peers], sep = "\t")
         print()
-        
-        self.__append_connection(sock, client_address[0], client_address[1])
 
     def run(self) -> None:
         while True:
