@@ -58,7 +58,6 @@ class ChainStateDB:
 
         return res, delete_tx
 
-
     def __spend_utxo(self, txid_in_vin: bytes, vout: int, new_txid: bytes):
         tx_utxos = self.db.get(txid_in_vin)
         vout_to_spend = self.__get_vout(tx_utxos, vout)
@@ -82,16 +81,18 @@ class ChainStateDB:
         vouts_to_spend = []
         txid_in_cur_block = hashlib.sha256(tx_info).digest()
 
-        for vin in vins:
-            txid_in_vin = vin['txid']
-            vout = int.from_bytes(vin['vout'], 'little')
-            vouts_to_spend.append((txid_in_vin, self.__spend_utxo(txid_in_vin, vout, txid_in_cur_block)))
+        try:
+            for vin in vins:
+                txid_in_vin = vin['txid']
+                vout = int.from_bytes(vin['vout'], 'little')
+                vouts_to_spend.append((txid_in_vin, self.__spend_utxo(txid_in_vin, vout, txid_in_cur_block)))
 
-        tx_utxos = self.__create_utxo_struct(tx_info)
+            tx_utxos = self.__create_utxo_struct(tx_info)
+            
+            self.db.put(txid_in_cur_block, tx_utxos)
         
-        self.db.put(txid_in_cur_block, tx_utxos)
-
-        return vouts_to_spend
+        except Exception:
+            raise
 
     def __create_utxo_struct(self, tx_info: bytes):
         vouts = self.blockchain.get_vouts(tx_info)

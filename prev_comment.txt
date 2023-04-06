@@ -1,1 +1,1 @@
-Fix height of miner
+Fixed updating db
