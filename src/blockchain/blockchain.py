@@ -457,20 +457,21 @@ class Blockchain:
 
     def __verify_transaction(self, tx_data: bytes):
         vins = self.get_vins(tx_data)
+        txid = hashlib.sha256(tx_data).digest()
 
-        if len(vins) and self.chainstate_db.get_utxo(hashlib.sha256(tx_data).digest()):
+        if len(vins) and self.chainstate_db.get_utxo(txid):
             return False
         
         for vin in vins:
-            txid = vin['txid']
-            tx_vouts = self.chainstate_db.get_info_of_txid(txid)['vouts']
+            tx_txid_field = vin['txid']
+            tx_vouts = self.chainstate_db.get_info_of_txid(tx_txid_field)['vouts']
             tx_vout = tx_vouts[int.from_bytes(vin['vout'], 'little')]
             vout_spent_field = tx_vout['spent']
             
-            if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_field != vout_spent_field:
+            if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_field != txid:
                 raise Exception('DOUBLE SPENDING DETECTED!!!')
                         
-            if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], txid):
+            if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], tx_txid_field):
                 return False
         
         return True

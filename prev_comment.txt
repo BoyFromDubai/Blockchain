@@ -1,1 +1,1 @@
-Updated func verifying block
+Fixed verifying

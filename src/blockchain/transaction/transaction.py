@@ -38,9 +38,6 @@ class Vin:
 
             self.vin = vin_data
 
-
-
-    
 class Vout:
     def __init__(self, address: str, value: str) -> None:
         self.__create_vout(address, value)
@@ -54,9 +51,6 @@ class Vout:
         vout_data += script_pub_key #ScriptPubKey
 
         self.vout = vout_data
-
-    
-    
 
 class Transaction:
     
