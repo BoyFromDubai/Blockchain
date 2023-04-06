@@ -30,13 +30,3 @@
         requirements: "{{ project_path }}/requirements.txt"
         virtualenv: "{{ project_path }}/venv"
         virtualenv_python: python3
-
-    # - name: Install virtualenv package
-    #   ansible.builtin.pip:
-    #     name: virtualenv
-
-    # - name: Install requirements
-    #   pip:
-    #     requirements: "{{ project_path }}/requirements.txt"
-    #     virtualenv: "{{ project_path }}/env"
-    #     virtualenv_command: virtualenv
