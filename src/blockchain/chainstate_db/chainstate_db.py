@@ -97,6 +97,7 @@ class ChainStateDB:
         vouts = self.blockchain.get_vouts(tx_info)
 
         res = self.blockchain.get_chain_len().to_bytes(self.DATA_STRUCT['height'], 'little')
+        print(res)
         res += len(vouts).to_bytes(self.DATA_STRUCT['vouts_num'], 'little')
         
         for i in range(len(vouts)):

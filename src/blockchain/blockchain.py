@@ -451,11 +451,14 @@ class Blockchain:
     def append_block(self, index, blk_data: bytes, txs : List):
         if not self.__check_block_correctness(index, blk_data, txs):
             raise Exception('[ERROR] Block is not correct!')
-
-        self.__save_block(index, blk_data)
-        self.__update_db(txs)
-        self.mempool.clear_mempool()
-
+        try:
+            self.__update_db(txs)
+            self.__save_block(index, blk_data)
+            self.mempool.clear_mempool()
+            
+        except Exception:
+            raise
+        
     def get_chain_len(self):
         # files_in_dir_len = len(os.listdir('blockchain/blocks'))
         # return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
