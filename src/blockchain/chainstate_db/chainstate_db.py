@@ -35,13 +35,7 @@ class ChainStateDB:
             cur_offset += self.DATA_STRUCT['spent']
             
             if i == vout:
-                if not int.from_bytes(spent, 'little'):
-                    res += new_txid 
-                elif spent == new_txid:
-                    raise Exception('TX ALREADY EXISTS')
-                    res += new_txid 
-                else:
-                    raise Exception('DOUBLE SPENDING DETECTED!!!')
+                res += new_txid 
             else:
                 if not int.from_bytes(spent, 'little'):
                     delete_tx = False
@@ -98,7 +92,7 @@ class ChainStateDB:
         vouts = self.blockchain.get_vouts(tx_info)
 
         res = self.blockchain.get_chain_len().to_bytes(self.DATA_STRUCT['height'], 'little')
-        print(res)
+
         res += len(vouts).to_bytes(self.DATA_STRUCT['vouts_num'], 'little')
         
         for i in range(len(vouts)):

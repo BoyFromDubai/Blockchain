@@ -1,1 +1,1 @@
-Fixed updating db
+Updated func verifying block

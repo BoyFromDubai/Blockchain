@@ -26,20 +26,12 @@ class Blockchain:
 
     def __blocks_folder_existance(self): return os.path.exists(self.BLOCKS_DIR)
 
-    def __create_rev_file(self, txs : dict):
-        pass
-        # for tx in txs:
-        #     vins = self.get_vins(tx)
-            # txid = hashlib.sha256(tx).digest()
-            # utxo = self.db.get_utxo_formatted(txid)
-
     def get_new_block_from_peer(self, index: int, blk_data: bytes):
         txs = self.get_block_txs(blk_data)
 
         if self.__check_block_correctness(index, blk_data, txs):
-            self.__create_rev_file(txs)
-            self.__update_db(txs)
             self.__save_block(index, blk_data)
+            self.__update_db(txs)
 
         else:
             raise Exception('[ERROR]: New Block was falsified')
@@ -432,7 +424,6 @@ class Blockchain:
         prev_blk_data = b''
         cur_blk_file = f"{self.BLOCKS_DIR}/blk_{str(index).zfill(NUMS_IN_NAME)}.dat"
         
-        #TODO: bring back transactions
         if os.path.exists(cur_blk_file):
             with open(cur_blk_file, 'rb') as f:
                 prev_blk_data = f.read()
@@ -445,23 +436,20 @@ class Blockchain:
 
     def __update_db(self, txs: List):
         for tx in txs:
-            #TODO: rev file
             self.chainstate_db.update_db(tx)
 
     def append_block(self, index, blk_data: bytes, txs : List):
         if not self.__check_block_correctness(index, blk_data, txs):
             raise Exception('[ERROR] Block is not correct!')
         try:
-            self.__update_db(txs)
             self.__save_block(index, blk_data)
+            self.__update_db(txs)
             self.mempool.clear_mempool()
-            
+
         except Exception:
             raise
         
     def get_chain_len(self):
-        # files_in_dir_len = len(os.listdir('blockchain/blocks'))
-        # return math.ceil(files_in_dir_len / 2) if files_in_dir_len > 1 else files_in_dir_len
         return len(self.get_block_files())
 
     def get_block_files(self):
@@ -476,11 +464,15 @@ class Blockchain:
         for vin in vins:
             txid = vin['txid']
             tx_vouts = self.chainstate_db.get_info_of_txid(txid)['vouts']
+            tx_vout = tx_vouts[int.from_bytes(vin['vout'], 'little')]
+            vout_spent_field = tx_vout['spent']
             
-            if not self.confirm_sign(vin['script_sig'], tx_vouts[int.from_bytes(vin['vout'], 'little')]['script_pub_key'], txid):
+            if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_field != vout_spent_field:
+                raise Exception('DOUBLE SPENDING DETECTED!!!')
+                        
+            if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], txid):
                 return False
         
-
         return True
         
     def __append_to_mempool(self, tx_data : bytes): self.mempool.add_tx(tx_data)
