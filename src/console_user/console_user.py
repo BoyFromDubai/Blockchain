@@ -119,10 +119,10 @@ class ConsoleUser:
 
     @__append_process
     def __start_output(self):
-        self.output_process = OutputThread(self.__res_values, self.__prefix)
-        self.output_process.start()
+        self.__output_process = OutputThread(self.__res_values, self.__prefix)
+        self.__output_process.start()
 
-        return self.output_process
+        return self.__output_process
 
     def __del__(self):
         for process in self.__processes:

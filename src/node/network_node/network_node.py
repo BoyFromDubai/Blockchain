@@ -385,13 +385,14 @@ class PeerConnection(Connection):
         # if self.blockchain.get_chain_len() < index + 1:
         try:
             self.blockchain.get_new_block_from_peer(index, blk_data)
+            index_to_request = index + 1
+            self.send_pkg(pkg_type='block_request', request_index=index_to_request)
+        
         except Exception as e:
             print(e)
 
         self.lock.release()
         
-        index_to_request = index + 1
-        self.send_pkg(pkg_type='block_request', request_index=index_to_request)
 
     def __handle_tx_msg(self, tx_data : bytes):
         self.blockchain.get_new_tx_from_peer(tx_data)
@@ -497,7 +498,7 @@ class NetworkNode(threading.Thread):
             f.write(f'{ip}:{port}')
 
         self.__connect_with_bind_server()
-        self.__get_peers()
+        self.get_peers()
 
         return 'Server was succesfully initialized!'
 

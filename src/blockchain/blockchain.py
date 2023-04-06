@@ -38,8 +38,8 @@ class Blockchain:
 
         if self.__check_block_correctness(index, blk_data, txs):
             self.__create_rev_file(txs)
-            self.__save_block(index, blk_data)
             self.__update_db(txs)
+            self.__save_block(index, blk_data)
 
         else:
             raise Exception('[ERROR]: New Block was falsified')
