@@ -54,9 +54,9 @@ class Wallet:
 
     def __get_utxos(self) -> None:
         utxos = self.__blockchain.chainstate_db.get_utxos()
-
+        
         for utxo in utxos:
-            self.append_to_utxos(utxo[0], utxo[1]['vout'], utxo[1]['value'])
+            self.append_to_utxos(utxo['txid'], utxo['vout'], utxo['value'])
             
     def get_utxos(self): return self.__utxos
 
