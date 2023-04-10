@@ -47,7 +47,7 @@ class ConsoleUser:
 
                 elif commands_arr[0] == 'mine':
                     if len(commands_arr) > 1 and commands_arr[1] == '-o':
-                        self.__execute_func(func=self.__node.mine_block)               
+                        self.__execute_func(func=self.__node.mine_block)
 
                 elif commands_arr[0] == 'list':
                     if len(commands_arr) > 1 and commands_arr[1] == 'db':
@@ -110,12 +110,12 @@ class ConsoleUser:
 
     @__update_queue
     def __execute_func(self, func, *args):
-        try:
-            return func(*args)
-        except Exception as e:
-            return e
+        # try:
+        #     return func(*args)
+        # except Exception as e:
+        #     return e
 
-        # return func(*args)
+        return func(*args)
 
     @__append_process
     def __start_output(self):

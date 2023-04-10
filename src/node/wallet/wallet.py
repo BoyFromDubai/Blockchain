@@ -45,13 +45,7 @@ class Wallet:
             f.write(self.sk.to_string())
     
     def __check_tx_on_vouts_posession(self, utxo):
-        vouts_arr = []
-
-        for i in range(len(utxo['vouts'])):
-            if utxo['vouts'][i]['script_pub_key'] == self.pk.to_string().hex() and not int(utxo['vouts'][i]['spent'], 16):
-                vouts_arr.append(i)
-        
-        return vouts_arr
+        return utxo['script_pub_key'] == self.pk.to_string().hex() and not utxo['spent']
 
     def __get_utxo_from_db(self, tx_data: bytes):
         txid = hashlib.sha256(tx_data).digest()
@@ -62,19 +56,18 @@ class Wallet:
         utxos = self.__blockchain.chainstate_db.get_utxos()
 
         for utxo in utxos:
-            vouts = self.__check_tx_on_vouts_posession(utxo[1])
-            values = [utxo[1]['vouts'][vout]['value'] for vout in vouts]
-            self.append_to_utxos(utxo[0], vouts, values)
+            self.append_to_utxos(utxo[0], utxo[1]['vout'], utxo[1]['value'])
             
     def get_utxos(self): return self.__utxos
 
-    def append_to_utxos(self, txid, vouts, values):
-
-        for i in range(len(vouts)):
-            self.__utxos.append({
-            'txid': txid, 
-            'vout': vouts[i],
-            'value': values[i]})
+    def append_to_utxos(self, txid, vout_num, value):
+        self.__utxos.append(
+            {
+                'txid': txid, 
+                'vout': vout_num,
+                'value': value,
+            }
+        )
 
     def update_utxos(self, txs: bytes):
 

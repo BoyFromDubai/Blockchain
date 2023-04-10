@@ -458,20 +458,17 @@ class Blockchain:
     def __verify_transaction(self, tx_data: bytes):
         vins = self.get_vins(tx_data)
         txid = hashlib.sha256(tx_data).digest()
-
-        if len(vins) and self.chainstate_db.get_utxo(txid):
-            return False
         
         for vin in vins:
-            tx_txid_field = vin['txid']
-            tx_vouts = self.chainstate_db.get_info_of_txid(tx_txid_field)['vouts']
-            tx_vout = tx_vouts[int.from_bytes(vin['vout'], 'little')]
+            vin_txid_field = vin['txid']
+            vin_vout_field = int.from_bytes(vin['vout'], 'little')
+            tx_vout = self.chainstate_db.get_info_of_vout_digest(vin_txid_field, vin_vout_field)
             vout_spent_field = tx_vout['spent']
             
             if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_field != txid:
                 raise Exception('DOUBLE SPENDING DETECTED!!!')
                         
-            if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], tx_txid_field):
+            if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], vin_txid_field):
                 return False
         
         return True
@@ -499,7 +496,7 @@ class Blockchain:
         if len(vin_data):
             coins_to_spend = sum(map(lambda value : int(value), [info_for_vout[1] for info_for_vout in vout_data]))
             txis_vout_turple = [(int(txid, 16).to_bytes(BLOCK_STRUCT['txid'], 'big'), int(vout)) for txid, vout in vin_data]
-            available_coins = sum(list(map(lambda data : int.from_bytes(self.chainstate_db.get_info_of_txid(data[0])['vouts'][data[1]]['value'], 'little'), txis_vout_turple)))
+            available_coins = sum(list(map(lambda data : self.chainstate_db.get_info_of_vout(data[0], data[1])['value'], txis_vout_turple)))
 
             if available_coins < coins_to_spend:
                 raise ValueError('[ERROR] Not enough coins on these vins!!!')        

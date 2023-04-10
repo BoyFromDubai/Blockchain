@@ -3,6 +3,7 @@ from .network_node import NetworkNode
 from .wallet import Wallet
 from ..blockchain import Blockchain
 
+import json
 
 class Node:
     def __init__(self) -> None:
@@ -35,7 +36,7 @@ class Node:
             vouts = self.__wallet.get_vouts()
             tx_data = self.__blockchain.add_transaction(vouts, vins, self.__wallet.sk)
             self.__network_node.new_tx_msg(tx_data)
-            
+                
             return tx_data
         
         except Exception as e:
@@ -53,11 +54,11 @@ class Node:
     
     def get_chain_len(self): return self.__blockchain.get_chain_len()
 
-    def get_db_utxos(self): return self.__blockchain.chainstate_db.get_utxos()
+    def get_db_utxos(self): return json.dumps(self.__blockchain.chainstate_db.get_utxos(), indent=2)
 
     def get_my_utxos(self): return self.__wallet.get_utxos()
 
-    @__update_utxos
+    # @__update_utxos
     def mine_block(self):
         blk_info = self.__miner.mine_block() 
         self.__network_node.new_block_msg(blk_info)

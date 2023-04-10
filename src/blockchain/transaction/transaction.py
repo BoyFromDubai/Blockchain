@@ -11,18 +11,12 @@ class Vin:
     def __create_vin(self, txid: bytes, vout_num: int):
         txid = int(txid, 16).to_bytes(BLOCK_STRUCT['txid'], 'big')
 
-        tx_vouts = self.blockchain.chainstate_db.get_info_of_txid(txid)['vouts']
+        utxo_data = self.blockchain.chainstate_db.get_info_of_vout_digest(txid, vout_num)
 
-        if vout_num > len(tx_vouts) - 1:
-            raise ValueError('[ERROR] Not enough vouts in tx!!!')
-
-        vout = tx_vouts[vout_num]
-
-        if int.from_bytes(vout['spent'], 'little'):
+        if int.from_bytes(utxo_data['spent'], 'little'):
             raise ValueError('[ERROR] Vout is already spent!!!')
         else:
-
-            script_pub_key = vout['script_pub_key'] 
+            script_pub_key = utxo_data['script_pub_key'] 
             
             vin_data = txid 
             vin_data += vout_num.to_bytes(BLOCK_STRUCT['vout'], "little")

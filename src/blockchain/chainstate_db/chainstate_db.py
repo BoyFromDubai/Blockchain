@@ -2,7 +2,27 @@ import plyvel
 import hashlib
 from ..blockchain import NUMS_IN_NAME
 
+from typing import List
+
 class ChainStateDB:
+    TX_LETTER = 'c'
+    KEY_STRUCT = {
+        'letter':       1,
+        'hash_len':     32,
+        'index_len':    1,
+        'index':        None,
+    }
+    UTXO_STRUCT = {
+        'coinbase':             1,
+        'height':               4,
+        'spent':                1, 
+        'spent_by':             32, 
+        'value':                8, 
+        'script_pub_key_size':  8,
+        'script_pub_key':       None, 
+    }
+
+
     DATA_STRUCT = {
         'height':               4,
         'vouts_num':            1,
@@ -13,198 +33,171 @@ class ChainStateDB:
     }
 
     def __init__(self, blockchain) -> None:
-        # self.db = leveldb.LevelDB('chainstate/')
         self.db = plyvel.DB('chainstate/', create_if_missing=True)
         self.blockchain = blockchain
 
     def __del__(self):
         self.db.close()
 
-    def __change_spent_field(self, tx_utxos_digest: bytes, vout: int, new_txid: bytes):
-        cur_offset = 0        
-        res = tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['height']]
-        cur_offset += self.DATA_STRUCT['height']
-        vouts_num = tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['vouts_num']] 
-        res += vouts_num
-        cur_offset += self.DATA_STRUCT['vouts_num']
+    def __count_byte_length(self, number: int): return (number.bit_length() + 7) // 8
 
-        delete_tx = True
+    def __spend_utxo(self, txid_to_spend: bytes, vout: int, txid_of_spending_tx: bytes):
+        key = self.__create_key(txid_to_spend, vout)
+        utxo = self.db.get(key)
+        
+        cur_offset = self.__get_utxo_property_offset('spent')
+        updated_utxo = utxo[:cur_offset]
+        
+        cur_offset += self.UTXO_STRUCT['spent']
+        updated_utxo += (1).to_bytes(self.UTXO_STRUCT['spent'], 'little')
+        
+        cur_offset += self.UTXO_STRUCT['spent_by']
+        updated_utxo += txid_of_spending_tx
+        
+        updated_utxo += utxo[cur_offset:]
 
-        for i in range(int.from_bytes(vouts_num, 'little')):
-            spent = tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['spent']]
-            cur_offset += self.DATA_STRUCT['spent']
-            
-            if i == vout:
-                res += new_txid 
-            else:
-                if not int.from_bytes(spent, 'little'):
-                    delete_tx = False
+        self.db.delete(key)
+        self.db.put(key, updated_utxo)
 
-                res += spent
-
-            res += tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['value']] 
-            cur_offset += self.DATA_STRUCT['value']            
-            pub_key_size = tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['script_pub_key_size']] 
-            res += pub_key_size
-            cur_offset += self.DATA_STRUCT['script_pub_key_size']
-            res += tx_utxos_digest[cur_offset:cur_offset + int.from_bytes(pub_key_size, 'little')]
-            cur_offset += int.from_bytes(pub_key_size, 'little')
-
-        return res, delete_tx
-
-    def __spend_utxo(self, txid_in_vin: bytes, vout: int, new_txid: bytes):
-        tx_utxos = self.db.get(txid_in_vin)
-        vout_to_spend = self.__get_vout(tx_utxos, vout)
-        updated_tx, delete_tx = self.__change_spent_field(tx_utxos, vout, new_txid)      
-
-        if not updated_tx:
-            raise ValueError('[ERROR] This vout if already spend!!!')
-        else:
-            self.db.delete(txid_in_vin)
-            self.db.put(txid_in_vin, updated_tx)
-
-            # if delete_tx:
-            #     with open(f'blockchain/txids_to_delete/txids_for_blk_{str(self.blockchain.get_chain_len() - 1).zfill(NUMS_IN_NAME)}.dat', 'ab') as f:
-            #         f.write(txid_in_vin)
-
-        return vout_to_spend
-
+        return txid_to_spend, vout
 
     def update_db(self, tx_info: bytes):
         vins = self.blockchain.get_vins(tx_info)
-        vouts_to_spend = []
-        txid_in_cur_block = hashlib.sha256(tx_info).digest()
+        spent_utxo = []
+        spending_txid = hashlib.sha256(tx_info).digest()
 
         try:
-            for vin in vins:
-                txid_in_vin = vin['txid']
-                vout = int.from_bytes(vin['vout'], 'little')
-                vouts_to_spend.append((txid_in_vin, self.__spend_utxo(txid_in_vin, vout, txid_in_cur_block)))
+            coinbase_flag = True
 
-            tx_utxos = self.__create_utxo_struct(tx_info)
+            for vin in vins:
+                spendable_txid = vin['txid']
+                vout = int.from_bytes(vin['vout'], 'little')
+                coinbase_flag = False
+                spent_utxo.append(self.__spend_utxo(spendable_txid, vout, spending_txid))
+
+            vouts = self.blockchain.get_vouts(tx_info)
             
-            self.db.put(txid_in_cur_block, tx_utxos)
-        
+            for i, vout in enumerate(vouts):
+                key = self.__create_key(hashlib.sha256(tx_info).digest(), i)
+                
+                tx_utxo = self.__create_utxo_struct(vout, coinbase_flag)
+
+                self.db.put(key, tx_utxo)
+            
         except Exception:
             raise
 
-    def __create_utxo_struct(self, tx_info: bytes):
-        vouts = self.blockchain.get_vouts(tx_info)
-
-        res = self.blockchain.get_chain_len().to_bytes(self.DATA_STRUCT['height'], 'little')
-
-        res += len(vouts).to_bytes(self.DATA_STRUCT['vouts_num'], 'little')
+    def __create_utxo_struct(self, vout: dict, coinbase_flag: bool):
+        res = int(coinbase_flag).to_bytes(self.UTXO_STRUCT['coinbase'], 'little')
+        res += self.blockchain.get_chain_len().to_bytes(self.DATA_STRUCT['height'], 'little')
+        res += (0).to_bytes(self.UTXO_STRUCT['spent'], 'little')
+        res += (0).to_bytes(self.UTXO_STRUCT['spent_by'], 'little')
         
-        for i in range(len(vouts)):
-            res += (0).to_bytes(self.DATA_STRUCT['spent'], 'little')
-            res += vouts[i]['value']
-            res += vouts[i]['script_pub_key_size']
-            res += vouts[i]['script_pub_key']
+        res += vout['value']
+        res += vout['script_pub_key_size']
+        res += vout['script_pub_key']
 
         return res
 
-    def __get_property_offset(self, property_name: str):
+    def __get_key_property_offset(self, property_name: str):
+        return self.__get_property_offset(self.KEY_STRUCT, property_name)
+
+    def __get_utxo_property_offset(self, property_name: str):
+        return self.__get_property_offset(self.UTXO_STRUCT, property_name)
+
+    def __get_property_offset(self, dictionary: dict, property_name: str):
         cur_offset = 0
 
-        for key, value in self.DATA_STRUCT.items():
+        for key, value in dictionary.items():
             if key == property_name:
                 return cur_offset
             
             else:
                 cur_offset += value
 
-        return False
+        raise ValueError('No such key in dictionary')
+            
+    def __create_key(self, txid: bytes, vout: int):
+        byte_len = self.__count_byte_length(vout)
+        return self.TX_LETTER.encode() + txid + byte_len.to_bytes(self.KEY_STRUCT['index_len'], 'little') + vout.to_bytes(byte_len, 'little')
 
-    def __get_vout(self, utxos_info: bytes, n: int):
-        vouts_num_offset = self.__get_property_offset('vouts_num')
-        vouts_num = int.from_bytes(utxos_info[vouts_num_offset:vouts_num_offset + self.DATA_STRUCT['vouts_num']], 'little')
-        vouts_info = utxos_info[vouts_num_offset + self.DATA_STRUCT['vouts_num']:]
-        
+    def __parse_utxo_data(self, utxo_data: bytes):
         cur_offset = 0
-        for i in range(vouts_num):
-            res = b''
-            cur_offset += self.DATA_STRUCT['spent']
-            res += vouts_info[cur_offset:cur_offset + self.DATA_STRUCT['value']]
-            cur_offset += self.DATA_STRUCT['value']
-            script_pub_key_size = vouts_info[cur_offset:cur_offset + self.DATA_STRUCT['script_pub_key_size']] 
-            res += script_pub_key_size
-            cur_offset += self.DATA_STRUCT['script_pub_key_size']
-            res += vouts_info[cur_offset:cur_offset + int.from_bytes(script_pub_key_size, 'little')]
-            cur_offset += int.from_bytes(script_pub_key_size, 'little')
+        utxo = {}
+        utxo['coinbase'] = bool(int.from_bytes(utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['coinbase']], 'little'))
+        cur_offset += self.UTXO_STRUCT['coinbase']
+        utxo['height'] = int.from_bytes(utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['height']], 'little')
+        cur_offset += self.UTXO_STRUCT['height']
+        utxo['spent'] = bool(int.from_bytes(utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['spent']], 'little'))
+        cur_offset += self.UTXO_STRUCT['spent']
+        utxo['spent_by'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['spent_by']].hex()
+        cur_offset += self.UTXO_STRUCT['spent_by']
+        utxo['value'] = int.from_bytes(utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['value']], 'little')
+        cur_offset += self.UTXO_STRUCT['value']
+        utxo['script_pub_key_size'] = int.from_bytes(utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['script_pub_key_size']], 'little')
+        cur_offset += self.UTXO_STRUCT['script_pub_key_size']
+        utxo['script_pub_key'] = utxo_data[cur_offset:cur_offset + utxo['script_pub_key_size']].hex()
+        cur_offset += utxo['script_pub_key_size']
 
-            if i == n:
-                return res
-
-
-    def __parse_utxo_data(self, tx_utxos_digest: bytes):
+        return utxo
+    
+    def __parse_utxo_data_digest(self, utxo_data: bytes):
         cur_offset = 0
-        utxos_dict = {}
-        utxos_dict['height'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['height']], 'little')
-        cur_offset += self.DATA_STRUCT['height']
-        utxos_dict['vouts_num'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['vouts_num']], 'little')
-        cur_offset += self.DATA_STRUCT['vouts_num']
+        utxo = {}
+        utxo['coinbase'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['coinbase']]
+        cur_offset += self.UTXO_STRUCT['coinbase']
+        utxo['height'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['height']]
+        cur_offset += self.UTXO_STRUCT['height']
+        utxo['spent'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['spent']]
+        cur_offset += self.UTXO_STRUCT['spent']
+        utxo['spent_by'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['spent_by']]
+        cur_offset += self.UTXO_STRUCT['spent_by']
+        utxo['value'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['value']]
+        cur_offset += self.UTXO_STRUCT['value']
+        utxo['script_pub_key_size'] = utxo_data[cur_offset:cur_offset + self.UTXO_STRUCT['script_pub_key_size']]
+        cur_offset += self.UTXO_STRUCT['script_pub_key_size']
+        utxo['script_pub_key'] = utxo_data[cur_offset:cur_offset + int.from_bytes(utxo['script_pub_key_size'], 'little')]
+        cur_offset += int.from_bytes(utxo['script_pub_key_size'], 'little')
 
-        utxos = []
-
-        for _ in range(utxos_dict['vouts_num']):
-            utxo = {}
-
-            utxo['spent'] = tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['spent']].hex()
-            cur_offset += self.DATA_STRUCT['spent']
-            utxo['value'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['value']], 'little')
-            cur_offset += self.DATA_STRUCT['value']
-            utxo['script_pub_key_size'] = int.from_bytes(tx_utxos_digest[cur_offset:cur_offset + self.DATA_STRUCT['script_pub_key_size']], 'little')
-            cur_offset += self.DATA_STRUCT['script_pub_key_size']
-            utxo['script_pub_key'] = tx_utxos_digest[cur_offset:cur_offset + utxo['script_pub_key_size']].hex()
-            cur_offset += utxo['script_pub_key_size']
-
-            utxos.append(utxo)
-
-        utxos_dict['vouts'] = utxos
-
-        return utxos_dict
-
-    def get_utxo(self, txid: bytes): return self.db.get(txid)
+        return utxo
     
     def get_utxo_formatted(self, txid: bytes): return self.__parse_utxo_data(self.db.get(txid))
 
     def get_utxos(self):
         arr = []
+
         for key, value in self.db:
-            arr.append((key.hex(), self.__parse_utxo_data(value)))
+            txid_offset = self.__get_key_property_offset('hash_len')
+            txid = key[txid_offset:self.KEY_STRUCT['hash_len'] + txid_offset].hex()
+            
+            cur_offset = self.__get_key_property_offset('index_len')
+            vout_len = int.from_bytes(key[cur_offset:cur_offset + self.KEY_STRUCT['index_len']], 'little')
+            cur_offset += self.KEY_STRUCT['index_len']
+            vout = int.from_bytes(key[cur_offset:cur_offset + vout_len], 'little')
+            
+            utxo_value = {}
+            utxo_value['txid'] = txid
+            utxo_value['vout'] = vout
+            utxo_value.update(self.__parse_utxo_data(value))
+
+            arr.append(utxo_value)
 
         return arr
 
-    def get_info_of_txid(self, txid: bytes):
-        info_to_txid = self.db.get(txid)
+    def get_info_of_vout_digest(self, txid: bytes, vout: int):
+        key = self.__create_key(txid, vout)
+        utxo_data = self.db.get(key)
         
-        if not info_to_txid:
-            raise ValueError('[ERROR] No such TXID in chain!!!')
+        if not utxo_data:
+            raise ValueError('[ERROR] No such vout in the chain!!!')
         
-        info_for_txid = {}
-        cur_offset = 0
+        return self.__parse_utxo_data_digest(utxo_data)
 
-        info_for_txid['height'] = info_to_txid[cur_offset:cur_offset + self.DATA_STRUCT['height']]
-        cur_offset += self.DATA_STRUCT['height']
-        info_for_txid['vouts_num'] = info_to_txid[cur_offset:cur_offset + self.DATA_STRUCT['vouts_num']]
-        cur_offset += self.DATA_STRUCT['vouts_num']
-
-        vouts = []
-        for _ in range(int.from_bytes(info_for_txid['vouts_num'], 'little')):
-            vout = {}
-
-            vout['spent'] = info_to_txid[cur_offset:cur_offset + self.DATA_STRUCT['spent']]
-            cur_offset += self.DATA_STRUCT['spent']
-            vout['value'] = info_to_txid[cur_offset:cur_offset + self.DATA_STRUCT['value']]
-            cur_offset += self.DATA_STRUCT['value']
-            
-            vout['script_pub_key_size'] = info_to_txid[cur_offset:cur_offset + self.DATA_STRUCT['script_pub_key_size']]
-            cur_offset += self.DATA_STRUCT['script_pub_key_size']
-            vout['script_pub_key'] = info_to_txid[cur_offset:cur_offset + int.from_bytes(vout['script_pub_key_size'], 'little')]
-            cur_offset += int.from_bytes(vout['script_pub_key_size'], 'little')
-
-            vouts.append(vout)
-
-        info_for_txid['vouts'] = vouts
-
-        return info_for_txid
+    def get_info_of_vout(self, txid: bytes, vout: int):
+        key = self.__create_key(txid, vout)
+        utxo_data = self.db.get(key)
+        
+        if not utxo_data:
+            raise ValueError('[ERROR] No such vout in the chain!!!')
+        
+        return self.__parse_utxo_data(utxo_data)
