@@ -462,11 +462,17 @@ class Blockchain:
         for vin in vins:
             vin_txid_field = vin['txid']
             vin_vout_field = int.from_bytes(vin['vout'], 'little')
-            tx_vout = self.chainstate_db.get_info_of_vout_digest(vin_txid_field, vin_vout_field)
+            tx_vout = self.chainstate_db.get_info_of_utxo_digest(vin_txid_field, vin_vout_field)
             vout_spent_field = tx_vout['spent']
+            vout_spent_by_field = tx_vout['spent_by']
             
-            if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_field != txid:
-                raise Exception('DOUBLE SPENDING DETECTED!!!')
+            if int.from_bytes(vout_spent_field, 'little') != 0:
+                print(txid)
+                print(vout_spent_by_field)
+                if vout_spent_by_field != txid:
+                    raise Exception('DOUBLE SPENDING DETECTED!!!')
+                else:
+                    print('TX THE SAME')
                         
             if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], vin_txid_field):
                 return False

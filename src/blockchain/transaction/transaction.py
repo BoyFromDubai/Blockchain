@@ -11,7 +11,7 @@ class Vin:
     def __create_vin(self, txid: bytes, vout_num: int):
         txid = int(txid, 16).to_bytes(BLOCK_STRUCT['txid'], 'big')
 
-        utxo_data = self.blockchain.chainstate_db.get_info_of_vout_digest(txid, vout_num)
+        utxo_data = self.blockchain.chainstate_db.get_info_of_utxo_digest(txid, vout_num)
 
         if int.from_bytes(utxo_data['spent'], 'little'):
             raise ValueError('[ERROR] Vout is already spent!!!')

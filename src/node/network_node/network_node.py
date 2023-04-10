@@ -336,16 +336,11 @@ class PeerConnection(Connection):
             self.__handle_block_ack(pkg_dict['data_dict']['index'], pkg_dict['data_dict']['blk_data'])
         elif pkg_dict['type'] == 'tx_msg':
             self.__handle_tx_msg(pkg_dict['data_dict']['tx_data'])
-
-        return 
     
     def __handle_version_pkg(self, peer_chain_len : int):
         my_chain_len = self.blockchain.get_chain_len()
 
         if peer_chain_len > my_chain_len:
-            print('AAAAA')
-            print('Peer chain: ', peer_chain_len)
-            print('My chain: ', my_chain_len)
             self.send_pkg(pkg_type='compare_nth_block_request', request_index=(my_chain_len - 1), nth_blk_hash=self.blockchain.hash_nth_block_in_digest(my_chain_len - 1))
         
     def __send_version_pkg(self):
@@ -382,7 +377,6 @@ class PeerConnection(Connection):
     def __handle_block_ack(self, index : int, blk_data : bytes):
         self.lock.acquire()
         
-        # if self.blockchain.get_chain_len() < index + 1:
         try:
             self.blockchain.get_new_block_from_peer(index, blk_data)
             index_to_request = index + 1
@@ -392,7 +386,6 @@ class PeerConnection(Connection):
             print(e)
 
         self.lock.release()
-        
 
     def __handle_tx_msg(self, tx_data : bytes):
         self.blockchain.get_new_tx_from_peer(tx_data)

@@ -184,7 +184,7 @@ class ChainStateDB:
 
         return arr
 
-    def get_info_of_vout_digest(self, txid: bytes, vout: int):
+    def get_info_of_utxo_digest(self, txid: bytes, vout: int):
         key = self.__create_key(txid, vout)
         utxo_data = self.db.get(key)
         
