@@ -1,4 +1,4 @@
-from hashlib import md5
+from hashlib import sha256
 from .data_field_helpers import *
 
 
@@ -71,7 +71,7 @@ class CCoinPackage:
 
         return res
 
-    def __hash_package(self, data): return md5(data).digest()
+    def __hash_package(self, data): return sha256(data).digest()
 
 
     

@@ -1,7 +1,7 @@
 from ...blockchain import Transaction
 from ...block import Block
 
-import random
+import secrets
 import hashlib
 import math
 
@@ -11,7 +11,7 @@ class Miner:
         self.blockchain = blockchain
 
     def mine_block(self):
-        emission = Transaction([(self.pk, math.ceil(random.random() * 1000))]).tx_data
+        emission = Transaction([(self.pk, secrets.secretsGenerator.randint(0, 50))]).tx_data
         nonce = 1
         check_proof = False
         num_of_zeros = 1

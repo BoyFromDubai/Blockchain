@@ -453,7 +453,7 @@ class NetworkNode(threading.Thread):
         try:
             self.__connect_with_bind_server()
         except:
-            pass
+            print('[WARNING] No bind server found!')
 
     def __connect_with_bind_server(self):
         if not os.path.exists(NetworkNode.NETWORK_CONF_DIR):

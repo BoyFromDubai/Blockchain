@@ -66,11 +66,10 @@ class Node:
         return blk_info
     
     def __verify_chain(self):
-        try:
-            self.__blockchain.verify_chain()
-        except:
-            pass
-            #TODO ask peers for correct blocks
-    
+        res = self.__blockchain.verify_chain()
+        
+        if res != 0:
+            print('[ERROR] The chain is invalid!')
+
     def __del__(self):
         self.__network_node.stop()

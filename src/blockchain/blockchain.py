@@ -466,13 +466,8 @@ class Blockchain:
             vout_spent_field = tx_vout['spent']
             vout_spent_by_field = tx_vout['spent_by']
             
-            if int.from_bytes(vout_spent_field, 'little') != 0:
-                print(txid)
-                print(vout_spent_by_field)
-                if vout_spent_by_field != txid:
+            if int.from_bytes(vout_spent_field, 'little') != 0 and vout_spent_by_field != txid:
                     raise Exception('DOUBLE SPENDING DETECTED!!!')
-                else:
-                    print('TX THE SAME')
                         
             if not self.confirm_sign(vin['script_sig'], tx_vout['script_pub_key'], vin_txid_field):
                 return False
@@ -490,12 +485,11 @@ class Blockchain:
                 cur_blk_prev_hash = self.get_nth_block_prev_hash(i)
 
                 if prev_blk_hash != cur_blk_prev_hash:
-                    return False
-                    raise Exception
+                    return i
                 else:
                     prev_blk_hash = self.hash_nth_block_in_digest(i)
             
-        return True
+        return 0
 
     def add_transaction(self, vout_data: List[tuple], vin_data: List[tuple] = [], secret_key = None):
 

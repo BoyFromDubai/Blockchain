@@ -8,7 +8,7 @@ class Vin:
         self.secret_key = secret_key
         self.__create_vin(txid, vout_num)
 
-    def __create_vin(self, txid: bytes, vout_num: int):
+    def __create_vin(self, txid: str, vout_num: int):
         txid = int(txid, 16).to_bytes(BLOCK_STRUCT['txid'], 'big')
 
         utxo_data = self.blockchain.chainstate_db.get_info_of_utxo_digest(txid, vout_num)
@@ -63,6 +63,7 @@ class Transaction:
         tx_data += len(vout_data).to_bytes(1, "little") #outputs num
 
         for i in range(len(vout_data)):
+            print(vout_data)
             tx_data += Vout(vout_data[i][0], int(vout_data[i][1])).vout
 
         return tx_data
