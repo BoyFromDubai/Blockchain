@@ -21,7 +21,7 @@ class CCoinPackage:
     def __init__(self) -> None:
         self.pkg_type_size = 1
         self.hash_offset = 4
-        self.hash_size = 16
+        self.hash_size = 32
         self.data_len_size = 4
 
     def __check_got_msg(self, pkg):

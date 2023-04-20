@@ -12,7 +12,7 @@
       git:
         repo: "{{ github_path }}"
         dest: "{{ project_path }}"
-        version: db_changed
+        version: tests
         force: true  
     
     - name: Installing pip
