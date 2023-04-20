@@ -277,7 +277,7 @@ class Blockchain:
         
         return header[cur_offset:cur_offset + size] 
 
-    def get_nth_block_prev_hash(self, n: int): return Blockchain.get_block_prev_hash(Blockchain.get_nth_block(n))
+    def get_nth_block_prev_hash(self, n: int): return self.get_block_prev_hash(self.get_nth_block(n))
 
     def get_vins(self, tx_data: bytes):
         vins = []
@@ -500,7 +500,7 @@ class Blockchain:
 
             if available_coins < coins_to_spend:
                 raise ValueError('[ERROR] Not enough coins on these vins!!!')        
-    
+        
         tx = Transaction(vout_data, vin_data, self, secret_key)
         tx_data = tx.tx_data
 

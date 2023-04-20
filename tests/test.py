@@ -16,25 +16,19 @@ class TestBlockchain(unittest.TestCase):
 
         self.assertTrue(blockchain.confirm_sign(signature, pk.to_string(), msg_to_sign))
 
-
 class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.vout_data = [('ff', '13'), ('abcd', '200')]
         self.vin_data = [('123456', 0), ('cdefd', 5)]
-        self.transaction = transaction.Transaction(self.vout_data, self.vin_data)
 
     def test_tx_vouts(self):
-        print(self.transaction.tx_data)
-        vouts = blockchain.get_vouts(self.transaction.tx_data)
+        tx = transaction.Transaction(self.vout_data)
+        vouts = blockchain.get_vouts(tx.tx_data)
         
         for i in range(len(vouts)):
-            print(int.from_bytes(vouts[i]['value'], 'little'))
-            print(hex(int.from_bytes(vouts[i]['script_pub_key'], 'little')))
-            # self.assertEqual(_, 0)
-        # print(self.transaction.tx_data)
-        # self.assertTrue(self.blockchain.confirm_sign(signature, pk.to_string(), msg_to_sign))
-        # self.assertTrue(self.blockchain.confirm_sign(signature, pk.to_string(), msg_to_sign))
+            self.assertEqual(int(self.vout_data[i][1]), int.from_bytes(vouts[i]['value'], 'little'))
+            self.assertEqual(hex(int(self.vout_data[i][0], 16)), hex(int.from_bytes(vouts[i]['script_pub_key'], 'big')))
 
 class TestMerkleTree(unittest.TestCase):
 

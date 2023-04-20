@@ -15,8 +15,8 @@ class Mempool:
                 pass
 
     def add_tx(self, tx_data: bytes):
-        with open(Mempool.MEMPOOL_PATH, 'ab') as f:
-            f.write(len(tx_data).to_bytes(Mempool.TX_SIZE, 'little'))
+        with open(self.MEMPOOL_PATH, 'ab') as f:
+            f.write(len(tx_data).to_bytes(self.TX_SIZE, 'little'))
             f.write(tx_data)
 
 

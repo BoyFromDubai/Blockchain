@@ -6,27 +6,19 @@ from typing import List
 
 class ChainStateDB:
     TX_LETTER = 'c'
+    
     KEY_STRUCT = {
         'letter':       1,
         'hash_len':     32,
         'index_len':    1,
         'index':        None,
     }
+    
     UTXO_STRUCT = {
         'coinbase':             1,
         'height':               4,
         'spent':                1, 
         'spent_by':             32, 
-        'value':                8, 
-        'script_pub_key_size':  8,
-        'script_pub_key':       None, 
-    }
-
-
-    DATA_STRUCT = {
-        'height':               4,
-        'vouts_num':            1,
-        'spent':                32, 
         'value':                8, 
         'script_pub_key_size':  8,
         'script_pub_key':       None, 
@@ -89,7 +81,7 @@ class ChainStateDB:
 
     def __create_utxo_struct(self, vout: dict, coinbase_flag: bool):
         res = int(coinbase_flag).to_bytes(self.UTXO_STRUCT['coinbase'], 'little')
-        res += self.blockchain.get_chain_len().to_bytes(self.DATA_STRUCT['height'], 'little')
+        res += self.blockchain.get_chain_len().to_bytes(self.UTXO_STRUCT['height'], 'little')
         res += (0).to_bytes(self.UTXO_STRUCT['spent'], 'little')
         res += (0).to_bytes(self.UTXO_STRUCT['spent_by'], 'little')
         

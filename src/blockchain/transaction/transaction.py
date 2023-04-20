@@ -63,7 +63,6 @@ class Transaction:
         tx_data += len(vout_data).to_bytes(1, "little") #outputs num
 
         for i in range(len(vout_data)):
-            print(vout_data)
             tx_data += Vout(vout_data[i][0], int(vout_data[i][1])).vout
 
         return tx_data
